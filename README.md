@@ -1,4 +1,5 @@
 # Xirorig
+***The name is inspired by [XMRig](https://github.com/xmrig/xmrig) and thus the similarity in design. The codes are 100% original.***
 
 Xirorig is a high performance Xiropht (XIRO) CPU pool miner, with official support for Windows, Linux and MacOS. Originally based on [Xiropht-Miner](https://github.com/XIROPHT/Xiropht-Miner) with heavy optimizations/rewrites.
 
