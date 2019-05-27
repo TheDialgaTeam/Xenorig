@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Bootstrap
+namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
 {
     public sealed class BootstrapService : IInitializable
     {

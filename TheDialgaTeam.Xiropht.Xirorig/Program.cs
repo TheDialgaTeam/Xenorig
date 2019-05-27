@@ -4,13 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Bootstrap;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.IO;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Setting;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Core
+namespace TheDialgaTeam.Xiropht.Xirorig
 {
     /// <summary>
     /// Main program executable code.

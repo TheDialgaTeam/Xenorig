@@ -3,9 +3,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.IO;
+using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console
+namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 {
     public sealed class LoggerService : IInitializable, IDisposable
     {

@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool.Packet;
-using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Setting;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Pool.Packet;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool
+namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 {
     public sealed class PoolService : IInitializable, IDisposable
     {

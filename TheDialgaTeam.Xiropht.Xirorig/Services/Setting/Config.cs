@@ -1,6 +1,6 @@
-﻿using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool;
+﻿using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Setting
+namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 {
     public sealed class Config
     {

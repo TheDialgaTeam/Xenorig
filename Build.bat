@@ -1,0 +1,1 @@
+dotnet build -c Win-Release

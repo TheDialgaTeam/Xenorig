@@ -1,12 +1,11 @@
-﻿
+﻿using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 #if WIN
-using System;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Core
+namespace TheDialgaTeam.Xiropht.Xirorig
 {
 
     public class DistributedThread

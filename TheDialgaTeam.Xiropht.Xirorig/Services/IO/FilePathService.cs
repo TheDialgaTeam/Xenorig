@@ -2,7 +2,7 @@
 using System.IO;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.IO
+namespace TheDialgaTeam.Xiropht.Xirorig.Services.IO
 {
     public sealed class FilePathService : IInitializable
     {
