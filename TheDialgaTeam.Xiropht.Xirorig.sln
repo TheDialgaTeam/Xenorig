@@ -1,0 +1,65 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28917.181
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.Xiropht.Xirorig", "TheDialgaTeam.Xiropht.Xirorig\TheDialgaTeam.Xiropht.Xirorig.csproj", "{2E1005EA-7ABD-46C7-8298-17BAD323E694}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xiropht-Connector-All", "Xiropht-Connector-All\Xiropht-Connector-All\Xiropht-Connector-All.csproj", "{A0684C2D-252E-4E1B-8AA1-3371669809E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.Microsoft.Extensions.DependencyInjection", "TheDialgaTeam.Microsoft.Extensions.DependencyInjection\src\TheDialgaTeam.Microsoft.Extensions.DependencyInjection.csproj", "{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Linux-Debug|Any CPU = Linux-Debug|Any CPU
+		Linux-Release|Any CPU = Linux-Release|Any CPU
+		Osx-Debug|Any CPU = Osx-Debug|Any CPU
+		Osx-Release|Any CPU = Osx-Release|Any CPU
+		Win-Debug|Any CPU = Win-Debug|Any CPU
+		Win-Release|Any CPU = Win-Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Linux-Debug|Any CPU.ActiveCfg = Linux-Debug|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Linux-Debug|Any CPU.Build.0 = Linux-Debug|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Linux-Release|Any CPU.ActiveCfg = Linux-Release|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Linux-Release|Any CPU.Build.0 = Linux-Release|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Osx-Debug|Any CPU.ActiveCfg = Osx-Debug|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Osx-Debug|Any CPU.Build.0 = Osx-Debug|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Osx-Release|Any CPU.ActiveCfg = Osx-Release|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Osx-Release|Any CPU.Build.0 = Osx-Release|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Win-Debug|Any CPU.ActiveCfg = Win-Debug|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Win-Debug|Any CPU.Build.0 = Win-Debug|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Win-Release|Any CPU.ActiveCfg = Win-Release|Any CPU
+		{2E1005EA-7ABD-46C7-8298-17BAD323E694}.Win-Release|Any CPU.Build.0 = Win-Release|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Linux-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Linux-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Linux-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Linux-Release|Any CPU.Build.0 = Release|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Osx-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Osx-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Osx-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Osx-Release|Any CPU.Build.0 = Release|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Win-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Win-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Win-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0684C2D-252E-4E1B-8AA1-3371669809E0}.Win-Release|Any CPU.Build.0 = Release|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Linux-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Linux-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Linux-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Linux-Release|Any CPU.Build.0 = Release|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Osx-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Osx-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Osx-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Osx-Release|Any CPU.Build.0 = Release|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Win-Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Win-Debug|Any CPU.Build.0 = Debug|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Win-Release|Any CPU.ActiveCfg = Release|Any CPU
+		{573A3288-8C5B-45D5-8F97-B2F8D873C9E5}.Win-Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3C1E41BE-99F5-4B0F-B048-076F53C4A104}
+	EndGlobalSection
+EndGlobal
