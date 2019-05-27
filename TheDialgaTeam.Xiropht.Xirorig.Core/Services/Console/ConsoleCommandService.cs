@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
+namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console
 {
     public sealed class ConsoleCommandService : IInitializable
     {

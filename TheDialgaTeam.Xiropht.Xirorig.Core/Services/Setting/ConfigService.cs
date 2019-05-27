@@ -3,12 +3,12 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
-using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.IO;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool;
 using Xiropht_Connector_All.Setting;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
+namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Setting
 {
     public sealed class ConfigService : IInitializable, IDisposable
     {

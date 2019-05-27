@@ -4,20 +4,33 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
-using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Bootstrap;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.IO;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Setting;
 
-namespace TheDialgaTeam.Xiropht.Xirorig
+namespace TheDialgaTeam.Xiropht.Xirorig.Core
 {
+    /// <summary>
+    /// Main program executable code.
+    /// </summary>
     public sealed class Program : IDisposable
     {
+        /// <summary>
+        /// Main program cancellation token source to safely exit this program.
+        /// </summary>
         public CancellationTokenSource CancellationTokenSource { get; private set; }
 
+        /// <summary>
+        /// List of tasks to await before this program exits.
+        /// </summary>
         public List<Task> TasksToAwait { get; private set; }
 
+        /// <summary>
+        /// Program main entry point.
+        /// </summary>
+        /// <param name="args">List of command line arguments.</param>
         public static async Task Main(string[] args)
         {
             var program = new Program();

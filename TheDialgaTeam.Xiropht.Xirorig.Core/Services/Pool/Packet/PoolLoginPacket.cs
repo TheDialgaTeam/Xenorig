@@ -1,4 +1,4 @@
-﻿namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool.Packet
+﻿namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool.Packet
 {
     public sealed class PoolLoginPacket
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace TheDialgaTeam.Xiropht.Xirorig
+namespace TheDialgaTeam.Xiropht.Xirorig.Core
 {
     public static class MiningUtility
     {

@@ -7,12 +7,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool.Packet;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool.Packet;
+using TheDialgaTeam.Xiropht.Xirorig.Core.Services.Setting;
 using Xiropht_Connector_All.Utils;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
+namespace TheDialgaTeam.Xiropht.Xirorig.Core.Services.Pool
 {
     public sealed class PoolMiner : IDisposable
     {

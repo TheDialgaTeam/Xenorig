@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28917.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.Xiropht.Xirorig", "TheDialgaTeam.Xiropht.Xirorig\TheDialgaTeam.Xiropht.Xirorig.csproj", "{2E1005EA-7ABD-46C7-8298-17BAD323E694}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.Xiropht.Xirorig.Core", "TheDialgaTeam.Xiropht.Xirorig.Core\TheDialgaTeam.Xiropht.Xirorig.Core.csproj", "{2E1005EA-7ABD-46C7-8298-17BAD323E694}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xiropht-Connector-All", "Xiropht-Connector-All\Xiropht-Connector-All\Xiropht-Connector-All.csproj", "{A0684C2D-252E-4E1B-8AA1-3371669809E0}"
 EndProject
