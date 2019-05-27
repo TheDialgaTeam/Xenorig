@@ -1,13 +1,11 @@
 # Xirorig
-**Xiropht Miner compatible with Xiropht Pool: https://github.com/XIROPHT/Xiropht-Mining-Pool**
 
-Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support for Windows, Linux and MacOS.
+Xirorig is a high performance Xiropht (XIRO) CPU pool miner, with official support for Windows, Linux and MacOS. Originally based on [Xiropht-Miner](https://github.com/XIROPHT/Xiropht-Miner) with heavy optimizations/rewrites.
 
-- This is the **CPU-mining** pool version. There is no solo or GPU miners at the moment.
+- This is the **CPU pool mining** version. There is no solo or GPU version at the moment.
 
-**Newtonsoft.Json library is used since version 0.0.0.1R for generated json syntax on mining packets: https://github.com/JamesNK/Newtonsoft.Json**
+#### Table of contents
+- [Developers](#Developers)
 
-**Developers:**
-
-- Xiropht (Sam Segura)
+## Developers
 - The Dialga Team (Yong Jian Ming)
