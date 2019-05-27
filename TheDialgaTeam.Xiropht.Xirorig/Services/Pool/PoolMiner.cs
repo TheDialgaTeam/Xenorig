@@ -169,12 +169,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 #if WIN
                                 var thread = new DistributedThread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { ProcessorAffinity = 1 << miningThread.ThreadAffinityToCpu };
                                 thread.ManagedThread.IsBackground = true;
-                                SetThreadPriority(thread.ManagedThread, miningThread.ThreadPriority);
+                                thread.ManagedThread.Priority = miningThread.ThreadPriority;
                                 thread.Start();
                                 RandomJobThreads.Add(thread.ManagedThread);
 #else
                                 var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true };
-                                SetThreadPriority(thread, miningThread.ThreadPriority);
+                                thread.Priority = miningThread.ThreadPriority;
                                 thread.Start();
                                 RandomJobThreads.Add(thread);
 #endif
@@ -182,7 +182,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                             else
                             {
                                 var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true };
-                                SetThreadPriority(thread, miningThread.ThreadPriority);
+                                thread.Priority = miningThread.ThreadPriority;
                                 thread.Start();
                                 RandomJobThreads.Add(thread);
                             }

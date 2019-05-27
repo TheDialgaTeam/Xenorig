@@ -3,11 +3,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+
 #if WIN
 
 namespace TheDialgaTeam.Xiropht.Xirorig
 {
-
     public class DistributedThread
     {
         private readonly ThreadStart threadStart;
@@ -88,4 +88,5 @@ namespace TheDialgaTeam.Xiropht.Xirorig
         }
     }
 }
+
 #endif

@@ -28,23 +28,21 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                 Program.CancellationTokenSource.Cancel();
             };
 
-            Program.TasksToAwait.Add(ReadConsoleKeysAsync());
-        }
-
-        private async Task ReadConsoleKeysAsync()
-        {
-            do
+            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
             {
-                if (System.Console.KeyAvailable)
+                while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    var keyPressed = System.Console.ReadKey(true);
+                    if (System.Console.KeyAvailable)
+                    {
+                        var keyPressed = System.Console.ReadKey(true);
 
-                    if (PoolService.IsConnected && PoolService.IsLoggedIn && keyPressed.Key == ConsoleKey.S)
-                        await LoggerService.LogMessageAsync($"Estimated Hashrate: {PoolService.PoolMiner.TotalHashCalculated} H/s | Good Share: {PoolService.TotalGoodSharesSubmitted} | Invalid Share: {PoolService.TotalBadSharesSubmitted}", ConsoleColor.Magenta).ConfigureAwait(false);
+                        if (PoolService.IsConnected && PoolService.IsLoggedIn && keyPressed.Key == ConsoleKey.S)
+                            await LoggerService.LogMessageAsync($"Estimated Hashrate: {PoolService.PoolMiner.TotalHashCalculated} H/s | Good Share: {PoolService.TotalGoodSharesSubmitted} | Invalid Share: {PoolService.TotalBadSharesSubmitted}", ConsoleColor.Magenta).ConfigureAwait(false);
+                    }
+
+                    await Task.Delay(1).ConfigureAwait(false);
                 }
-
-                await Task.Delay(1).ConfigureAwait(false);
-            } while (!Program.CancellationTokenSource.IsCancellationRequested);
+            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current));
         }
     }
 }

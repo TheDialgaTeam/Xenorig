@@ -82,7 +82,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private async Task ConnectToPoolNetworkUntilCancellationAsync()
         {
-            do
+            while (!Program.CancellationTokenSource.IsCancellationRequested)
             {
                 await ConnectToPoolNetwork(ConfigService.Host, ConfigService.Port, ConfigService.WalletAddress).ConfigureAwait(false);
 
@@ -94,7 +94,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 }
 
                 await Task.Delay(1000).ConfigureAwait(false);
-            } while (!Program.CancellationTokenSource.IsCancellationRequested);
+            }
 
             await DisconnectPoolNetworkAsync().ConfigureAwait(false);
         }

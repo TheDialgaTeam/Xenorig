@@ -6,29 +6,28 @@ using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
-using Xiropht_Connector_All.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 {
     public sealed class ConfigService : IInitializable, IDisposable
     {
-        public string Host => Config.Host;
+        public string Host => Config.Pools[0].Host;
 
-        public ushort Port => Config.Port;
+        public ushort Port => ushort.TryParse(Config.Pools[0].WalletAddress.Substring(Config.Pools[0].WalletAddress.IndexOf(":", StringComparison.Ordinal) + 1), out var port) ? port : (ushort) 0;
 
-        public string WalletAddress => Config.WalletAddress;
+        public string WalletAddress => Config.Pools[0].WalletAddress;
 
-        public Config.MiningThread[] AdditionJobThreads => Config.MiningThreads.Where(a => a.JobType == PoolMiner.JobType.AdditionJob).ToArray();
+        public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.AdditionJob).ToArray();
 
-        public Config.MiningThread[] SubtractionJobThreads => Config.MiningThreads.Where(a => a.JobType == PoolMiner.JobType.SubtractionJob).ToArray();
+        public Config.MiningThread[] SubtractionJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.SubtractionJob).ToArray();
 
-        public Config.MiningThread[] MultiplicationJobThreads => Config.MiningThreads.Where(a => a.JobType == PoolMiner.JobType.MultiplicationJob).ToArray();
+        public Config.MiningThread[] MultiplicationJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.MultiplicationJob).ToArray();
 
-        public Config.MiningThread[] DivisionJobThreads => Config.MiningThreads.Where(a => a.JobType == PoolMiner.JobType.DivisionJob).ToArray();
+        public Config.MiningThread[] DivisionJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.DivisionJob).ToArray();
 
-        public Config.MiningThread[] ModulusJobThreads => Config.MiningThreads.Where(a => a.JobType == PoolMiner.JobType.ModulusJob).ToArray();
+        public Config.MiningThread[] ModulusJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.ModulusJob).ToArray();
 
-        public Config.MiningThread[] RandomJobThreads => Config.MiningThreads.Where(a => a.JobType == PoolMiner.JobType.RandomJob).ToArray();
+        public Config.MiningThread[] RandomJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.RandomJob).ToArray();
 
         private Program Program { get; }
 
@@ -47,10 +46,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public void Initialize()
         {
-            Config = new Config { MiningThreads = new Config.MiningThread[Environment.ProcessorCount / 2] };
+            Config = new Config { Threads = new Config.MiningThread[Environment.ProcessorCount / 2] };
 
-            for (var i = 0; i < Config.MiningThreads.Length; i++)
-                Config.MiningThreads[i] = new Config.MiningThread { ThreadAffinityToCpu = i * 2 };
+            for (var i = 0; i < Config.Threads.Length; i++)
+                Config.Threads[i] = new Config.MiningThread { ThreadAffinityToCpu = i * 2 };
 
             if (!File.Exists(FilePathService.SettingFilePath))
             {
@@ -86,23 +85,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                         var jsonSerializer = new JsonSerializer();
                         Config = jsonSerializer.Deserialize<Config>(new JsonTextReader(streamReader));
                     }
-
-                    if (string.IsNullOrWhiteSpace(Host) || Port == 0)
-                        throw new ArgumentException("Invalid host or port to connect.");
-
-                    if (string.IsNullOrWhiteSpace(WalletAddress) || WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize || WalletAddress.Length > ClassConnectorSetting.MaxWalletAddressSize)
-                        throw new ArgumentException("Invalid Xiropht wallet address.");
-
-                    foreach (var configMiningThread in Config.MiningThreads)
-                    {
-                        if (configMiningThread.ThreadPriority < 0 || configMiningThread.ThreadPriority > 4)
-                            throw new ArgumentException("Invalid thread priority.");
-
-                        if (configMiningThread.ThreadAffinityToCpu < 0)
-                            throw new ArgumentException("Invalid thread affinity. Set 0 for any cpu.");
-                    }
-
-                    LoggerService.LogMessage("Config loaded!");
                 }
                 catch (Exception ex)
                 {
@@ -110,6 +92,32 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                     Program.CancellationTokenSource.Cancel();
                 }
             }
+
+            var consoleMessages = new ConsoleMessageBuilder()
+                .Write(" * ", ConsoleColor.Green)
+                .Write("THREADS".PadRight(13))
+                .Write(Config.Threads.Length.ToString(), ConsoleColor.Cyan)
+                .Write(", ")
+                .Write($"donate={Config.DonateLevel}%", Config.DonateLevel > 0 ? ConsoleColor.White : ConsoleColor.Red)
+                .WriteLine("", includeDateTime: false);
+
+            for (var i = 0; i < Config.Pools.Length; i++)
+            {
+                consoleMessages
+                    .Write(" * ", ConsoleColor.Green)
+                    .Write($"POOL #{i + 1}".PadRight(13))
+                    .Write(Config.Pools[i].Host, ConsoleColor.Cyan)
+                    .WriteLine("", includeDateTime: false);
+            }
+
+            consoleMessages
+                .Write(" * ", ConsoleColor.Green)
+                .Write("COMMANDS".PadRight(13))
+                .Write("h", ConsoleColor.Magenta)
+                .Write("ashrate")
+                .WriteLine("", includeDateTime: false);
+
+            LoggerService.LogMessage(consoleMessages.Build());
         }
 
         public void Dispose()
@@ -119,8 +127,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                 var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
                 jsonSerializer.Serialize(streamWriter, Config);
             }
-
-            LoggerService.LogMessage($"Saving Configuration file at: {FilePathService.SettingFilePath}");
         }
     }
 }

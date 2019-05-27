@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+using System.Runtime.Versioning;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 
@@ -18,9 +20,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
             var title = $"Xirorig (.Net Core) v{Assembly.GetExecutingAssembly().GetName().Version}";
             System.Console.Title = title;
 
-            LoggerService.LogMessage("==================================================");
-            LoggerService.LogMessage(title);
-            LoggerService.LogMessage("==================================================");
+            var consoleMessages = new ConsoleMessageBuilder()
+                .Write(" * ", ConsoleColor.Green)
+                .Write("ABOUT".PadRight(13))
+                .Write($"Xirorig/{Assembly.GetExecutingAssembly().GetName().Version} ", ConsoleColor.Cyan)
+                .Write(Assembly.GetCallingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName)
+                .WriteLine("", includeDateTime: false)
+                .Build();
+
+            LoggerService.LogMessage(consoleMessages);
         }
     }
 }

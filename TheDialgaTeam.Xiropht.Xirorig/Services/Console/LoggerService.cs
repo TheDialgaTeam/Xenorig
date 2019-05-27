@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,9 +32,19 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
             LogMessageAsync(message, consoleColor).GetAwaiter().GetResult();
         }
 
+        public void LogMessage(IEnumerable<ConsoleMessage> consoleMessages)
+        {
+            LogMessageAsync(consoleMessages).GetAwaiter().GetResult();
+        }
+
         public async Task LogMessageAsync(string message, ConsoleColor consoleColor = ConsoleColor.White)
         {
             await LogMessageAsync(System.Console.Out, consoleColor, message).ConfigureAwait(false);
+        }
+
+        public async Task LogMessageAsync(IEnumerable<ConsoleMessage> consoleMessages)
+        {
+            await LogMessageAsync(System.Console.Out, consoleMessages).ConfigureAwait(false);
         }
 
         public void LogErrorMessage(Exception exception)
@@ -55,9 +66,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
             {
                 await SemaphoreSlim.WaitAsync().ConfigureAwait(false);
 
-                System.Console.ForegroundColor = consoleColor;
+                System.Console.ForegroundColor = ConsoleColor.Gray;
+                await writer.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
 
-                await writer.WriteLineAsync($"{DateTime.UtcNow:s} {message}").ConfigureAwait(false);
+                System.Console.ForegroundColor = consoleColor;
+                await writer.WriteLineAsync($"{message}").ConfigureAwait(false);
                 await writer.FlushAsync().ConfigureAwait(false);
 
                 if (writer != System.Console.Error)
@@ -73,7 +86,36 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
             }
             finally
             {
-                System.Console.ResetColor();
+                SemaphoreSlim.Release();
+            }
+        }
+
+        private async Task LogMessageAsync(TextWriter writer, IEnumerable<ConsoleMessage> consoleMessages)
+        {
+            try
+            {
+                await SemaphoreSlim.WaitAsync().ConfigureAwait(false);
+
+                foreach (var consoleMessage in consoleMessages)
+                {
+                    if (consoleMessage.IncludeDateTime)
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Gray;
+                        await writer.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+                    }
+
+                    System.Console.ForegroundColor = consoleMessage.Color;
+                    await writer.WriteAsync(consoleMessage.Message).ConfigureAwait(false); ;
+                    await writer.FlushAsync().ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                await System.Console.Error.WriteLineAsync(ex.ToString()).ConfigureAwait(false);
+            }
+            finally
+            {
                 SemaphoreSlim.Release();
             }
         }
