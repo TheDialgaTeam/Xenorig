@@ -27,12 +27,14 @@ assignees: ''
 
 **Application Version:**
 <!-- Please delete where applicable -->
-- Version: 0.0.x branch.
+- 0.0.1
 
 **Operating System:**
 <!-- Please delete where applicable -->
-- OS: Windows / Linux / MacOS
-- Version: 10
+- Windows 10 / 8 / 7
+- Linux (Please include the distro used)
+- MacOS Sierra / High Sierra / Mojave
+- Raspberry PI (Please include OS used)
 
 **Additional context:**
 <!-- Please attach any relevant crash logs below by adding a file on this issue -->

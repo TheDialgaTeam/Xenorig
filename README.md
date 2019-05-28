@@ -6,20 +6,39 @@ Xirorig is a high performance Xiropht (XIRO) CPU pool miner, with official suppo
 - This is the **CPU pool mining** version. There is no solo or GPU version at the moment.
 
 #### Table of contents
+- [Features](#Features)
+- [Downloads](#Downloads)
+- [Usage](#Usage)
+- [Other information](#Other-information)
 - [Donations](#Donations)
 - [Developers](#Developers)
 
 ## Features
-WIP
+- High performance.
+- Official Windows support, Linux and MacOS. (Includes Raspberry PI as well)
+- x86/x64/arm support.
+- Support for backup (failover) mining server.
+- It's open source software.
 
 ## Downloads
-WIP
+- Binary releases: https://github.com/TheDialgaTeam/Xirorig/releases
 
 ## Usage
 WIP
 
 ## Other information
-WIP
+- Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via option donate-level/DonateLevel.
+
+### CPU mining performance
+- Intel i7-8750H - 160 KH/s (6 threads)
+
+Please note performance is highly dependent on system load. The numbers above are obtained on an idle system. Tasks heavily using a processor, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the number of cores you have on your cpu.
+
+### Maximum performance checklist
+- Idle operating system.
+- Do not exceed optimal thread count.
+- Use modern CPUs with AES-NI instruction set.
+- Try setup optimal cpu affinity.
 
 ## Donations
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`
