@@ -15,7 +15,7 @@ Xirorig is a high performance Xiropht (XIRO) CPU pool miner, with official suppo
 
 ## Features
 - High performance.
-- Official Windows support, Linux and MacOS. (Includes Raspberry Pi as well)
+- Official Windows support, Linux and MacOS. (Includes Raspberry PI as well)
 - x86/x64/arm support.
 - Support for backup (failover) mining server.
 - It's open source software.
