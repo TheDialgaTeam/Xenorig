@@ -6,6 +6,10 @@ Xirorig is a high performance Xiropht (XIRO) CPU pool miner, with official suppo
 - This is the **CPU pool mining** version. There is no solo or GPU version at the moment.
 
 #### Table of contents
+- [Features](#Features)
+- [Downloads](#Downloads)
+- [Usage](#Usage)
+- [Other information](#Other information)
 - [Donations](#Donations)
 - [Developers](#Developers)
 
