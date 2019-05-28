@@ -24,7 +24,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
                 .Write(" * ", ConsoleColor.Green)
                 .Write("ABOUT".PadRight(13))
                 .Write($"Xirorig/{Assembly.GetExecutingAssembly().GetName().Version} ", ConsoleColor.Cyan)
-                .Write(Assembly.GetCallingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName)
+                .Write(Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName)
                 .WriteLine("", includeDateTime: false)
                 .Build();
 

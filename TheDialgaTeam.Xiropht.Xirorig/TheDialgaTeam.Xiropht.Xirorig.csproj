@@ -6,20 +6,19 @@
     <TargetFrameworks>netcoreapp2.2;net462</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
+    <PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>
     <Version>0.0.0.5</Version>
     <Authors>Yong Jian Ming</Authors>
     <Company>The Dialga Team</Company>
     <Product>Xirorig</Product>
     <Description>Xiropht Pool Miner compatible with Xiropht Pool.</Description>
-    <Copyright>Copyright © The Dialga Team 2019</Copyright>
-    <PackageLicenseFile>LICENCE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/TheDialgaTeam/Xirorig</PackageProjectUrl>
     <RepositoryUrl>https://github.com/TheDialgaTeam/Xirorig</RepositoryUrl>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Configurations>Win-Debug;Win-Release;Linux-Debug;Linux-Release;Osx-Debug;Osx-Release</Configurations>
-    <RuntimeIdentifiers>win-x64;linux-x64;linux-arm;osx-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm;linux-x64;linux-arm;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win-Debug|AnyCPU'">
@@ -60,13 +59,6 @@
   <ItemGroup>
     <ProjectReference Include="..\TheDialgaTeam.Microsoft.Extensions.DependencyInjection\src\TheDialgaTeam.Microsoft.Extensions.DependencyInjection.csproj" />
     <ProjectReference Include="..\Xiropht-Connector-All\Xiropht-Connector-All\Xiropht-Connector-All.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\LICENCE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
   </ItemGroup>
 
 </Project>
