@@ -16,5 +16,6 @@
         public const string JobMethodAesSize = "aes_size";
         public const string JobMethodAesKey = "aes_key";
         public const string JobMethodXorKey = "xor_key";
+        public const string JobKeyEncryption = "job_key_encryption";
     }
 }

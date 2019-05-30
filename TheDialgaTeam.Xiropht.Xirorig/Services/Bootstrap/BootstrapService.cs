@@ -17,13 +17,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
 
         public void Initialize()
         {
-            var title = $"Xirorig (.Net Core) v{Assembly.GetExecutingAssembly().GetName().Version}";
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            var title = $"Xirorig (.Net Core) v{version}";
             System.Console.Title = title;
 
             var consoleMessages = new ConsoleMessageBuilder()
                 .Write(" * ", ConsoleColor.Green)
                 .Write("ABOUT".PadRight(13))
-                .Write($"Xirorig/{Assembly.GetExecutingAssembly().GetName().Version} ", ConsoleColor.Cyan)
+                .Write($"Xirorig/{version} ", ConsoleColor.Cyan)
                 .Write(Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName)
                 .WriteLine("", includeDateTime: false)
                 .Build();

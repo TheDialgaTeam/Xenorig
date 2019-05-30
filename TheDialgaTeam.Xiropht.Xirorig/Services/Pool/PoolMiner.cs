@@ -54,7 +54,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         public int JobMethodXorKey { get; private set; }
 
-        public int TotalShareToFind => JobIndication.Length / BlockIndication.Length;
+        public string JobKeyEncryption { get; private set; }
 
         public long TotalHashCalculated { get; private set; }
 
@@ -83,36 +83,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             PoolService = poolService;
         }
 
-        private static void SetThreadPriority(Thread thread, int threadPriority)
-        {
-            switch (threadPriority)
-            {
-                case 0:
-                    thread.Priority = ThreadPriority.Lowest;
-                    break;
-
-                case 1:
-                    thread.Priority = ThreadPriority.BelowNormal;
-                    break;
-
-                case 2:
-                    thread.Priority = ThreadPriority.Normal;
-                    break;
-
-                case 3:
-                    thread.Priority = ThreadPriority.AboveNormal;
-                    break;
-
-                case 4:
-                    thread.Priority = ThreadPriority.Highest;
-                    break;
-
-                default:
-                    thread.Priority = ThreadPriority.Normal;
-                    break;
-            }
-        }
-
         public void UpdateJob(string packet)
         {
             var json = JObject.Parse(packet);
@@ -122,7 +92,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             BlockKey = json[PoolJobPacket.BlockKey].ToString();
             BlockIndication = json[PoolJobPacket.BlockIndication].ToString();
             BlockDifficulty = decimal.Parse(json[PoolJobPacket.BlockDifficulty].ToString());
-            JobIndication = ClassUtils.DecompressData(json[PoolJobPacket.JobIndication].ToString());
+            JobIndication = json[PoolJobPacket.JobIndication].ToString();
             JobDifficulty = decimal.Parse(json[PoolJobPacket.JobDifficulty].ToString());
             JobMinRange = decimal.Parse(json[PoolJobPacket.JobMinRange].ToString());
             JobMaxRange = decimal.Parse(json[PoolJobPacket.JobMaxRange].ToString());
@@ -131,6 +101,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             JobMethodAesSize = int.Parse(json[PoolJobPacket.JobMethodAesSize].ToString());
             JobMethodAesKey = json[PoolJobPacket.JobMethodAesKey].ToString();
             JobMethodXorKey = int.Parse(json[PoolJobPacket.JobMethodXorKey].ToString());
+            JobKeyEncryption = json[PoolJobPacket.JobKeyEncryption].ToString();
 
             using (var pdb = new PasswordDeriveBytes(BlockKey, Encoding.UTF8.GetBytes(JobMethodAesKey)))
             {
@@ -164,7 +135,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                             var threadIndex = i;
                             var miningThread = ConfigService.RandomJobThreads[i];
 
-                            if (miningThread.ThreadAffinityToCpu > 0)
+                            if (miningThread.ThreadAffinityToCpu >= 0)
                             {
 #if WIN
                                 var thread = new DistributedThread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { ProcessorAffinity = 1 << miningThread.ThreadAffinityToCpu };
@@ -173,16 +144,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                                 thread.Start();
                                 RandomJobThreads.Add(thread.ManagedThread);
 #else
-                                var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true };
-                                thread.Priority = miningThread.ThreadPriority;
+                                var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
                                 thread.Start();
                                 RandomJobThreads.Add(thread);
 #endif
                             }
                             else
                             {
-                                var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true };
-                                thread.Priority = miningThread.ThreadPriority;
+                                var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
                                 thread.Start();
                                 RandomJobThreads.Add(thread);
                             }
@@ -206,36 +175,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private async Task DoRandomJob(int threadIndex, bool prioritizePoolSharesVsBlock)
         {
-            var poolSharesDone = false;
-            var currentJobIndication = JobIndication;
-
             while (PoolService.IsLoggedIn && !PoolService.CancellationTokenSource.IsCancellationRequested)
             {
-                if (currentJobIndication != JobIndication)
-                {
-                    poolSharesDone = false;
-                    currentJobIndication = JobIndication;
-                }
-
                 decimal startRange, endRange;
 
-                if (prioritizePoolSharesVsBlock && !poolSharesDone)
+                if (prioritizePoolSharesVsBlock)
                     (startRange, endRange) = MiningUtility.GetJobRange(JobMaxRange - JobMinRange + 1, ConfigService.RandomJobThreads.Length, threadIndex, JobMinRange);
                 else
                     (startRange, endRange) = MiningUtility.GetJobRange(BlockDifficulty - 1, ConfigService.RandomJobThreads.Length, threadIndex, 2);
 
+                var currentJobIndication = JobIndication;
                 await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: Random | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}", ConsoleColor.Blue).ConfigureAwait(false);
 
                 while (currentJobIndication == JobIndication)
                 {
                     if (!PoolService.IsLoggedIn || PoolService.CancellationTokenSource.IsCancellationRequested)
                         break;
-
-                    if (prioritizePoolSharesVsBlock && SubmittedShares.Count >= TotalShareToFind && !poolSharesDone)
-                    {
-                        poolSharesDone = true;
-                        break;
-                    }
 
                     var firstNumber = decimal.Parse(MiningUtility.GenerateNumberMathCalculation(startRange, endRange));
                     var secondNumber = decimal.Parse(MiningUtility.GenerateNumberMathCalculation(startRange, endRange));
@@ -309,17 +264,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             var hashEncryptedShare = MiningUtility.GenerateSHA512(encryptedShare);
 
-            if (!JobIndication.Contains(hashEncryptedShare) && hashEncryptedShare != BlockIndication)
+            var hashEncryptedKeyShare = MiningUtility.EncryptXorShare(hashEncryptedShare, JobKeyEncryption);
+            hashEncryptedKeyShare = MiningUtility.HashJobToHexString(hashEncryptedKeyShare);
+
+            if (!JobIndication.Contains(hashEncryptedKeyShare) && hashEncryptedShare != BlockIndication)
+                return;
+
+            if (SubmittedShares.ContainsKey(calculation))
                 return;
 
             if (!SubmittedShares.TryAdd(calculation, true))
                 return;
 
-            if (JobIndication.Contains(hashEncryptedShare))
-                await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: {jobType} | Job found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green).ConfigureAwait(false);
-
             if (hashEncryptedShare == BlockIndication)
                 await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: {jobType} | Block found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green).ConfigureAwait(false);
+            else if (JobIndication.Contains(hashEncryptedShare))
+                await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: {jobType} | Job found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green).ConfigureAwait(false);
 
             var share = new JObject
             {
@@ -329,10 +289,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 { PoolSubmitPacket.SubmitSecondNumber, secondNumber },
                 { PoolSubmitPacket.SubmitOperator, operatorSymbol },
                 { PoolSubmitPacket.SubmitShare, encryptedShare },
-                { PoolSubmitPacket.SubmitHash, hashEncryptedShare }
+                { PoolSubmitPacket.SubmitHash, hashEncryptedKeyShare }
             };
 
-            await PoolService.SendPacketToPoolNetworkAsync(share.ToString(Formatting.None)).ConfigureAwait(false);
+            _ = Task.Run(() => PoolService.SendPacketToPoolNetworkAsync(share.ToString(Formatting.None)));
         }
 
         private string MakeEncryptedShare(string calculation, int threadIndex)

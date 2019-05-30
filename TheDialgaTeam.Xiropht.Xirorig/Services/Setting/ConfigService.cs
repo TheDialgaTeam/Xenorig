@@ -6,16 +6,19 @@ using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
+using Xiropht_Connector_All.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 {
     public sealed class ConfigService : IInitializable, IDisposable
     {
-        public string Host => Config.Pools[0].Host;
+        public int DonateLevel => Config.DonateLevel;
 
-        public ushort Port => ushort.TryParse(Config.Pools[0].WalletAddress.Substring(Config.Pools[0].WalletAddress.IndexOf(":", StringComparison.Ordinal) + 1), out var port) ? port : (ushort) 0;
+        public int PrintTime => Config.PrintTime;
 
-        public string WalletAddress => Config.Pools[0].WalletAddress;
+        public bool Safe => Config.Safe;
+
+        public Config.MiningPool[] Pools => Config.Pools;
 
         public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.AdditionJob).ToArray();
 
@@ -85,6 +88,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                         var jsonSerializer = new JsonSerializer();
                         Config = jsonSerializer.Deserialize<Config>(new JsonTextReader(streamReader));
                     }
+
+                    ValidateSettings();
                 }
                 catch (Exception ex)
                 {
@@ -110,14 +115,66 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                     .WriteLine("", includeDateTime: false);
             }
 
-            consoleMessages
-                .Write(" * ", ConsoleColor.Green)
-                .Write("COMMANDS".PadRight(13))
-                .Write("h", ConsoleColor.Magenta)
-                .Write("ashrate")
-                .WriteLine("", includeDateTime: false);
-
             LoggerService.LogMessage(consoleMessages.Build());
+        }
+
+        private void ValidateSettings()
+        {
+            try
+            {
+                if (DonateLevel < 1)
+                    Config.DonateLevel = 1;
+
+                if (DonateLevel > 100)
+                    Config.DonateLevel = 100;
+
+                if (PrintTime < 1)
+                    Config.PrintTime = 1;
+
+                if (Safe)
+                {
+                    if (Config.Threads.Length > Environment.ProcessorCount)
+                        throw new ArgumentOutOfRangeException(nameof(Config.Threads), "Excessive amount of thread allocated which may cause unstable results. Use \"Safe: false\" if you intend to use this configuration.");
+                }
+
+                foreach (var miningPool in Pools)
+                {
+                    if (!miningPool.Host.Contains(":"))
+                        throw new ArgumentException("Invalid pool host. Please ensure that it is in this format \"URL:PORT\".");
+
+                    if (int.TryParse(miningPool.Host.Substring(miningPool.Host.IndexOf(':') + 1), out var port))
+                    {
+                        if (port < 0 || port > ushort.MaxValue)
+                            throw new ArgumentException($"Invalid pool port. Please ensure that the port is between 1 to {ushort.MaxValue}");
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Invalid pool port. Please ensure that the port is between 1 to {ushort.MaxValue}");
+                    }
+
+                    if (miningPool.WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
+                        throw new ArgumentException("Invalid Xiropht wallet address. Please check your wallet address again.");
+                }
+
+                foreach (var miningThread in Config.Threads)
+                {
+                    if (miningThread.ThreadAffinityToCpu < 0)
+                        miningThread.ThreadAffinityToCpu = -1;
+
+                    if (Safe)
+                    {
+                        if (miningThread.ThreadAffinityToCpu > Environment.ProcessorCount)
+                            throw new ArgumentException($"Invalid Thread Affinity. Ensure that it is between -1 to {Environment.ProcessorCount}. Use \"Safe: false\" if you intend to use this configuration.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.LogErrorMessage(ex);
+                LoggerService.LogMessage("Press Enter/Return to continue...");
+                System.Console.ReadLine();
+                Program.CancellationTokenSource.Cancel();
+            }
         }
 
         public void Dispose()

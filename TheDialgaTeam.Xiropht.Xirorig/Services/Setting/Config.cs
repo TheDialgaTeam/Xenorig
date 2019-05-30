@@ -8,7 +8,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
     {
         public sealed class MiningPool
         {
-            public string Host { get; set; } = "pool.xir.aggressivegaming.org:1111";
+            public string Host { get; set; } = "pool.xir.aggressivegaming.org:4444";
 
             public string WalletAddress { get; set; } = "";
 
@@ -37,7 +37,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
         {
             public PoolMiner.JobType JobType { get; set; } = PoolMiner.JobType.RandomJob;
 
-            public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Lowest;
+            public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
 
             public int ThreadAffinityToCpu { get; set; }
 
@@ -52,7 +52,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public int DonateLevel { get; set; } = 5;
 
-        public int PrintTime { get; set; }
+        public int PrintTime { get; set; } = 10;
+
+        public bool Safe { get; set; } = true;
 
         public MiningPool[] Pools { get; set; } = { new MiningPool() };
 

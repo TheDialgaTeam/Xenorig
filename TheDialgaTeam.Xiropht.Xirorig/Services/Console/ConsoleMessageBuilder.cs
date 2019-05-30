@@ -23,9 +23,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
     {
         private List<ConsoleMessage> MessagesToLog { get; } = new List<ConsoleMessage>();
 
-        public ConsoleMessageBuilder Write(string message, ConsoleColor color = ConsoleColor.White)
+        public ConsoleMessageBuilder Write(string message, ConsoleColor color = ConsoleColor.White, bool includeDateTime = false)
         {
-            MessagesToLog.Add(new ConsoleMessage($"{message}", color, false));
+            MessagesToLog.Add(new ConsoleMessage($"{message}", color, includeDateTime));
             return this;
         }
 

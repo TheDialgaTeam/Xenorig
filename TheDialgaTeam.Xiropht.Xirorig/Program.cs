@@ -20,12 +20,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig
         /// <summary>
         /// Main program cancellation token source to safely exit this program.
         /// </summary>
-        public CancellationTokenSource CancellationTokenSource { get; private set; }
+        public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
 
         /// <summary>
         /// List of tasks to await before this program exits.
         /// </summary>
-        public List<Task> TasksToAwait { get; private set; }
+        public List<Task> TasksToAwait { get; } = new List<Task>();
+
+        public ServiceProvider ServiceProvider { get; private set; }
 
         /// <summary>
         /// Program main entry point.
@@ -40,7 +42,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
         private async Task Start(string[] args)
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton(this);
+            serviceCollection.AddInterfacesAndSelfAsSingleton(this);
             serviceCollection.AddInterfacesAndSelfAsSingleton<FilePathService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<LoggerService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<BootstrapService>();
@@ -48,27 +50,47 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             serviceCollection.AddInterfacesAndSelfAsSingleton<PoolService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<ConsoleCommandService>();
 
-            var serviceProvider = serviceCollection.BuildServiceProvider();
-
-            CancellationTokenSource = new CancellationTokenSource();
-            TasksToAwait = new List<Task>();
+            ServiceProvider = serviceCollection.BuildServiceProvider();
 
             try
             {
-                serviceProvider.InitializeServices();
+                ServiceProvider.InitializeServices();
+                ServiceProvider.LateInitializeServices();
+
                 Task.WaitAll(TasksToAwait.ToArray());
+            }
+            catch (AggregateException ex)
+            {
+                var loggerService = ServiceProvider.GetService<LoggerService>();
+
+                foreach (var exception in ex.InnerExceptions)
+                {
+                    if (exception is TaskCanceledException)
+                        continue;
+
+                    if (loggerService != null)
+                        await loggerService.LogErrorMessageAsync(exception).ConfigureAwait(false);
+                }
+
+                CancellationTokenSource?.Cancel();
+
+                ServiceProvider?.DisposeServices();
+                ServiceProvider?.Dispose();
+
+                Environment.Exit(1);
+                return;
             }
             catch (Exception ex)
             {
-                var loggerService = serviceProvider.GetService<LoggerService>();
+                var loggerService = ServiceProvider.GetService<LoggerService>();
 
                 if (loggerService != null)
                     await loggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
 
                 CancellationTokenSource?.Cancel();
 
-                serviceProvider?.DisposeServices();
-                serviceProvider?.Dispose();
+                ServiceProvider?.DisposeServices();
+                ServiceProvider?.Dispose();
 
                 Environment.Exit(1);
                 return;
@@ -76,8 +98,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
             try
             {
-                serviceProvider.DisposeServices();
-                serviceProvider.Dispose();
+                ServiceProvider.DisposeServices();
+                ServiceProvider.Dispose();
+                Dispose();
             }
             catch (Exception ex)
             {

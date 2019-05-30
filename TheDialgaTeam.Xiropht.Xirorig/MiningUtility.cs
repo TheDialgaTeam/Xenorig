@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -82,6 +83,20 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
                 return hashedInputStringBuilder.ToString();
             }
+        }
+
+        public static string HashJobToHexString(string str)
+        {
+            var sb = new StringBuilder();
+
+            var bytes = Encoding.Unicode.GetBytes(str);
+
+            foreach (var t in bytes)
+            {
+                sb.Append(t.ToString("X2"));
+            }
+
+            return sb.ToString();
         }
 
         public static string GenerateNumberMathCalculation(decimal minRange, decimal maxRange)

@@ -36,13 +36,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                     {
                         var keyPressed = System.Console.ReadKey(true);
 
-                        if (PoolService.IsConnected && PoolService.IsLoggedIn && keyPressed.Key == ConsoleKey.S)
+                        if (PoolService.IsConnected && PoolService.IsLoggedIn && keyPressed.KeyChar == 's')
                             await LoggerService.LogMessageAsync($"Estimated Hashrate: {PoolService.PoolMiner.TotalHashCalculated} H/s | Good Share: {PoolService.TotalGoodSharesSubmitted} | Invalid Share: {PoolService.TotalBadSharesSubmitted}", ConsoleColor.Magenta).ConfigureAwait(false);
                     }
 
                     await Task.Delay(1).ConfigureAwait(false);
                 }
             }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current));
+
+            var consoleMessages = new ConsoleMessageBuilder()
+                .Write(" * ", ConsoleColor.Green)
+                .Write("COMMANDS".PadRight(13))
+                .Write("h", ConsoleColor.Magenta)
+                .Write("ashrate")
+                .WriteLine("", includeDateTime: false);
+
+            LoggerService.LogMessage(consoleMessages.Build());
         }
     }
 }
