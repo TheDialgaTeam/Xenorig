@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
@@ -89,7 +90,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig
         {
             var sb = new StringBuilder();
 
-            var bytes = Encoding.Unicode.GetBytes(str);
+            //var bytes = Encoding.Unicode.GetBytes(str);
+            var bytes = GetBytes(str);
 
             foreach (var t in bytes)
             {
@@ -97,6 +99,31 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             }
 
             return sb.ToString();
+        }
+
+        static string BytesToStringConverted(byte[] bytes)
+        {
+            using (var stream = new MemoryStream(bytes))
+            {
+                using (var streamReader = new StreamReader(stream))
+                {
+                    return streamReader.ReadToEnd();
+                }
+            }
+        }
+
+        static byte[] GetBytes(string str)
+        {
+            byte[] bytes = new byte[str.Length * sizeof(char)];
+            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
+        }
+
+        static string GetString(byte[] bytes)
+        {
+            char[] chars = new char[bytes.Length / sizeof(char)];
+            System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
+            return new string(chars);
         }
 
         public static string GenerateNumberMathCalculation(decimal minRange, decimal maxRange)
