@@ -16,16 +16,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 {
     public sealed class PoolMiner : IDisposable
     {
-        public enum JobType
-        {
-            AdditionJob = 1,
-            SubtractionJob = 2,
-            MultiplicationJob = 3,
-            DivisionJob = 4,
-            ModulusJob = 5,
-            RandomJob = 0
-        }
-
         public int BlockId { get; private set; }
 
         public string BlockTimestampCreate { get; private set; }
@@ -46,21 +36,23 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         public string JobMethodName { get; private set; }
 
-        public int JobMethodAesRound { get; private set; }
+        public int JobAesRound { get; private set; }
 
-        public int JobMethodAesSize { get; private set; }
+        public int JobAesSize { get; private set; }
 
-        public string JobMethodAesKey { get; private set; }
+        public string JobAesKey { get; private set; }
 
-        public int JobMethodXorKey { get; private set; }
+        public int JobXorKey { get; private set; }
 
-        public string JobKeyEncryption { get; private set; }
+        public string JobEncryptionKey { get; private set; }
 
-        public long TotalHashCalculated { get; private set; }
+        public List<ulong> Average10SecondsHashesCalculated { get; } = new List<ulong>();
 
-        public ConcurrentDictionary<int, long> HashesCalculated { get; } = new ConcurrentDictionary<int, long>();
+        public List<ulong> Average60SecondsHashesCalculated { get; } = new List<ulong>();
 
-        public ConcurrentDictionary<string, bool> SubmittedShares { get; } = new ConcurrentDictionary<string, bool>();
+        public List<ulong> Average15MinutesHashesCalculated { get; } = new List<ulong>();
+
+        private Program Program { get; }
 
         private LoggerService LoggerService { get; }
 
@@ -68,16 +60,29 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private PoolService PoolService { get; }
 
-        private Task StartMiningTask { get; set; }
+        private Task Average10SecondsHashesCalculatedTask { get; set; }
 
-        private List<Thread> RandomJobThreads { get; } = new List<Thread>();
+        private Task Average60SecondsHashesCalculatedTask { get; set; }
 
-        private byte[] AesKeyBytes { get; set; }
+        private Task Average15MinutesHashesCalculatedTask { get; set; }
 
-        private byte[] AesIvBytes { get; set; }
+        private ConcurrentDictionary<int, ulong> TotalAverage10SecondsHashesCalculated { get; } = new ConcurrentDictionary<int, ulong>();
 
-        public PoolMiner(LoggerService loggerService, ConfigService configService, PoolService poolService)
+        private ConcurrentDictionary<int, ulong> TotalAverage60SecondsHashesCalculated { get; } = new ConcurrentDictionary<int, ulong>();
+
+        private ConcurrentDictionary<int, ulong> TotalAverage15MinutesHashesCalculated { get; } = new ConcurrentDictionary<int, ulong>();
+
+        private List<Thread> JobThreads { get; } = new List<Thread>();
+
+        private ConcurrentDictionary<string, bool> SubmittedShares { get; } = new ConcurrentDictionary<string, bool>();
+
+        private byte[] JobAesKeyBytes { get; set; }
+
+        private byte[] JobAesIvBytes { get; set; }
+
+        public PoolMiner(Program program, LoggerService loggerService, ConfigService configService, PoolService poolService)
         {
+            Program = program;
             LoggerService = loggerService;
             ConfigService = configService;
             PoolService = poolService;
@@ -97,16 +102,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             JobMinRange = decimal.Parse(json[PoolJobPacket.JobMinRange].ToString());
             JobMaxRange = decimal.Parse(json[PoolJobPacket.JobMaxRange].ToString());
             JobMethodName = json[PoolJobPacket.JobMethodName].ToString();
-            JobMethodAesRound = int.Parse(json[PoolJobPacket.JobMethodAesRound].ToString());
-            JobMethodAesSize = int.Parse(json[PoolJobPacket.JobMethodAesSize].ToString());
-            JobMethodAesKey = json[PoolJobPacket.JobMethodAesKey].ToString();
-            JobMethodXorKey = int.Parse(json[PoolJobPacket.JobMethodXorKey].ToString());
-            JobKeyEncryption = json[PoolJobPacket.JobKeyEncryption].ToString();
+            JobAesRound = int.Parse(json[PoolJobPacket.JobMethodAesRound].ToString());
+            JobAesSize = int.Parse(json[PoolJobPacket.JobMethodAesSize].ToString());
+            JobAesKey = json[PoolJobPacket.JobMethodAesKey].ToString();
+            JobXorKey = int.Parse(json[PoolJobPacket.JobMethodXorKey].ToString());
+            JobEncryptionKey = json[PoolJobPacket.JobKeyEncryption].ToString();
 
-            using (var pdb = new PasswordDeriveBytes(BlockKey, Encoding.UTF8.GetBytes(JobMethodAesKey)))
+            using (var pdb = new PasswordDeriveBytes(BlockKey, Encoding.UTF8.GetBytes(JobAesKey)))
             {
-                AesKeyBytes = pdb.GetBytes(JobMethodAesSize / 8);
-                AesIvBytes = pdb.GetBytes(JobMethodAesSize / 8);
+                JobAesKeyBytes = pdb.GetBytes(JobAesSize / 8);
+                JobAesIvBytes = pdb.GetBytes(JobAesSize / 8);
             }
 
             SubmittedShares.Clear();
@@ -114,63 +119,182 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         public void StartMining()
         {
-            StartMiningTask = Task.Factory.StartNew(async () =>
+            //            StartMiningTask?.GetAwaiter().GetResult();
+
+            //            StartMiningTask = Task.Factory.StartNew(async () =>
+            //            {
+            //                while (PoolService.IsLoggedIn && !PoolService.CancellationTokenSource.IsCancellationRequested)
+            //                {
+            //                    while (JobIndication == null)
+            //                    {
+            //                        if (!PoolService.IsLoggedIn || PoolService.CancellationTokenSource.IsCancellationRequested)
+            //                            break;
+
+            //                        await Task.Delay(1000).ConfigureAwait(false);
+            //                    }
+
+            //                    if (!IsThreadAllocated)
+            //                    {
+            //                        IsThreadAllocated = true;
+
+            //                        for (var i = 0; i < ConfigService.RandomJobThreads.Length; i++)
+            //                        {
+            //                            var threadIndex = i;
+
+            //                            TotalAverage10SecondsHashesCalculated[threadIndex] = 0;
+            //                            TotalAverage60SecondsHashesCalculated[threadIndex] = 0;
+            //                            TotalAverage15MinutesHashesCalculated[threadIndex] = 0;
+
+            //                            var miningThread = ConfigService.RandomJobThreads[i];
+
+            //                            if (miningThread.ThreadAffinityToCpu >= 0)
+            //                            {
+            //#if WIN
+            //                                var thread = new DistributedThread(async () => await DoRandomJob(threadIndex, false).ConfigureAwait(false)) { ProcessorAffinity = 1 << miningThread.ThreadAffinityToCpu };
+            //                                thread.ManagedThread.IsBackground = true;
+            //                                thread.ManagedThread.Priority = miningThread.ThreadPriority;
+            //                                thread.Start();
+            //                                RandomJobThreads.Add(thread.ManagedThread);
+            //#else
+            //                                var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
+            //                                thread.Start();
+            //                                RandomJobThreads.Add(thread);
+            //#endif
+            //                            }
+            //                            else
+            //                            {
+            //                                var thread = new Thread(async () => await DoRandomJob(threadIndex, false).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
+            //                                thread.Start();
+            //                                RandomJobThreads.Add(thread);
+            //                            }
+            //                        }
+            //                    }
+
+
+            //                    TotalHashCalculated = 0;
+
+            //                    for (var i = 0; i < HashesCalculated.Count; i++)
+            //                    {
+            //                        TotalHashCalculated += HashesCalculated[i];
+            //                        HashesCalculated[i] = 0;
+            //                    }
+
+            //                    await Task.Delay(1000).ConfigureAwait(false);
+            //                }
+
+            //                RandomJobThreads.Clear();
+            //            }, PoolService.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+        }
+
+        private void GenerateMiningThreads()
+        {
+            for (var i = 0; i < ConfigService.RandomJobThreads.Length; i++)
             {
-                do
+                var threadIndex = i;
+
+                Average10SecondsHashesCalculated[threadIndex] = 0;
+                Average60SecondsHashesCalculated[threadIndex] = 0;
+                Average15MinutesHashesCalculated[threadIndex] = 0;
+
+                TotalAverage10SecondsHashesCalculated[threadIndex] = 0;
+                TotalAverage60SecondsHashesCalculated[threadIndex] = 0;
+                TotalAverage15MinutesHashesCalculated[threadIndex] = 0;
+
+                var miningThread = ConfigService.RandomJobThreads[i];
+
+                if (miningThread.ThreadAffinityToCpu >= 0)
                 {
-                    while (JobIndication == null)
-                    {
-                        if (!PoolService.IsLoggedIn || PoolService.CancellationTokenSource.IsCancellationRequested)
-                            break;
-
-                        await Task.Delay(1000).ConfigureAwait(false);
-                    }
-
-                    if (RandomJobThreads.Count == 0)
-                    {
-                        for (var i = 0; i < ConfigService.RandomJobThreads.Length; i++)
-                        {
-                            HashesCalculated[i] = 0;
-
-                            var threadIndex = i;
-                            var miningThread = ConfigService.RandomJobThreads[i];
-
-                            if (miningThread.ThreadAffinityToCpu >= 0)
-                            {
 #if WIN
-                                var thread = new DistributedThread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { ProcessorAffinity = 1 << miningThread.ThreadAffinityToCpu };
-                                thread.ManagedThread.IsBackground = true;
-                                thread.ManagedThread.Priority = miningThread.ThreadPriority;
-                                thread.Start();
-                                RandomJobThreads.Add(thread.ManagedThread);
+                    var thread = new DistributedThread(async () => await DoRandomJob(threadIndex, false).ConfigureAwait(false)) { ProcessorAffinity = 1 << miningThread.ThreadAffinityToCpu };
+                    thread.ManagedThread.IsBackground = true;
+                    thread.ManagedThread.Priority = miningThread.ThreadPriority;
+                    thread.Start();
+                    JobThreads.Add(thread.ManagedThread);
 #else
-                                var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
-                                thread.Start();
-                                RandomJobThreads.Add(thread);
+                                            var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
+                                            thread.Start();
+                                            RandomJobThreads.Add(thread);
 #endif
-                            }
-                            else
-                            {
-                                var thread = new Thread(async () => await DoRandomJob(threadIndex, miningThread.PrioritizePoolSharesVsBlock).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
-                                thread.Start();
-                                RandomJobThreads.Add(thread);
-                            }
-                        }
-                    }
+                }
+                else
+                {
+                    var thread = new Thread(async () => await DoRandomJob(threadIndex, false).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
+                    thread.Start();
+                    JobThreads.Add(thread);
+                }
+            }
+        }
 
-                    TotalHashCalculated = 0;
-
-                    for (var i = 0; i < HashesCalculated.Count; i++)
+        private void StartAverage10SecondsHashesCalculatedTask()
+        {
+            Average10SecondsHashesCalculatedTask = Task.Factory.StartNew(async () =>
+            {
+                while (!Program.CancellationTokenSource.IsCancellationRequested)
+                {
+                    foreach (var hashes in TotalAverage10SecondsHashesCalculated)
                     {
-                        TotalHashCalculated += HashesCalculated[i];
-                        HashesCalculated[i] = 0;
+                        Average10SecondsHashesCalculated[hashes.Key] = hashes.Value / 10;
                     }
 
-                    await Task.Delay(1000).ConfigureAwait(false);
-                } while (PoolService.IsLoggedIn && !PoolService.CancellationTokenSource.IsCancellationRequested);
+                    await Task.Delay(new TimeSpan(0, 0, 10)).ConfigureAwait(false);
+                }
+            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+        }
 
-                RandomJobThreads.Clear();
-            }, PoolService.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+        private void StartAverage60SecondsHashesCalculatedTask()
+        {
+            Average60SecondsHashesCalculatedTask = Task.Factory.StartNew(async () =>
+            {
+                while (!Program.CancellationTokenSource.IsCancellationRequested)
+                {
+                    foreach (var hashes in TotalAverage60SecondsHashesCalculated)
+                    {
+                        Average60SecondsHashesCalculated[hashes.Key] = hashes.Value / 60;
+                    }
+
+                    await Task.Delay(new TimeSpan(0, 1, 0)).ConfigureAwait(false);
+                }
+            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+        }
+
+        private void StartAverage15MinutesHashesCalculatedTask()
+        {
+            Average15MinutesHashesCalculatedTask = Task.Factory.StartNew(async () =>
+            {
+                while (!Program.CancellationTokenSource.IsCancellationRequested)
+                {
+                    foreach (var hashes in TotalAverage15MinutesHashesCalculated)
+                    {
+                        Average15MinutesHashesCalculated[hashes.Key] = hashes.Value / (60 * 15);
+                    }
+
+                    await Task.Delay(new TimeSpan(0, 15, 0)).ConfigureAwait(false);
+                }
+            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+        }
+
+        private async Task DoMiningJob(int threadIndex, Config.MiningJob miningJob, Config.MiningPriority miningPriority)
+        {
+            while (!Program.CancellationTokenSource.IsCancellationRequested)
+            {
+                // If the pool is not connected or logged in, pause the miner.
+                while (!PoolService.IsConnected || !PoolService.IsLoggedIn)
+                    await Task.Delay(1000).ConfigureAwait(false);
+
+                var currentJob = JobIndication;
+                await WaitForNextPoolJobAsync(currentJob).ConfigureAwait(false);
+            }
+        }
+
+        private async Task WaitForNextPoolJobAsync(string currentJob)
+        {
+            while (currentJob == JobIndication)
+            {
+                if (Program.CancellationTokenSource.IsCancellationRequested)
+                    break;
+
+                await Task.Delay(1000).ConfigureAwait(false);
+            }
         }
 
         private async Task DoRandomJob(int threadIndex, bool prioritizePoolSharesVsBlock)
@@ -264,7 +388,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             var hashEncryptedShare = MiningUtility.GenerateSHA512(encryptedShare);
 
-            var hashEncryptedKeyShare = MiningUtility.EncryptXorShare(hashEncryptedShare, JobKeyEncryption);
+            var hashEncryptedKeyShare = MiningUtility.EncryptXorShare(hashEncryptedShare, JobEncryptionKey);
             hashEncryptedKeyShare = MiningUtility.HashJobToHexString(hashEncryptedKeyShare);
 
             if (!JobIndication.Contains(hashEncryptedKeyShare) && hashEncryptedShare != BlockIndication)
@@ -302,21 +426,21 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 var encryptedShare = MiningUtility.StringToHexString(calculation + BlockTimestampCreate);
 
                 // Static XOR Encryption -> Key updated from the current mining method.
-                encryptedShare = MiningUtility.EncryptXorShare(encryptedShare, JobMethodXorKey.ToString());
+                encryptedShare = MiningUtility.EncryptXorShare(encryptedShare, JobXorKey.ToString());
 
                 // Dynamic AES Encryption -> Size and Key's from the current mining method and the current block key encryption.
-                encryptedShare = MiningUtility.EncryptAesShareRound(encryptedShare, AesKeyBytes, AesIvBytes, JobMethodAesSize, JobMethodAesRound);
+                encryptedShare = MiningUtility.EncryptAesShareRound(encryptedShare, JobAesKeyBytes, JobAesIvBytes, JobAesSize, JobAesRound);
 
                 // Static XOR Encryption -> Key from the current mining method
-                encryptedShare = MiningUtility.EncryptXorShare(encryptedShare, JobMethodXorKey.ToString());
+                encryptedShare = MiningUtility.EncryptXorShare(encryptedShare, JobXorKey.ToString());
 
                 // Static AES Encryption -> Size and Key's from the current mining method.
-                encryptedShare = MiningUtility.EncryptAesShare(encryptedShare, AesKeyBytes, AesIvBytes, JobMethodAesSize);
+                encryptedShare = MiningUtility.EncryptAesShare(encryptedShare, JobAesKeyBytes, JobAesIvBytes, JobAesSize);
 
                 // Generate SHA512 HASH for the share.
                 encryptedShare = MiningUtility.GenerateSHA512(encryptedShare);
 
-                HashesCalculated[threadIndex]++;
+                //HashesCalculated[threadIndex]++;
 
                 return encryptedShare;
             }
@@ -328,7 +452,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         public void Dispose()
         {
-            StartMiningTask?.Dispose();
+
         }
     }
 }

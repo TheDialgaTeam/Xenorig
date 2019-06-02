@@ -1,23 +1,45 @@
 ﻿using System.Threading;
 using Newtonsoft.Json;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 {
     public sealed class Config
     {
+        public enum MiningJob
+        {
+            RandomJob = 0,
+            AdditionJob = 1,
+            SubtractionJob = 2,
+            MultiplicationJob = 3,
+            DivisionJob = 4,
+            ModulusJob = 5
+        }
+
+        public enum MiningPriority
+        {
+            Shares = 0,
+            Normal = 1,
+            Block = 2
+        }
+
         public sealed class MiningPool
         {
-            public string Host { get; set; } = "pool.xir.aggressivegaming.org:4444";
+            public string Host { get; set; } = "";
+
+            public ushort Port { get; set; }
 
             public string WalletAddress { get; set; } = "";
 
             public string WorkerId { get; set; } = "";
 
             [JsonProperty("url")]
-            private string HostAlias
+            private string HostPortAlias
             {
-                set => Host = value;
+                set
+                {
+                    Host = value.Remove(value.IndexOf(':'));
+                    Port = ushort.Parse(value.Substring(value.IndexOf(':') + 1));
+                }
             }
 
             [JsonProperty("user")]
@@ -35,13 +57,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public sealed class MiningThread
         {
-            public PoolMiner.JobType JobType { get; set; } = PoolMiner.JobType.RandomJob;
+            public MiningJob JobType { get; set; } = MiningJob.RandomJob;
 
             public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
 
             public int ThreadAffinityToCpu { get; set; }
 
-            public bool PrioritizePoolSharesVsBlock { get; set; } = false;
+            public MiningPriority MiningPriority { get; set; } = MiningPriority.Normal;
 
             [JsonProperty("affine_to_cpu")]
             private int ThreadAffinityToCpuAlias
@@ -69,13 +91,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
         [JsonProperty]
         private ushort Port
         {
-            set
-            {
-                if (Pools[0].Host.Contains(":"))
-                    Pools[0].Host = Pools[0].Host.Remove(Pools[0].Host.IndexOf(':')) + ":" + value;
-                else
-                    Pools[0].Host = $"{Pools[0].Host}:{value}";
-            }
+            set => Pools[0].Port = value;
         }
 
         [JsonProperty]
@@ -90,16 +106,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
             set => DonateLevel = value;
         }
 
-        [JsonProperty("pools")]
-        private MiningPool[] PoolsAlias
-        {
-            set => Pools = value;
-        }
-
         [JsonProperty("print-time")]
         private int PrintTimeAlias
         {
             set => PrintTime = value;
+        }
+
+        [JsonProperty("safe")]
+        private bool SafeAlias
+        {
+            set => Safe = value;
+        }
+
+        [JsonProperty("pools")]
+        private MiningPool[] PoolsAlias
+        {
+            set => Pools = value;
         }
 
         [JsonProperty("threads")]

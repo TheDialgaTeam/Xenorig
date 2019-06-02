@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
 using Xiropht_Connector_All.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
@@ -20,17 +19,17 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public Config.MiningPool[] Pools => Config.Pools;
 
-        public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.AdditionJob).ToArray();
+        public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.AdditionJob).ToArray();
 
-        public Config.MiningThread[] SubtractionJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.SubtractionJob).ToArray();
+        public Config.MiningThread[] SubtractionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.SubtractionJob).ToArray();
 
-        public Config.MiningThread[] MultiplicationJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.MultiplicationJob).ToArray();
+        public Config.MiningThread[] MultiplicationJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.MultiplicationJob).ToArray();
 
-        public Config.MiningThread[] DivisionJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.DivisionJob).ToArray();
+        public Config.MiningThread[] DivisionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.DivisionJob).ToArray();
 
-        public Config.MiningThread[] ModulusJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.ModulusJob).ToArray();
+        public Config.MiningThread[] ModulusJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.ModulusJob).ToArray();
 
-        public Config.MiningThread[] RandomJobThreads => Config.Threads.Where(a => a.JobType == PoolMiner.JobType.RandomJob).ToArray();
+        public Config.MiningThread[] RandomJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.RandomJob).ToArray();
 
         private Program Program { get; }
 
@@ -66,7 +65,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     LoggerService.LogMessage($"Generated Configuration file at: \"{FilePathService.SettingFilePath}\"");
                     LoggerService.LogMessage("Please edit the configuration file before running again :)");
-                    LoggerService.LogMessage("Press Enter/Return to continue...");
+                    LoggerService.LogMessage("Press Enter/Return to exit...");
 
                     System.Console.ReadLine();
                 }
@@ -111,7 +110,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                 consoleMessages
                     .Write(" * ", ConsoleColor.Green)
                     .Write($"POOL #{i + 1}".PadRight(13))
-                    .Write(Config.Pools[i].Host, ConsoleColor.Cyan)
+                    .Write($"{Config.Pools[i].Host}:{Config.Pools[i].Port}", ConsoleColor.Cyan)
                     .WriteLine("", includeDateTime: false);
             }
 
@@ -131,26 +130,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                 if (PrintTime < 1)
                     Config.PrintTime = 1;
 
-                if (Safe)
-                {
-                    if (Config.Threads.Length > Environment.ProcessorCount)
-                        throw new ArgumentOutOfRangeException(nameof(Config.Threads), "Excessive amount of thread allocated which may cause unstable results. Use \"Safe: false\" if you intend to use this configuration.");
-                }
+                if (Safe && Config.Threads.Length > Environment.ProcessorCount)
+                    throw new ArgumentOutOfRangeException(nameof(Config.Threads), "Excessive amount of thread allocated which may cause unstable results. Use \"Safe: false\" if you intend to use this configuration.");
 
                 foreach (var miningPool in Pools)
                 {
-                    if (!miningPool.Host.Contains(":"))
-                        throw new ArgumentException("Invalid pool host. Please ensure that it is in this format \"URL:PORT\".");
-
-                    if (int.TryParse(miningPool.Host.Substring(miningPool.Host.IndexOf(':') + 1), out var port))
-                    {
-                        if (port < 0 || port > ushort.MaxValue)
-                            throw new ArgumentException($"Invalid pool port. Please ensure that the port is between 1 to {ushort.MaxValue}");
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"Invalid pool port. Please ensure that the port is between 1 to {ushort.MaxValue}");
-                    }
+                    if (miningPool.Host.Contains(":"))
+                        throw new ArgumentException("Invalid pool host. Please remove the port from the host.");
 
                     if (miningPool.WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
                         throw new ArgumentException("Invalid Xiropht wallet address. Please check your wallet address again.");
@@ -161,17 +147,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                     if (miningThread.ThreadAffinityToCpu < 0)
                         miningThread.ThreadAffinityToCpu = -1;
 
-                    if (Safe)
-                    {
-                        if (miningThread.ThreadAffinityToCpu > Environment.ProcessorCount)
-                            throw new ArgumentException($"Invalid Thread Affinity. Ensure that it is between -1 to {Environment.ProcessorCount}. Use \"Safe: false\" if you intend to use this configuration.");
-                    }
+                    if (Safe && miningThread.ThreadAffinityToCpu > Environment.ProcessorCount)
+                        throw new ArgumentException($"Invalid Thread Affinity. Ensure that it is between -1 to {Environment.ProcessorCount}. Use \"Safe: false\" if you intend to use this configuration.");
                 }
             }
             catch (Exception ex)
             {
                 LoggerService.LogErrorMessage(ex);
-                LoggerService.LogMessage("Press Enter/Return to continue...");
+                LoggerService.LogMessage("Press Enter/Return to exit...");
                 System.Console.ReadLine();
                 Program.CancellationTokenSource.Cancel();
             }

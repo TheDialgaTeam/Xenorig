@@ -58,18 +58,23 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 ServiceProvider.LateInitializeServices();
 
                 Task.WaitAll(TasksToAwait.ToArray());
+
+                ServiceProvider.DisposeServices();
+                ServiceProvider.Dispose();
             }
             catch (AggregateException ex)
             {
-                var loggerService = ServiceProvider.GetService<LoggerService>();
+                var loggerService = ServiceProvider?.GetService<LoggerService>();
 
-                foreach (var exception in ex.InnerExceptions)
+                if (loggerService != null)
                 {
-                    if (exception is TaskCanceledException)
-                        continue;
+                    foreach (var exception in ex.InnerExceptions)
+                    {
+                        if (exception is TaskCanceledException)
+                            continue;
 
-                    if (loggerService != null)
                         await loggerService.LogErrorMessageAsync(exception).ConfigureAwait(false);
+                    }
                 }
 
                 CancellationTokenSource?.Cancel();
@@ -82,7 +87,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             }
             catch (Exception ex)
             {
-                var loggerService = ServiceProvider.GetService<LoggerService>();
+                var loggerService = ServiceProvider?.GetService<LoggerService>();
 
                 if (loggerService != null)
                     await loggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
@@ -92,19 +97,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 ServiceProvider?.DisposeServices();
                 ServiceProvider?.Dispose();
 
-                Environment.Exit(1);
-                return;
-            }
-
-            try
-            {
-                ServiceProvider.DisposeServices();
-                ServiceProvider.Dispose();
-                Dispose();
-            }
-            catch (Exception ex)
-            {
-                await Console.Error.WriteLineAsync(ex.ToString()).ConfigureAwait(false);
                 Environment.Exit(1);
                 return;
             }

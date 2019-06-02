@@ -36,8 +36,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                     {
                         var keyPressed = System.Console.ReadKey(true);
 
-                        if (PoolService.IsConnected && PoolService.IsLoggedIn && keyPressed.KeyChar == 's')
-                            await LoggerService.LogMessageAsync($"Estimated Hashrate: {PoolService.PoolMiner.TotalHashCalculated} H/s | Good Share: {PoolService.TotalGoodSharesSubmitted} | Invalid Share: {PoolService.TotalBadSharesSubmitted}", ConsoleColor.Magenta).ConfigureAwait(false);
+                        //if (PoolService.IsConnected && PoolService.IsLoggedIn && keyPressed.KeyChar == 's')
+                        //    await LoggerService.LogMessageAsync($"Estimated Hashrate: {PoolService.PoolMiner.TotalHashCalculated} H/s | Good Share: {PoolService.TotalGoodSharesSubmitted} | Invalid Share: {PoolService.TotalBadSharesSubmitted}", ConsoleColor.Magenta).ConfigureAwait(false);
                     }
 
                     await Task.Delay(1).ConfigureAwait(false);
