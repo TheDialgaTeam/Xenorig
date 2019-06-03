@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -52,6 +53,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         public Dictionary<int, decimal> Average15MinutesHashesCalculated { get; } = new Dictionary<int, decimal>();
 
+        public decimal MaxHashes { get; private set; }
+
         private Program Program { get; }
 
         private LoggerService LoggerService { get; }
@@ -84,6 +87,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             StartAverage10SecondsHashesCalculatedTask();
             StartAverage15MinutesHashesCalculatedTask();
             StartAverage60SecondsHashesCalculatedTask();
+            StartCalculateHashesTask();
             GenerateMiningThreads();
 
             loggerService.LogMessage(new ConsoleMessageBuilder()
@@ -150,12 +154,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    foreach (var hashes in TotalAverage10SecondsHashesCalculated)
+                    for (var i = 0; i < TotalAverage10SecondsHashesCalculated.Count; i++)
                     {
                         if (Program.CancellationTokenSource.IsCancellationRequested)
                             break;
 
-                        Average10SecondsHashesCalculated[hashes.Key] = hashes.Value / 10;
+                        Average10SecondsHashesCalculated[i] = TotalAverage10SecondsHashesCalculated[i] / 10;
+                        TotalAverage10SecondsHashesCalculated[i] = 0;
                     }
 
                     if (Program.CancellationTokenSource.IsCancellationRequested)
@@ -172,12 +177,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    foreach (var hashes in TotalAverage60SecondsHashesCalculated)
+                    for (var i = 0; i < TotalAverage60SecondsHashesCalculated.Count; i++)
                     {
                         if (Program.CancellationTokenSource.IsCancellationRequested)
                             break;
 
-                        Average60SecondsHashesCalculated[hashes.Key] = hashes.Value / 60;
+                        Average60SecondsHashesCalculated[i] = TotalAverage60SecondsHashesCalculated[i] / 60;
+                        TotalAverage60SecondsHashesCalculated[i] = 0;
                     }
 
                     if (Program.CancellationTokenSource.IsCancellationRequested)
@@ -194,18 +200,53 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    foreach (var hashes in TotalAverage15MinutesHashesCalculated)
+                    for (var i = 0; i < TotalAverage15MinutesHashesCalculated.Count; i++)
                     {
                         if (Program.CancellationTokenSource.IsCancellationRequested)
                             break;
 
-                        Average15MinutesHashesCalculated[hashes.Key] = hashes.Value / (60 * 15);
+                        Average15MinutesHashesCalculated[i] = TotalAverage15MinutesHashesCalculated[i] / (60 * 15);
+                        TotalAverage15MinutesHashesCalculated[i] = 0;
                     }
 
                     if (Program.CancellationTokenSource.IsCancellationRequested)
                         break;
 
                     await Task.Delay(new TimeSpan(0, 15, 0), Program.CancellationTokenSource.Token).ConfigureAwait(false);
+                }
+            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
+        }
+
+        private void StartCalculateHashesTask()
+        {
+            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
+            {
+                while (!Program.CancellationTokenSource.IsCancellationRequested)
+                {
+                    await Task.Delay(ConfigService.PrintTime * 1000, Program.CancellationTokenSource.Token).ConfigureAwait(false);
+
+                    decimal average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
+
+                    foreach (var hash in Average10SecondsHashesCalculated)
+                        average10SecondsSum += hash.Value;
+
+                    foreach (var hash in Average60SecondsHashesCalculated)
+                        average60SecondsSum += hash.Value;
+
+                    foreach (var hash in Average15MinutesHashesCalculated)
+                        average15MinutesSum += hash.Value;
+
+                    MaxHashes = Math.Max(MaxHashes, average10SecondsSum);
+
+                    await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                        .Write("speed 10s/60s/15m ", includeDateTime: true)
+                        .Write($"{average10SecondsSum:F1} ", ConsoleColor.Cyan)
+                        .Write($"{average60SecondsSum:F1} ", ConsoleColor.DarkCyan)
+                        .Write($"{average15MinutesSum:F1} ", ConsoleColor.DarkCyan)
+                        .Write("H/s ", ConsoleColor.Cyan)
+                        .Write("max ")
+                        .WriteLine($"{MaxHashes:F1} H/s", ConsoleColor.Cyan, false)
+                        .Build()).ConfigureAwait(false);
                 }
             }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
         }
@@ -217,13 +258,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 while (PoolService.PoolListener == null)
                     await Task.Delay(1000, Program.CancellationTokenSource.Token).ConfigureAwait(false);
 
-                if (PoolService.PoolListener.ConnectionStatus != ConnectionStatus.Connected || !PoolService.PoolListener.IsLoggedIn)
+                if (Program.CancellationTokenSource.IsCancellationRequested)
                     return;
 
                 while (PoolService.PoolListener.ConnectionStatus != ConnectionStatus.Connected || !PoolService.PoolListener.IsLoggedIn)
                     await Task.Delay(1000, Program.CancellationTokenSource.Token).ConfigureAwait(false);
 
-                if (PoolService.PoolListener.ConnectionStatus != ConnectionStatus.Connected || !PoolService.PoolListener.IsLoggedIn)
+                if (Program.CancellationTokenSource.IsCancellationRequested)
                     return;
 
                 switch (miningThread.JobType)
@@ -246,9 +287,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
                     case Config.MiningJob.ModulusJob:
                         break;
-
-                    default:
-                        throw new ArgumentOutOfRangeException();
                 }
             }
         }
@@ -282,10 +320,18 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 if (PoolService.PoolListener.ConnectionStatus != ConnectionStatus.Connected || !PoolService.PoolListener.IsLoggedIn)
                     break;
 
+                while (JobIndication == null)
+                {
+                    if (PoolService.PoolListener.ConnectionStatus != ConnectionStatus.Connected || !PoolService.PoolListener.IsLoggedIn)
+                        break;
+
+                    await Task.Delay(1000).ConfigureAwait(false);
+                }
+
                 var currentJobIndication = JobIndication;
                 var currentBlockIndication = BlockIndication;
 
-                decimal startRange, endRange;
+                decimal startRange = 0, endRange = 0;
 
                 if (!miningThread.ShareRange)
                 {
@@ -299,46 +345,80 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                         case Config.MiningPriority.Block:
                             (startRange, endRange) = (2, BlockDifficulty);
                             break;
+                    }
+                }
+                else
+                {
+                    decimal totalPossibilities;
+                    Config.MiningThread[] threads;
+                    int totalThread;
+                    int index;
 
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                    switch (miningThread.MiningPriority)
+                    {
+                        case Config.MiningPriority.Shares:
+                            totalPossibilities = JobMaxRange - JobMinRange + 1;
+                            threads = ConfigService.RandomJobThreads.Where(a => a.JobType == Config.MiningJob.RandomJob && a.ShareRange && a.MiningPriority == Config.MiningPriority.Shares).ToArray();
+                            totalThread = threads.Length;
+                            index = 0;
+
+                            for (var i = 0; i < totalThread; i++)
+                            {
+                                if (threads[i] != miningThread)
+                                    continue;
+
+                                index = i;
+                            }
+
+                            (startRange, endRange) = MiningUtility.GetJobRange(totalPossibilities, totalThread, index, JobMinRange);
+                            break;
+
+                        case Config.MiningPriority.Normal:
+                        case Config.MiningPriority.Block:
+                            totalPossibilities = BlockDifficulty - 2 + 1;
+                            threads = ConfigService.RandomJobThreads.Where(a => a.JobType == Config.MiningJob.RandomJob && a.ShareRange && a.MiningPriority != Config.MiningPriority.Shares).ToArray();
+                            totalThread = threads.Length;
+                            index = 0;
+
+                            for (var i = 0; i < totalThread; i++)
+                            {
+                                if (threads[i] != miningThread)
+                                    continue;
+
+                                index = i;
+                            }
+
+                            (startRange, endRange) = MiningUtility.GetJobRange(totalPossibilities, totalThread, index, 2);
+                            break;
+                    }
+                }
+
+                _ = Task.Run(() => LoggerService.LogMessage($"Thread: {threadIndex + 1} | Job Type: Random | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}", ConsoleColor.Blue));
+
+                while (currentJobIndication == JobIndication)
+                {
+                    if (PoolService.PoolListener.ConnectionStatus != ConnectionStatus.Connected || !PoolService.PoolListener.IsLoggedIn)
+                        break;
+
+                    if (currentJobIndication != JobIndication)
+                        break;
+
+                    var firstNumber = MiningUtility.GetRandomBetween(0, 100) >= MiningUtility.GetRandomBetween(0, 100) ? Convert.ToDecimal(MiningUtility.GenerateNumberMathCalculation(startRange, endRange, BlockDifficulty.ToString("F0").Length)) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
+                    var secondNumber = MiningUtility.GetRandomBetween(0, 100) >= MiningUtility.GetRandomBetween(0, 100) ? Convert.ToDecimal(MiningUtility.GenerateNumberMathCalculation(startRange, endRange, BlockDifficulty.ToString("F0").Length)) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
+
+                    foreach (var randomOperator in MiningUtility.RandomOperatorCalculation)
+                    {
+                        if (PoolService.PoolListener.ConnectionStatus != ConnectionStatus.Connected || !PoolService.PoolListener.IsLoggedIn)
+                            break;
+
+                        if (currentJobIndication != JobIndication)
+                            break;
+
+                        await DoCalculationAsync(firstNumber, secondNumber, randomOperator, "Random", threadIndex).ConfigureAwait(false);
+                        await DoCalculationAsync(secondNumber, firstNumber, randomOperator, "Random", threadIndex).ConfigureAwait(false);
                     }
                 }
             }
-
-            //while (PoolService.IsLoggedIn && !PoolService.CancellationTokenSource.IsCancellationRequested)
-            //{
-            //    decimal startRange, endRange;
-
-            //    if (prioritizePoolSharesVsBlock)
-            //        (startRange, endRange) = MiningUtility.GetJobRange(JobMaxRange - JobMinRange + 1, ConfigService.RandomJobThreads.Length, threadIndex, JobMinRange);
-            //    else
-            //        (startRange, endRange) = MiningUtility.GetJobRange(BlockDifficulty - 1, ConfigService.RandomJobThreads.Length, threadIndex, 2);
-
-            //    var currentJobIndication = JobIndication;
-            //    await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: Random | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}", ConsoleColor.Blue).ConfigureAwait(false);
-
-            //    while (currentJobIndication == JobIndication)
-            //    {
-            //        if (!PoolService.IsLoggedIn || PoolService.CancellationTokenSource.IsCancellationRequested)
-            //            break;
-
-            //        var firstNumber = decimal.Parse(MiningUtility.GenerateNumberMathCalculation(startRange, endRange));
-            //        var secondNumber = decimal.Parse(MiningUtility.GenerateNumberMathCalculation(startRange, endRange));
-
-            //        foreach (var randomOperator in MiningUtility.RandomOperatorCalculation)
-            //        {
-            //            if (!PoolService.IsLoggedIn || PoolService.CancellationTokenSource.IsCancellationRequested)
-            //                break;
-
-            //            if (currentJobIndication != JobIndication)
-            //                break;
-
-            //            await DoCalculationAsync(firstNumber, secondNumber, randomOperator, "Random", threadIndex).ConfigureAwait(false);
-            //            await DoCalculationAsync(secondNumber, firstNumber, randomOperator, "Random", threadIndex).ConfigureAwait(false);
-            //        }
-            //    }
-            //}
         }
 
         private async Task DoCalculationAsync(decimal firstNumber, decimal secondNumber, string operatorSymbol, string jobType, int threadIndex)
@@ -408,9 +488,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 return;
 
             if (hashEncryptedShare == BlockIndication)
-                await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: {jobType} | Block found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green).ConfigureAwait(false);
-            else if (JobIndication.Contains(hashEncryptedShare))
-                await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: {jobType} | Job found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green).ConfigureAwait(false);
+                _ = Task.Run(() => LoggerService.LogMessage($"Thread: {threadIndex + 1} | Job Type: {jobType} | Block found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green));
+            else if (JobIndication.Contains(hashEncryptedKeyShare))
+                _ = Task.Run(() => LoggerService.LogMessage($"Thread: {threadIndex + 1} | Job Type: {jobType} | Job found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green));
 
             var share = new JObject
             {
@@ -447,8 +527,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 // Generate SHA512 HASH for the share.
                 encryptedShare = MiningUtility.GenerateSHA512(encryptedShare);
 
-                //HashesCalculated[threadIndex]++;
-
+                TotalAverage10SecondsHashesCalculated[threadIndex]++;
+                TotalAverage60SecondsHashesCalculated[threadIndex]++;
+                TotalAverage15MinutesHashesCalculated[threadIndex]++;
+                
                 return encryptedShare;
             }
             catch

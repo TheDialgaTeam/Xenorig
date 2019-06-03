@@ -176,11 +176,21 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
         private async Task CurrentPoolListenerOnShareAccepted(PoolListener poolListener)
         {
             TotalGoodSharesSubmitted++;
+
+            await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                .Write("accepted ", ConsoleColor.Green, true)
+                .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted})", includeDateTime: false)
+                .Build()).ConfigureAwait(false);
         }
 
         private async Task CurrentPoolListenerOnShareRejected(PoolListener poolListener, string reason)
         {
             TotalBadSharesSubmitted++;
+
+            await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                .Write("rejected ", ConsoleColor.Red, true)
+                .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted}) - {reason}", includeDateTime: false)
+                .Build()).ConfigureAwait(false);
         }
     }
 }

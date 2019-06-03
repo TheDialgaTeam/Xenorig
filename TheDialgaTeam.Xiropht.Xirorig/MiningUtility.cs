@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -93,19 +91,51 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             var bytes = Encoding.Unicode.GetBytes(str);
 
             foreach (var t in bytes)
-            {
                 sb.Append(t.ToString("X2"));
-            }
 
             return sb.ToString();
         }
 
-        public static string GenerateNumberMathCalculation(decimal minRange, decimal maxRange)
+        public static int GetRandomBetween(int minimumValue, int maximumValue)
+        {
+            using (var generator = new RNGCryptoServiceProvider())
+            {
+                var randomNumber = new byte[sizeof(int)];
+
+                generator.GetBytes(randomNumber);
+
+                var asciiValueOfRandomCharacter = Convert.ToDouble(randomNumber[0]);
+                var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255d - 0.00000000001d);
+                var range = maximumValue - minimumValue + 1;
+                var randomValueInRange = Math.Floor(multiplier * range);
+
+                return (int) (minimumValue + randomValueInRange);
+            }
+        }
+
+        public static decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
+        {
+            using (var Generator = new RNGCryptoServiceProvider())
+            {
+                var randomNumber = new byte[sizeof(decimal)];
+
+                Generator.GetBytes(randomNumber);
+
+                var asciiValueOfRandomCharacter = (decimal) Convert.ToDouble(randomNumber[0]);
+                var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255m - 0.00000000001m);
+                var range = maximumValue - minimumValue + 1;
+                var randomValueInRange = Math.Floor(multiplier * range);
+
+                return minimumValue + randomValueInRange;
+            }
+        }
+
+        public static string GenerateNumberMathCalculation(decimal minRange, decimal maxRange, int currentBlockDifficultyLength)
         {
             var number = "0";
             var numberBuilder = new StringBuilder();
 
-            while (decimal.Parse(number) > maxRange || decimal.Parse(number) < minRange)
+            while (decimal.Parse(number) > maxRange || decimal.Parse(number) <= 1 || number.Length > currentBlockDifficultyLength)
             {
                 var randomJobSize = GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length;
 
@@ -130,8 +160,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                     else
                     {
                         numberBuilder.Append(
-                            RandomNumberCalculation[
-                                GetRandomBetween(0, RandomNumberCalculation.Length - 1)]);
+                            RandomNumberCalculation[GetRandomBetween(0, RandomNumberCalculation.Length - 1)]);
                     }
 
                     counter++;
@@ -139,6 +168,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
                 number = numberBuilder.ToString();
                 numberBuilder.Clear();
+
                 return number;
             }
 
@@ -223,40 +253,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                     continue;
 
                 yield return new Tuple<decimal, decimal>(i, i / result);
-            }
-        }
-
-        private static decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
-        {
-            using (var Generator = new RNGCryptoServiceProvider())
-            {
-                var randomNumber = new byte[sizeof(decimal)];
-
-                Generator.GetBytes(randomNumber);
-
-                var asciiValueOfRandomCharacter = (decimal) Convert.ToDouble(randomNumber[0]);
-                var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255m - 0.00000000001m);
-                var range = maximumValue - minimumValue + 1;
-                var randomValueInRange = Math.Floor(multiplier * range);
-
-                return minimumValue + randomValueInRange;
-            }
-        }
-
-        private static int GetRandomBetween(int minimumValue, int maximumValue)
-        {
-            using (var generator = new RNGCryptoServiceProvider())
-            {
-                var randomNumber = new byte[sizeof(int)];
-
-                generator.GetBytes(randomNumber);
-
-                var asciiValueOfRandomCharacter = Convert.ToDouble(randomNumber[0]);
-                var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255d - 0.00000000001d);
-                var range = maximumValue - minimumValue + 1;
-                var randomValueInRange = Math.Floor(multiplier * range);
-
-                return (int) (minimumValue + randomValueInRange);
             }
         }
 
