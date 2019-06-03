@@ -37,6 +37,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         public bool IsActive { get; private set; }
 
+        public int RetryCount { get; private set; }
+
         public string Host { get; }
 
         public ushort Port { get; }
@@ -75,6 +77,23 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             ConnectionStatus = ConnectionStatus.Connecting;
             IsActive = true;
 
+            if (CheckConnectionFromPoolNetworkTask == null)
+            {
+                CheckConnectionFromPoolNetworkTask = Task.Factory.StartNew(async () =>
+                {
+                    while (IsActive)
+                    {
+                        if (ConnectionStatus == ConnectionStatus.Connected && DateTimeOffset.Now > LastValidPacketBeforeTimeout)
+                            await DisconnectFromNetwork().ConfigureAwait(false);
+
+                        if (ConnectionStatus == ConnectionStatus.Disconnected)
+                            await StartConnectToNetwork().ConfigureAwait(false);
+
+                        await Task.Delay(1000).ConfigureAwait(false);
+                    }
+                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+            }
+
             try
             {
                 PoolClient = new TcpClient();
@@ -93,23 +112,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
                 PoolClientReader = new StreamReader(PoolClient.GetStream());
                 PoolClientWriter = new StreamWriter(PoolClient.GetStream());
-
-                if (CheckConnectionFromPoolNetworkTask == null)
-                {
-                    CheckConnectionFromPoolNetworkTask = Task.Factory.StartNew(async () =>
-                    {
-                        while (IsActive)
-                        {
-                            if (DateTimeOffset.Now > LastValidPacketBeforeTimeout)
-                                await DisconnectFromNetwork().ConfigureAwait(false);
-
-                            if (ConnectionStatus == ConnectionStatus.Disconnected)
-                                await StartConnectToNetwork().ConfigureAwait(false);
-
-                            await Task.Delay(1000).ConfigureAwait(false);
-                        }
-                    }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current);
-                }
 
                 ReadPacketFromPoolNetworkTask = Task.Factory.StartNew(async () =>
                 {
@@ -170,6 +172,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             
             ConnectionStatus = ConnectionStatus.Disconnected;
             IsLoggedIn = false;
+            RetryCount++;
 
             if (Disconnected != null)
                 await Disconnected(this).ConfigureAwait(false);
@@ -206,6 +209,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             ConnectionStatus = ConnectionStatus.Disconnected;
             IsLoggedIn = false;
+            RetryCount = 0;
 
             if (Disconnected != null)
                 await Disconnected(this).ConfigureAwait(false);
@@ -255,6 +259,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     if (jsonPacket.ContainsKey(PoolLoginPacket.LoginOkay))
                     {
                         IsLoggedIn = true;
+                        RetryCount = 0;
 
                         if (LoginResult != null)
                             await LoginResult(this, true).ConfigureAwait(false);

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Newtonsoft.Json;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
@@ -61,15 +62,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
             public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
 
-            public int ThreadAffinityToCpu { get; set; }
+            public MiningPriority MiningPriority { get; set; } = MiningPriority.Shares;
 
-            public MiningPriority MiningPriority { get; set; } = MiningPriority.Normal;
-
-            [JsonProperty("affine_to_cpu")]
-            private int ThreadAffinityToCpuAlias
-            {
-                set => ThreadAffinityToCpu = value;
-            }
+            public bool ShareRange { get; set; } = true;
         }
 
         public int DonateLevel { get; set; } = 5;

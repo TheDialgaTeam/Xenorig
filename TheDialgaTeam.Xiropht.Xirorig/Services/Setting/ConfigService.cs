@@ -51,7 +51,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
             Config = new Config { Threads = new Config.MiningThread[Environment.ProcessorCount / 2] };
 
             for (var i = 0; i < Config.Threads.Length; i++)
-                Config.Threads[i] = new Config.MiningThread { ThreadAffinityToCpu = i * 2 };
+                Config.Threads[i] = new Config.MiningThread();
 
             if (!File.Exists(FilePathService.SettingFilePath))
             {
@@ -140,15 +140,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     if (miningPool.WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
                         throw new ArgumentException("Invalid Xiropht wallet address. Please check your wallet address again.");
-                }
-
-                foreach (var miningThread in Config.Threads)
-                {
-                    if (miningThread.ThreadAffinityToCpu < 0)
-                        miningThread.ThreadAffinityToCpu = -1;
-
-                    if (Safe && miningThread.ThreadAffinityToCpu > Environment.ProcessorCount)
-                        throw new ArgumentException($"Invalid Thread Affinity. Ensure that it is between -1 to {Environment.ProcessorCount}. Use \"Safe: false\" if you intend to use this configuration.");
                 }
             }
             catch (Exception ex)

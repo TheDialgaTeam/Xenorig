@@ -10,11 +10,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 {
     public sealed class PoolService : IInitializable, ILateInitializable
     {
-        //public PoolMiner PoolMiner { get; private set; }
+        public PoolListener PoolListener { get; private set; }
 
-        public ulong TotalGoodSharesSubmitted { get; private set; }
+        public PoolMiner PoolMiner { get; private set; }
 
-        public ulong TotalBadSharesSubmitted { get; private set; }
+        public decimal TotalGoodSharesSubmitted { get; private set; }
+
+        public decimal TotalBadSharesSubmitted { get; private set; }
 
         private Program Program { get; }
 
@@ -23,8 +25,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
         private ConfigService ConfigService { get; }
 
         private List<PoolListener> PoolListeners { get; set; }
-
-        private PoolListener CurrentPoolListener { get; set; }
 
         private PoolListener DevPoolListener { get; set; }
 
@@ -62,14 +62,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         public void LateInitialize()
         {
+            PoolMiner = new PoolMiner(Program, LoggerService, ConfigService, this);
+
             Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
             {
-                var retryCount = 0;
                 var currentIndex = 0;
 
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    if (CurrentPoolListener == null)
+                    if (PoolListener == null)
                     {
                         Stopwatch.Restart();
                         await SwitchPoolListener(PoolListeners[currentIndex]).ConfigureAwait(false);
@@ -87,17 +88,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                                 continue;
                             }
 
-                            if (CurrentPoolListener.ConnectionStatus == ConnectionStatus.Disconnected)
+                            if (PoolListener.RetryCount > 5)
                             {
-                                retryCount++;
+                                currentIndex++;
 
-                                if (retryCount > 5)
-                                {
-                                    currentIndex++;
-
-                                    if (currentIndex > PoolListeners.Count - 1)
-                                        currentIndex = 0;
-                                }
+                                if (currentIndex > PoolListeners.Count - 1)
+                                    currentIndex = 0;
 
                                 await SwitchPoolListener(PoolListeners[currentIndex]).ConfigureAwait(false);
                             }
@@ -128,25 +124,25 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private async Task SwitchPoolListener(PoolListener poolListener)
         {
-            if (CurrentPoolListener != null)
+            if (PoolListener != null)
             {
-                CurrentPoolListener.Disconnected -= CurrentPoolListenerOnDisconnected;
-                CurrentPoolListener.LoginResult -= CurrentPoolListenerOnLoginResult;
-                CurrentPoolListener.NewJob -= CurrentPoolListenerOnNewJob;
-                CurrentPoolListener.ShareAccepted -= CurrentPoolListenerOnShareAccepted;
-                CurrentPoolListener.ShareRejected -= CurrentPoolListenerOnShareRejected;
+                PoolListener.Disconnected -= CurrentPoolListenerOnDisconnected;
+                PoolListener.LoginResult -= CurrentPoolListenerOnLoginResult;
+                PoolListener.NewJob -= CurrentPoolListenerOnNewJob;
+                PoolListener.ShareAccepted -= CurrentPoolListenerOnShareAccepted;
+                PoolListener.ShareRejected -= CurrentPoolListenerOnShareRejected;
 
-                await CurrentPoolListener.StopConnectToNetwork().ConfigureAwait(false);
+                await PoolListener.StopConnectToNetwork().ConfigureAwait(false);
             }
 
-            CurrentPoolListener = poolListener;
-            CurrentPoolListener.Disconnected += CurrentPoolListenerOnDisconnected;
-            CurrentPoolListener.LoginResult += CurrentPoolListenerOnLoginResult;
-            CurrentPoolListener.NewJob += CurrentPoolListenerOnNewJob;
-            CurrentPoolListener.ShareAccepted += CurrentPoolListenerOnShareAccepted;
-            CurrentPoolListener.ShareRejected += CurrentPoolListenerOnShareRejected;
+            PoolListener = poolListener;
+            PoolListener.Disconnected += CurrentPoolListenerOnDisconnected;
+            PoolListener.LoginResult += CurrentPoolListenerOnLoginResult;
+            PoolListener.NewJob += CurrentPoolListenerOnNewJob;
+            PoolListener.ShareAccepted += CurrentPoolListenerOnShareAccepted;
+            PoolListener.ShareRejected += CurrentPoolListenerOnShareRejected;
 
-            await CurrentPoolListener.StartConnectToNetwork().ConfigureAwait(false);
+            await PoolListener.StartConnectToNetwork().ConfigureAwait(false);
         }
 
         private async Task CurrentPoolListenerOnDisconnected(PoolListener poolListener)
@@ -169,17 +165,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private async Task CurrentPoolListenerOnNewJob(PoolListener poolListener, string packet)
         {
-            
+            PoolMiner.UpdateJob(packet);
+
+            await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                .Write("new job ", ConsoleColor.Magenta, true)
+                .WriteLine($"from {poolListener.Host}:{poolListener.Port} diff {PoolMiner.JobDifficulty}/{PoolMiner.BlockDifficulty} algo {PoolMiner.JobMethodName} height {PoolMiner.BlockId}", includeDateTime: false)
+                .Build()).ConfigureAwait(false);
         }
 
         private async Task CurrentPoolListenerOnShareAccepted(PoolListener poolListener)
         {
-            
+            TotalGoodSharesSubmitted++;
         }
 
-        private async Task CurrentPoolListenerOnShareRejected(PoolListener poolListener, string arg2)
+        private async Task CurrentPoolListenerOnShareRejected(PoolListener poolListener, string reason)
         {
-            
+            TotalBadSharesSubmitted++;
         }
     }
 }
