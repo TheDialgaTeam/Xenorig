@@ -72,26 +72,44 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public bool Safe { get; set; } = true;
 
-        public MiningPool[] Pools { get; set; }
+        public MiningPool[] Pools { get; set; } = { new MiningPool() };
 
-        public MiningThread[] Threads { get; set; }
+        public MiningThread[] Threads { get; set; } = { new MiningThread() };
 
         [JsonProperty]
         private string Host
         {
-            set => Pools[0].Host = value;
+            set
+            {
+                if (Pools == null)
+                    Pools = new[] { new MiningPool { Host = value } };
+                else
+                    Pools[0].Host = value;
+            }
         }
 
         [JsonProperty]
         private ushort Port
         {
-            set => Pools[0].Port = value;
+            set
+            {
+                if (Pools == null)
+                    Pools = new[] { new MiningPool { Port = value } };
+                else
+                    Pools[0].Port = value;
+            }
         }
 
         [JsonProperty]
         private string WalletAddress
         {
-            set => Pools[0].WalletAddress = value;
+            set
+            {
+                if (Pools == null)
+                    Pools = new[] { new MiningPool { WalletAddress = value } };
+                else
+                    Pools[0].WalletAddress = value;
+            }
         }
 
         [JsonProperty("donate-level")]

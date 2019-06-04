@@ -119,12 +119,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     {
                         try
                         {
-                            var packet = await PoolClientReader.ReadLineAsync().ConfigureAwait(false);
+                            if (PoolClientReader.BaseStream is NetworkStream networkStream)
+                            {
+                                if (networkStream.DataAvailable)
+                                {
+                                    var packet = await PoolClientReader.ReadLineAsync().ConfigureAwait(false);
+                                    _ = Task.Run(async () => await HandlePacketFromPoolNetworkAsync(packet).ConfigureAwait(false));
+                                }
+                            }
 
-                            if (packet == null)
-                                return;
-
-                            _ = Task.Run(async () => await HandlePacketFromPoolNetworkAsync(packet).ConfigureAwait(false));
+                            await Task.Delay(1).ConfigureAwait(false);
                         }
                         catch (Exception)
                         {
