@@ -168,6 +168,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 await ReadPacketFromPoolNetworkTask.ConfigureAwait(false);
                 ReadPacketFromPoolNetworkTask.Dispose();
+                ReadPacketFromPoolNetworkTask = null;
             }
             
             ConnectionStatus = ConnectionStatus.Disconnected;
@@ -205,6 +206,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 await ReadPacketFromPoolNetworkTask.ConfigureAwait(false);
                 ReadPacketFromPoolNetworkTask.Dispose();
+                ReadPacketFromPoolNetworkTask = null;
             }
 
             ConnectionStatus = ConnectionStatus.Disconnected;

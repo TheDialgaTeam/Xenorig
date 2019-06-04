@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using Newtonsoft.Json;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
@@ -73,7 +72,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public bool Safe { get; set; } = true;
 
-        public MiningPool[] Pools { get; set; } = { new MiningPool() };
+        public MiningPool[] Pools { get; set; }
 
         public MiningThread[] Threads { get; set; }
 

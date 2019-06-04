@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
@@ -50,7 +52,18 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             foreach (var miningPool in ConfigService.Pools)
                 PoolListeners.Add(new PoolListener(miningPool.Host, miningPool.Port, miningPool.WalletAddress, miningPool.WorkerId));
 
-            DevPoolListener = new PoolListener("pool.xiro.aggressivegaming.org", 4446, "brjxVl3Ge1Sv60vXFDarqqQds5cxiS4Bec2p4Zld1v1yvslgY7caGebIF83mSb", "DEV_FEE");
+            try
+            {
+                var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                var jsonString = httpClient.GetStringAsync("https://raw.githubusercontent.com/TheDialgaTeam/Xirorig/master/Dev_Donate.json").GetAwaiter().GetResult();
+                var json = JObject.Parse(jsonString);
+
+                DevPoolListener = new PoolListener(json["Pools"][0]["Host"].ToString(), Convert.ToUInt16(json["Pools"][0]["Port"].ToString()), json["Pools"][0]["WalletAddress"].ToString(), json["Pools"][0]["WorkerId"].ToString());
+            }
+            catch (Exception)
+            {
+                DevPoolListener = new PoolListener("pool.xiro.aggressivegaming.org", 4445, "brjxVl3Ge1Sv60vXFDarqqQds5cxiS4Bec2p4Zld1v1yvslgY7caGebIF83mSb", "DEV_FEE");
+            }
 
             Stopwatch = new Stopwatch();
             Stopwatch.Stop();
@@ -88,7 +101,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                                 continue;
                             }
 
-                            if (PoolListener.RetryCount > 5)
+                            if (PoolListener.RetryCount >= 5)
                             {
                                 currentIndex++;
 

@@ -15,8 +15,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public int PrintTime => Config.PrintTime;
 
-        public bool Safe => Config.Safe;
-
         public Config.MiningPool[] Pools => Config.Pools;
 
         public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.AdditionJob).ToArray();
@@ -48,10 +46,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public void Initialize()
         {
-            Config = new Config { Threads = new Config.MiningThread[Environment.ProcessorCount / 2] };
-
-            for (var i = 0; i < Config.Threads.Length; i++)
-                Config.Threads[i] = new Config.MiningThread();
+            Config = new Config();
 
             if (!File.Exists(FilePathService.SettingFilePath))
             {
@@ -63,8 +58,59 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                         jsonSerializer.Serialize(streamWriter, Config);
                     }
 
+                    LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Running configuration setup...", includeDateTime: false).Build());
+
+                    var walletAddress = "";
+                    var host = "";
+                    ushort port = 0;
+                    var threads = 0;
+
+                    do
+                    {
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write your wallet address (Append a period with the difficulty number if you wish to use static difficulty):", includeDateTime: false).Build());
+                        walletAddress = System.Console.ReadLine();
+
+                        if (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
+                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Input wallet address is wrong, Xiropht wallet addresses are between 48 and 96 characters long.", ConsoleColor.Red, false).Build());
+                    } while (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize);
+
+                    do
+                    {
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool host:", includeDateTime: false).Build());
+                        host = System.Console.ReadLine();
+
+                        if (string.IsNullOrWhiteSpace(host))
+                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid host.", ConsoleColor.Red, false).Build());
+                    } while (string.IsNullOrWhiteSpace(host));
+
+                    do
+                    {
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool port:", includeDateTime: false).Build());
+
+                        if (!ushort.TryParse(System.Console.ReadLine(), out port))
+                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid port.", ConsoleColor.Red, false).Build());
+                        else if (port == 0)
+                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid port.", ConsoleColor.Red, false).Build());
+                    } while (port == 0);
+
+                    do
+                    {
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine($"Select the number of thread to use, detected thread {Environment.ProcessorCount}:", includeDateTime: false).Build());
+
+                        if (!int.TryParse(System.Console.ReadLine(), out threads))
+                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid thread count.", ConsoleColor.Red, false).Build());
+                        else if (threads <= 0)
+                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid thread count.", ConsoleColor.Red, false).Build());
+                    } while (threads <= 0);
+
+                    Config.Pools = new[] { new Config.MiningPool { Host = host, Port = port, WalletAddress = walletAddress } };
+                    Config.Threads = new Config.MiningThread[threads];
+
+                    for (var i = 0; i < Config.Threads.Length; i++)
+                        Config.Threads[i] = new Config.MiningThread();
+
                     LoggerService.LogMessage($"Generated Configuration file at: \"{FilePathService.SettingFilePath}\"");
-                    LoggerService.LogMessage("Please edit the configuration file before running again :)");
+                    LoggerService.LogMessage("You may want to edit the configuration file for advanced settings :)");
                     LoggerService.LogMessage("Press Enter/Return to exit...");
 
                     System.Console.ReadLine();
@@ -130,7 +176,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                 if (PrintTime < 1)
                     Config.PrintTime = 1;
 
-                if (Safe && Config.Threads.Length > Environment.ProcessorCount)
+                if (Config.Safe && Config.Threads.Length > Environment.ProcessorCount)
                     throw new ArgumentOutOfRangeException(nameof(Config.Threads), "Excessive amount of thread allocated which may cause unstable results. Use \"Safe: false\" if you intend to use this configuration.");
 
                 foreach (var miningPool in Pools)
