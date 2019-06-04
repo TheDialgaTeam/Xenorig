@@ -144,6 +144,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
                 var thread = new Thread(async () => await DoMiningJobAsync(threadIndex, miningThread).ConfigureAwait(false)) { IsBackground = true, Priority = miningThread.ThreadPriority };
                 thread.Start();
+
                 JobThreads.Add(thread);
             }
         }
@@ -227,14 +228,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
                     decimal average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
 
-                    foreach (var hash in Average10SecondsHashesCalculated)
-                        average10SecondsSum += hash.Value;
+                    for (var i = 0; i < Average10SecondsHashesCalculated.Count; i++)
+                        average10SecondsSum += Average10SecondsHashesCalculated[i];
 
-                    foreach (var hash in Average60SecondsHashesCalculated)
-                        average60SecondsSum += hash.Value;
+                    for (var i = 0; i < Average60SecondsHashesCalculated.Count; i++)
+                        average60SecondsSum += Average60SecondsHashesCalculated[i];
 
-                    foreach (var hash in Average15MinutesHashesCalculated)
-                        average15MinutesSum += hash.Value;
+                    for (var i = 0; i < Average15MinutesHashesCalculated.Count; i++)
+                        average15MinutesSum += Average15MinutesHashesCalculated[i];
 
                     MaxHashes = Math.Max(MaxHashes, average10SecondsSum);
 
@@ -393,7 +394,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     }
                 }
 
-                _ = Task.Run(() => LoggerService.LogMessage($"Thread: {threadIndex + 1} | Job Type: Random | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}", ConsoleColor.Blue));
+                await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: Random | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}", ConsoleColor.Blue).ConfigureAwait(false);
 
                 while (currentJobIndication == JobIndication)
                 {
@@ -488,9 +489,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 return;
 
             if (hashEncryptedShare == BlockIndication)
-                _ = Task.Run(() => LoggerService.LogMessage($"Thread: {threadIndex + 1} | Job Type: {jobType} | Block found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green));
+                await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: {jobType} | Block found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green).ConfigureAwait(false);
             else if (JobIndication.Contains(hashEncryptedKeyShare))
-                _ = Task.Run(() => LoggerService.LogMessage($"Thread: {threadIndex + 1} | Job Type: {jobType} | Job found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green));
+                await LoggerService.LogMessageAsync($"Thread: {threadIndex + 1} | Job Type: {jobType} | Job found: {firstNumber} {operatorSymbol} {secondNumber} = {result}", ConsoleColor.Green).ConfigureAwait(false);
 
             var share = new JObject
             {
@@ -503,7 +504,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 { PoolSubmitPacket.SubmitHash, hashEncryptedKeyShare }
             };
 
-            _ = Task.Run(() => PoolService.PoolListener.SendPacketToPoolNetworkAsync(share.ToString(Formatting.None)));
+            await PoolService.PoolListener.SendPacketToPoolNetworkAsync(share.ToString(Formatting.None)).ConfigureAwait(false);
         }
 
         private string MakeEncryptedShare(string calculation, int threadIndex)

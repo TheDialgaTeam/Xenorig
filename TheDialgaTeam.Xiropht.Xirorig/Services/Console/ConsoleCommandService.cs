@@ -39,17 +39,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                         if (keyPressed.KeyChar == 'h')
                         {
                             decimal average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
-                            var tableBuilder = new ConsoleMessageBuilder();
+                            var tableBuilder = new ConsoleMessageBuilder()
+                                .WriteLine("| THREAD | 10s H/s | 60s H/s | 15m H/s |", includeDateTime: false);
 
-                            foreach (var hash in PoolService.PoolMiner.Average10SecondsHashesCalculated)
-                                average10SecondsSum += hash.Value;
+                            for (var i = 0; i < PoolService.PoolMiner.Average10SecondsHashesCalculated.Count; i++)
+                                average10SecondsSum += PoolService.PoolMiner.Average10SecondsHashesCalculated[i];
 
-                            foreach (var hash in PoolService.PoolMiner.Average60SecondsHashesCalculated)
-                                average60SecondsSum += hash.Value;
+                            for (var i = 0; i < PoolService.PoolMiner.Average60SecondsHashesCalculated.Count; i++)
+                                average60SecondsSum += PoolService.PoolMiner.Average60SecondsHashesCalculated[i];
 
-                            foreach (var hash in PoolService.PoolMiner.Average15MinutesHashesCalculated)
-                                average15MinutesSum += hash.Value;
+                            for (var i = 0; i < PoolService.PoolMiner.Average15MinutesHashesCalculated.Count; i++)
+                                average15MinutesSum += PoolService.PoolMiner.Average15MinutesHashesCalculated[i];
 
+                            for (var i = 0; i < PoolService.PoolMiner.Average10SecondsHashesCalculated.Count; i++)
+                                tableBuilder.WriteLine($"| {i.ToString().PadLeft(6)} | {PoolService.PoolMiner.Average10SecondsHashesCalculated[i].ToString("F1").PadLeft(7)} | {PoolService.PoolMiner.Average60SecondsHashesCalculated[i].ToString("F1").PadLeft(7)} | {PoolService.PoolMiner.Average15MinutesHashesCalculated[i].ToString("F1").PadLeft(7)} |", includeDateTime: false);
+
+                            await LoggerService.LogMessageAsync(tableBuilder.Build()).ConfigureAwait(false);
                             await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
                                 .Write("speed 10s/60s/15m ", includeDateTime: true)
                                 .Write($"{average10SecondsSum:F1} ", ConsoleColor.Cyan)
