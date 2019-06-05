@@ -64,6 +64,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
             public MiningPriority MiningPriority { get; set; } = MiningPriority.Shares;
 
             public bool ShareRange { get; set; } = true;
+
+            public int MinMiningRange { get; set; } = 0;
+
+            public int MaxMiningRange { get; set; } = 100;
         }
 
         public int DonateLevel { get; set; } = 5;
@@ -71,6 +75,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
         public int PrintTime { get; set; } = 10;
 
         public bool Safe { get; set; } = true;
+
+        public bool ForceParallelism { get; set; } = false;
 
         public MiningPool[] Pools { get; set; } = { new MiningPool() };
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -15,7 +16,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public int PrintTime => Config.PrintTime;
 
-        public Config.MiningPool[] Pools => Config.Pools;
+        public bool ForceParallelism => Config.ForceParallelism;
+
+        public IEnumerable<Config.MiningPool> Pools => Config.Pools;
 
         public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.AdditionJob).ToArray();
 
@@ -108,6 +111,20 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     for (var i = 0; i < Config.Threads.Length; i++)
                         Config.Threads[i] = new Config.MiningThread();
+
+                    try
+                    {
+                        using (var streamReader = new StreamReader(new FileStream(FilePathService.SettingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                        {
+                            var jsonSerializer = new JsonSerializer();
+                            Config = jsonSerializer.Deserialize<Config>(new JsonTextReader(streamReader));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerService.LogErrorMessage(ex);
+                        Program.CancellationTokenSource.Cancel();
+                    }
 
                     LoggerService.LogMessage($"Generated Configuration file at: \"{FilePathService.SettingFilePath}\"");
                     LoggerService.LogMessage("You may want to edit the configuration file for advanced settings :)");
