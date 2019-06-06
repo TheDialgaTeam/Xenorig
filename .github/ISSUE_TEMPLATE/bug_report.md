@@ -2,8 +2,8 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: ''
-assignees: ''
+labels: bug
+assignees: jianmingyong
 
 ---
 
@@ -27,7 +27,8 @@ assignees: ''
 
 **Application Version:**
 <!-- Please delete where applicable -->
-- 0.0.1
+- 0.0.1.0
+- 0.0.1.1
 
 **Operating System:**
 <!-- Please delete where applicable -->
@@ -35,6 +36,7 @@ assignees: ''
 - Linux (Please include the distro used)
 - MacOS Sierra / High Sierra / Mojave
 - Raspberry PI (Please include OS used)
+- Any
 
 **Additional context:**
 <!-- Please attach any relevant crash logs below by adding a file on this issue -->
