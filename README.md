@@ -10,7 +10,6 @@ Xirorig is a high performance Xiropht (XIRO) CPU pool miner, with official suppo
 #### Table of contents
 - [Features](#Features)
 - [Downloads](#Downloads)
-- [Usage](#Usage)
 - [Other information](#Other-information)
 - [Donations](#Donations)
 - [Developers](#Developers)
@@ -25,14 +24,11 @@ Xirorig is a high performance Xiropht (XIRO) CPU pool miner, with official suppo
 ## Downloads
 - Binary releases: https://github.com/TheDialgaTeam/Xirorig/releases
 
-## Usage
-WIP
-
 ## Other information
 - Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via option donate-level/DonateLevel.
 
 ### CPU mining performance
-- Intel i7-8750H - 160 KH/s (6 threads)
+- Intel i7-8750H - 90 KH/s (6 threads)
 
 Please note performance is highly dependent on system load. The numbers above are obtained on an idle system. Tasks heavily using a processor, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the number of cores you have on your cpu.
 
