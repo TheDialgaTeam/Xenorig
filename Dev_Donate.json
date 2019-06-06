@@ -2,7 +2,7 @@
   "Pools": [
     {
       "Host": "pool.xir.aggressivegaming.org",
-      "Port": 4445,
+      "Port": 2222,
       "WalletAddress": "brjxVl3Ge1Sv60vXFDarqqQds5cxiS4Bec2p4Zld1v1yvslgY7caGebIF83mSb",
       "WorkerId": "DEV_FEE"
     }
