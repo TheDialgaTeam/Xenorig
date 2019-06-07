@@ -71,11 +71,17 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private List<Thread> JobThreads { get; } = new List<Thread>();
 
-        private ConcurrentDictionary<string, bool> SubmittedShares { get; } = new ConcurrentDictionary<string, bool>();
+        private ConcurrentDictionary<string, string> SharesSubmitted { get; } = new ConcurrentDictionary<string, string>();
+
+        private int SharesToFind { get; set; }
 
         private byte[] JobAesKeyBytes { get; set; }
 
         private byte[] JobAesIvBytes { get; set; }
+
+        private RijndaelManaged Aes { get; } = new RijndaelManaged();
+
+        private ICryptoTransform JobAesCryptoTransform { get; set; }
 
         public PoolMiner(Program program, LoggerService loggerService, ConfigService configService, PoolService poolService)
         {
@@ -121,9 +127,18 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 JobAesKeyBytes = pdb.GetBytes(JobAesSize / 8);
                 JobAesIvBytes = pdb.GetBytes(JobAesSize / 8);
+
+                Aes.BlockSize = JobAesSize;
+                Aes.KeySize = JobAesSize;
+                Aes.Key = JobAesKeyBytes;
+                Aes.IV = JobAesIvBytes;
+
+                JobAesCryptoTransform = Aes.CreateEncryptor();
             }
 
-            SubmittedShares.Clear();
+            SharesToFind = JobIndication.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Length - 1;
+
+            SharesSubmitted.Clear();
         }
 
         private void GenerateMiningThreads()
@@ -339,12 +354,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     switch (miningThread.MiningPriority)
                     {
                         case Config.MiningPriority.Shares:
-                            (startRange, endRange) = (JobMinRange, JobMaxRange);
+                            (startRange, endRange) = MiningUtility.GetJobRangeByPercentage(JobMinRange, JobMaxRange, miningThread.MinMiningRangePercentage, miningThread.MaxMiningRangePercentage);
                             break;
 
                         case Config.MiningPriority.Normal:
                         case Config.MiningPriority.Block:
-                            (startRange, endRange) = (2, BlockDifficulty);
+                            (startRange, endRange) = MiningUtility.GetJobRangeByPercentage(2, BlockDifficulty, miningThread.MinMiningRangePercentage, miningThread.MaxMiningRangePercentage);
                             break;
                     }
                 }
@@ -415,10 +430,28 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                         if (currentJobIndication != JobIndication)
                             break;
 
+                        if (SharesSubmitted.Values.Contains(BlockIndication))
+                            break;
+
+                        if (SharesSubmitted.Count >= SharesToFind)
+                            break;
+
                         await DoCalculationAsync(firstNumber, secondNumber, randomOperator, "Random", threadIndex).ConfigureAwait(false);
                         await DoCalculationAsync(secondNumber, firstNumber, randomOperator, "Random", threadIndex).ConfigureAwait(false);
                     }
+
+                    if (SharesSubmitted.Values.Contains(BlockIndication))
+                        break;
+
+                    if (SharesSubmitted.Count >= SharesToFind)
+                        break;
                 }
+
+                if (SharesSubmitted.Values.Contains(BlockIndication))
+                    await WaitForNextBlockAsync(currentBlockIndication).ConfigureAwait(false);
+
+                if (SharesSubmitted.Count >= SharesToFind)
+                    await WaitForNextPoolJobAsync(currentJobIndication).ConfigureAwait(false);
             }
         }
 
@@ -430,9 +463,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             if (secondNumber < 2 || secondNumber > BlockDifficulty)
                 return;
 
+            if (SharesSubmitted.Values.Contains(BlockIndication))
+                return;
+
+            if (SharesSubmitted.Count >= SharesToFind)
+                return;
+
             var calculation = $"{firstNumber} {operatorSymbol} {secondNumber}";
 
-            if (SubmittedShares.ContainsKey(calculation))
+            if (SharesSubmitted.ContainsKey(calculation))
                 return;
 
             decimal result;
@@ -474,7 +513,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             if (encryptedShare == ClassAlgoErrorEnumeration.AlgoError)
                 return;
 
-            var hashEncryptedShare = MiningUtility.GenerateSHA512(encryptedShare);
+            var hashEncryptedShare = MiningUtility.GenerateSha512(encryptedShare);
 
             var hashEncryptedKeyShare = MiningUtility.EncryptXorShare(hashEncryptedShare, JobEncryptionKey);
             hashEncryptedKeyShare = MiningUtility.HashJobToHexString(hashEncryptedKeyShare);
@@ -482,10 +521,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             if (!JobIndication.Contains(hashEncryptedKeyShare) && hashEncryptedShare != BlockIndication)
                 return;
 
-            if (SubmittedShares.ContainsKey(calculation))
+            if (SharesSubmitted.ContainsKey(calculation))
                 return;
 
-            if (!SubmittedShares.TryAdd(calculation, true))
+            if (!SharesSubmitted.TryAdd(calculation, hashEncryptedShare))
                 return;
 
             if (hashEncryptedShare == BlockIndication)
@@ -517,16 +556,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 encryptedShare = MiningUtility.EncryptXorShare(encryptedShare, JobXorKey.ToString());
 
                 // Dynamic AES Encryption -> Size and Key's from the current mining method and the current block key encryption.
-                encryptedShare = MiningUtility.EncryptAesShareRound(encryptedShare, JobAesKeyBytes, JobAesIvBytes, JobAesSize, JobAesRound);
+                encryptedShare = MiningUtility.EncryptAesShareRound(JobAesCryptoTransform, encryptedShare, JobAesRound);
 
                 // Static XOR Encryption -> Key from the current mining method
                 encryptedShare = MiningUtility.EncryptXorShare(encryptedShare, JobXorKey.ToString());
 
                 // Static AES Encryption -> Size and Key's from the current mining method.
-                encryptedShare = MiningUtility.EncryptAesShare(encryptedShare, JobAesKeyBytes, JobAesIvBytes, JobAesSize);
+                encryptedShare = MiningUtility.EncryptAesShare(JobAesCryptoTransform, encryptedShare);
 
                 // Generate SHA512 HASH for the share.
-                encryptedShare = MiningUtility.GenerateSHA512(encryptedShare);
+                encryptedShare = MiningUtility.GenerateSha512(encryptedShare);
 
                 TotalAverage10SecondsHashesCalculated[threadIndex]++;
                 TotalAverage60SecondsHashesCalculated[threadIndex]++;

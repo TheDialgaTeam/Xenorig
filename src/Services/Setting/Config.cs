@@ -65,9 +65,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
             public bool ShareRange { get; set; } = true;
 
-            public int MinMiningRange { get; set; } = 0;
+            public int MinMiningRangePercentage { get; set; } = 0;
 
-            public int MaxMiningRange { get; set; } = 100;
+            public int MaxMiningRangePercentage { get; set; } = 100;
         }
 
         public int DonateLevel { get; set; } = 5;

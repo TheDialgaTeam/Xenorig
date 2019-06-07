@@ -112,10 +112,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     try
                     {
-                        using (var streamReader = new StreamReader(new FileStream(FilePathService.SettingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                        using (var streamWriter = new StreamWriter(new FileStream(FilePathService.SettingFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)))
                         {
-                            var jsonSerializer = new JsonSerializer();
-                            Config = jsonSerializer.Deserialize<Config>(new JsonTextReader(streamReader));
+                            var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
+                            jsonSerializer.Serialize(streamWriter, Config);
                         }
                     }
                     catch (Exception ex)

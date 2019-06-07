@@ -12,6 +12,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
         private static string[] RandomNumberCalculation { get; } = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+        private static SHA512 Sha512 { get; } = SHA512.Create();
+
+        private static RNGCryptoServiceProvider RngCryptoServiceProvider { get; } = new RNGCryptoServiceProvider();
+
         public static string StringToHexString(string hex)
         {
             var buffer = Encoding.UTF8.GetBytes(hex);
@@ -28,60 +32,38 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             return result.ToString();
         }
 
-        public static string EncryptAesShare(string text, byte[] aesKeyBytes, byte[] aesIvBytes, int size)
+        public static string EncryptAesShare(ICryptoTransform aesCryptoTransform, string text)
         {
-            using (var aes = new RijndaelManaged())
-            {
-                aes.BlockSize = size;
-                aes.KeySize = size;
-                aes.Key = aesKeyBytes;
-                aes.IV = aesIvBytes;
+            var textBytes = Encoding.UTF8.GetBytes(text);
+            var result = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
 
-                var encryptor = aes.CreateEncryptor();
-
-                var textBytes = Encoding.UTF8.GetBytes(text);
-                var result = encryptor.TransformFinalBlock(textBytes, 0, textBytes.Length);
-
-                return BitConverter.ToString(result);
-            }
+            return BitConverter.ToString(result);
         }
 
-        public static string EncryptAesShareRound(string text, byte[] aesKeyBytes, byte[] aesIvBytes, int size, int round)
+        public static string EncryptAesShareRound(ICryptoTransform aesCryptoTransform, string text, int round)
         {
-            using (var aes = new RijndaelManaged())
+            var textToEncrypt = text;
+
+            for (var i = 0; i < round; i++)
             {
-                aes.BlockSize = size;
-                aes.KeySize = size;
-                aes.Key = aesKeyBytes;
-                aes.IV = aesIvBytes;
-
-                var encryptor = aes.CreateEncryptor();
-                var textToEncrypt = text;
-
-                for (var i = 0; i < round; i++)
-                {
-                    var textBytes = Encoding.UTF8.GetBytes(textToEncrypt);
-                    var result = encryptor.TransformFinalBlock(textBytes, 0, textBytes.Length);
-                    textToEncrypt = BitConverter.ToString(result);
-                }
-
-                return textToEncrypt;
+                var textBytes = Encoding.UTF8.GetBytes(textToEncrypt);
+                var result = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+                textToEncrypt = BitConverter.ToString(result);
             }
+
+            return textToEncrypt;
         }
 
-        public static string GenerateSHA512(string input)
+        public static string GenerateSha512(string input)
         {
-            using (var hash = SHA512.Create())
-            {
-                var hashedInputBytes = hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+            var hashedInputBytes = Sha512.ComputeHash(Encoding.UTF8.GetBytes(input));
 
-                var hashedInputStringBuilder = new StringBuilder(128);
+            var hashedInputStringBuilder = new StringBuilder(128);
 
-                foreach (var b in hashedInputBytes)
-                    hashedInputStringBuilder.Append(b.ToString("X2"));
+            foreach (var b in hashedInputBytes)
+                hashedInputStringBuilder.Append(b.ToString("X2"));
 
-                return hashedInputStringBuilder.ToString();
-            }
+            return hashedInputStringBuilder.ToString();
         }
 
         public static string HashJobToHexString(string str)
@@ -98,36 +80,30 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
         public static int GetRandomBetween(int minimumValue, int maximumValue)
         {
-            using (var generator = new RNGCryptoServiceProvider())
-            {
-                var randomNumber = new byte[sizeof(int)];
+            var randomNumber = new byte[sizeof(int)];
 
-                generator.GetBytes(randomNumber);
+            RngCryptoServiceProvider.GetBytes(randomNumber);
 
-                var asciiValueOfRandomCharacter = Convert.ToDouble(randomNumber[0]);
-                var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255d - 0.00000000001d);
-                var range = maximumValue - minimumValue + 1;
-                var randomValueInRange = Math.Floor(multiplier * range);
+            var asciiValueOfRandomCharacter = Convert.ToDouble(randomNumber[0]);
+            var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255d - 0.00000000001d);
+            var range = maximumValue - minimumValue + 1;
+            var randomValueInRange = Math.Floor(multiplier * range);
 
-                return (int) (minimumValue + randomValueInRange);
-            }
+            return (int)(minimumValue + randomValueInRange);
         }
 
         public static decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
         {
-            using (var Generator = new RNGCryptoServiceProvider())
-            {
-                var randomNumber = new byte[sizeof(decimal)];
+            var randomNumber = new byte[sizeof(decimal)];
 
-                Generator.GetBytes(randomNumber);
+            RngCryptoServiceProvider.GetBytes(randomNumber);
 
-                var asciiValueOfRandomCharacter = (decimal) Convert.ToDouble(randomNumber[0]);
-                var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255m - 0.00000000001m);
-                var range = maximumValue - minimumValue + 1;
-                var randomValueInRange = Math.Floor(multiplier * range);
+            var asciiValueOfRandomCharacter = (decimal)Convert.ToDouble(randomNumber[0]);
+            var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255m - 0.00000000001m);
+            var range = maximumValue - minimumValue + 1;
+            var randomValueInRange = Math.Floor(multiplier * range);
 
-                return minimumValue + randomValueInRange;
-            }
+            return minimumValue + randomValueInRange;
         }
 
         public static string GenerateNumberMathCalculation(decimal minRange, decimal maxRange, int currentBlockDifficultyLength)
@@ -158,10 +134,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                             numberBuilder.Append(numberRandom);
                     }
                     else
-                    {
-                        numberBuilder.Append(
-                            RandomNumberCalculation[GetRandomBetween(0, RandomNumberCalculation.Length - 1)]);
-                    }
+                        numberBuilder.Append(RandomNumberCalculation[GetRandomBetween(0, RandomNumberCalculation.Length - 1)]);
 
                     counter++;
                 }
@@ -179,6 +152,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig
         {
             var startRange = DivideEvenly(totalPossibilities, totalThread).Take(threadIndex + 1).Sum() - DivideEvenly(totalPossibilities, totalThread).ElementAt(threadIndex) + offset;
             var endRange = DivideEvenly(totalPossibilities, totalThread).Take(threadIndex + 1).Sum() + offset - 1;
+
+            return (startRange, endRange);
+        }
+
+        public static (decimal, decimal) GetJobRangeByPercentage(decimal minRange, decimal maxRange, int minRangePercentage, int maxRangePercentage)
+        {
+            var startRange = maxRange * minRangePercentage * 0.01m + minRange;
+            var endRange = Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1;
 
             return (startRange, endRange);
         }
