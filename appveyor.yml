@@ -8,7 +8,7 @@ image: Visual Studio 2019 Preview
 clone_depth: 1
 dotnet_csproj:
   patch: true
-  file: src/TheDialgaTeam.Xiropht.Xirorig.Builder.csproj
+  file: '**\TheDialgaTeam.Xiropht.Xirorig.Builder.csproj'
   version: '{version}'
   package_version: '{version}'
   assembly_version: '{version}'
