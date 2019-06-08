@@ -9,6 +9,8 @@ image: Visual Studio 2019 Preview
 configuration: Release
 platform: Any CPU
 clone_depth: 1
+clone_script:
+- cmd: git submodule update --init --recursive
 dotnet_csproj:
   patch: true
   file: '**\*.csproj'
