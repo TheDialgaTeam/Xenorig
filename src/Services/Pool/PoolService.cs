@@ -10,7 +10,7 @@ using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 {
-    public sealed class PoolService : IInitializable, ILateInitializable
+    public sealed class PoolService : IInitializable, ILateInitializable, IDisposable
     {
         public PoolListener PoolListener { get; private set; }
 
@@ -204,6 +204,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 .Write("rejected ", ConsoleColor.Red, true)
                 .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted}) - {reason}", includeDateTime: false)
                 .Build()).ConfigureAwait(false);
+        }
+
+        public void Dispose()
+        {
+            PoolMiner?.Dispose();
         }
     }
 }

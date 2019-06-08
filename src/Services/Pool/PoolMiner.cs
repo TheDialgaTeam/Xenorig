@@ -15,7 +15,7 @@ using Xiropht_Connector_All.Utils;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 {
-    public sealed class PoolMiner
+    public sealed class PoolMiner : IDisposable
     {
         public decimal BlockId { get; private set; }
 
@@ -577,6 +577,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 return ClassAlgoErrorEnumeration.AlgoError;
             }
+        }
+
+        public void Dispose()
+        {
+            Aes?.Dispose();
+            JobAesCryptoTransform?.Dispose();
         }
     }
 }
