@@ -4,7 +4,6 @@ pull_requests:
 branches:
   only:
   - master
-skip_non_tags: true
 image: Visual Studio 2019 Preview
 configuration: Release
 platform: Any CPU
@@ -49,3 +48,5 @@ deploy:
   auth_token:
     secure: N+JUPZbbAuyrCHxK+vor2jDWI0867mo0gqA5g0EWPwYgYZmAXztdRUV9rpwQ0TdR
   artifact: mono-portable, net-core-linux-arm, net-core-linux-x64, net-core-osx-x64, net-core-win-arm, net-core-win-x64, net-core-win-x86
+  draft: true
+  prerelease: false
