@@ -5,12 +5,10 @@ branches:
   only:
   - master
 image: Visual Studio 2019 Preview
-configuration: Release
-platform: Any CPU
 clone_depth: 1
 dotnet_csproj:
   patch: true
-  file: '**\*.csproj'
+  file: src/TheDialgaTeam.Xiropht.Xirorig.Builder.csproj
   version: '{version}'
   package_version: '{version}'
   assembly_version: '{version}'
