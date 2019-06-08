@@ -1,0 +1,49 @@
+version: 0.0.1.{build}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - master
+skip_non_tags: true
+image: Visual Studio 2019 Preview
+configuration: Release
+platform: Any CPU
+clone_depth: 1
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+build_script:
+- cmd: >-
+    nuget restore TheDialgaTeam.Xiropht.Xirorig.sln
+
+    cd Builder
+
+    WIN_Build.bat
+test: off
+artifacts:
+- path: bin/Release/mono-portable.zip
+  name: mono-portable
+- path: bin/Release/net-core-linux-arm.zip
+  name: net-core-linux-arm
+- path: bin/Release/net-core-linux-x64.zip
+  name: net-core-linux-x64
+- path: bin/Release/net-core-osx-x64.zip
+  name: net-core-osx-x64
+- path: bin/Release/net-core-win-arm.zip
+  name: net-core-win-arm
+- path: bin/Release/net-core-win-x64.zip
+  name: net-core-win-x64
+- path: bin/Release/net-core-win-x86.zip
+  name: net-core-win-x86
+deploy:
+- provider: GitHub
+  tag: $(appveyor_build_version)
+  release: Xirorig $(appveyor_build_version)
+  auth_token:
+    secure: N+JUPZbbAuyrCHxK+vor2jDWI0867mo0gqA5g0EWPwYgYZmAXztdRUV9rpwQ0TdR
+  artifact: mono-portable, net-core-linux-arm, net-core-linux-x64, net-core-osx-x64, net-core-win-arm, net-core-win-x64, net-core-win-x86
