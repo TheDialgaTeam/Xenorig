@@ -18,7 +18,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
         public void Initialize()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            System.Console.Title = $"Xirorig v{version}";
+            System.Console.Title = $"Xirorig v{version} {Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName}";
 
             var consoleMessages = new ConsoleMessageBuilder()
                 .Write(" * ", ConsoleColor.Green)

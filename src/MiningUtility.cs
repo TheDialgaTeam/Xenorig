@@ -12,24 +12,62 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
         private static string[] RandomNumberCalculation { get; } = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+        private static char[] HexStringRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
         private static SHA512 Sha512 { get; } = SHA512.Create();
 
         private static RNGCryptoServiceProvider RngCryptoServiceProvider { get; } = new RNGCryptoServiceProvider();
 
-        public static string StringToHexString(string hex)
+        public static string EncryptStringWithStringHexAndXor(string value, string key)
         {
-            var buffer = Encoding.UTF8.GetBytes(hex);
-            return BitConverter.ToString(buffer).Replace("-", "");
+#if NETCOREAPP
+            return string.Create(value.Length * 2, (value, key), (result, state) =>
+            {
+                var valueLength = state.value.Length;
+                var keyLength = state.key.Length;
+
+                for (var i = 0; i < valueLength; i++)
+                {
+                    result[i * 2] = (char) (HexStringRepresentation[state.value[i] >> 4] ^ state.key[i * 2 % keyLength]);
+                    result[i * 2 + 1] = (char) (HexStringRepresentation[state.value[i] & 15] ^ state.key[(i * 2 + 1) % keyLength]);
+                }
+            });
+#else
+            var valueLength = value.Length;
+            var keyLength = key.Length;
+            var result = new char[valueLength * 2];
+
+            for (var i = 0; i < valueLength; i++)
+            {
+                result[i * 2] = (char) (HexStringRepresentation[value[i] >> 4] ^ key[i * 2 % keyLength]);
+                result[i * 2 + 1] = (char) (HexStringRepresentation[value[i] & 15] ^ key[(i * 2 + 1) % keyLength]);
+            }
+
+            return new string(result);
+#endif
         }
 
         public static string EncryptXorShare(string text, string key)
         {
-            var result = new StringBuilder();
+#if NETCOREAPP
+            return string.Create(text.Length, (text, key), (result, state) =>
+            {
+                var textLength = state.text.Length;
+                var keyLength = state.key.Length;
 
-            for (var c = 0; c < text.Length; c++)
-                result.Append((char) (text[c] ^ (uint) key[c % key.Length]));
+                for (var i = 0; i < textLength; i++)
+                    result[i] = (char) (state.text[i] ^ state.key[i % keyLength]);
+            });
+#else
+            var textLength = text.Length;
+            var keyLength = key.Length;
+            var result = new char[textLength];
 
-            return result.ToString();
+            for (var i = 0; i < textLength; i++)
+                result[i] = (char) (text[i] ^ key[i % keyLength]);
+
+            return new string(result);
+#endif
         }
 
         public static string EncryptAesShare(ICryptoTransform aesCryptoTransform, string text)
@@ -89,7 +127,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             var range = maximumValue - minimumValue + 1;
             var randomValueInRange = Math.Floor(multiplier * range);
 
-            return (int)(minimumValue + randomValueInRange);
+            return (int) (minimumValue + randomValueInRange);
         }
 
         public static decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
@@ -98,7 +136,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
             RngCryptoServiceProvider.GetBytes(randomNumber);
 
-            var asciiValueOfRandomCharacter = (decimal)Convert.ToDouble(randomNumber[0]);
+            var asciiValueOfRandomCharacter = (decimal) Convert.ToDouble(randomNumber[0]);
             var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255m - 0.00000000001m);
             var range = maximumValue - minimumValue + 1;
             var randomValueInRange = Math.Floor(multiplier * range);
@@ -158,8 +196,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
         public static (decimal, decimal) GetJobRangeByPercentage(decimal minRange, decimal maxRange, int minRangePercentage, int maxRangePercentage)
         {
-            var startRange = maxRange * minRangePercentage * 0.01m + minRange;
-            var endRange = Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1;
+            var startRange = Math.Floor(maxRange * minRangePercentage * 0.01m) + minRange;
+            var endRange = Math.Min(maxRange, Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1);
 
             return (startRange, endRange);
         }

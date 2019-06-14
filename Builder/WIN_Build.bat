@@ -10,8 +10,6 @@ SET framework_mono=net461
 
 SET output=../bin/Release
 
-del /S /F /Q "%~dp0/../bin"
-
 dotnet publish %project% -c %configuration% -f %framework_mono% -o %output%/mono-portable
 dotnet publish %project% /p:PublishSingleFile=true -c %configuration% -f %framework_core% -o %output%/net-core-linux-arm -r linux-arm --self-contained
 dotnet publish %project% /p:PublishSingleFile=true -c %configuration% -f %framework_core% -o %output%/net-core-linux-x64 -r linux-x64 --self-contained
