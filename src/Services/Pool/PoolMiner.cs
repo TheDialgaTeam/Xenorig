@@ -91,6 +91,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             ConfigService = configService;
             PoolService = poolService;
 
+            StartAverage10SecondsHashesCalculatedTask();
+            StartAverage15MinutesHashesCalculatedTask();
+            StartAverage60SecondsHashesCalculatedTask();
+            StartCalculateHashesTask();
             GenerateMiningThreads();
 
             loggerService.LogMessage(new ConsoleMessageBuilder()
@@ -159,42 +163,27 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
                 JobThreads.Add(thread);
             }
-
-            StartAverage10SecondsHashesCalculatedTask();
-            StartAverage15MinutesHashesCalculatedTask();
-            StartAverage60SecondsHashesCalculatedTask();
-            StartCalculateHashesTask();
         }
 
         private void StartAverage10SecondsHashesCalculatedTask()
         {
             Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
             {
-                var threadCount = TotalAverage10SecondsHashesCalculated.Count;
-
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
-
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    await Task.Delay(10000, Program.CancellationTokenSource.Token).ConfigureAwait(false);
-
-                    stopwatch.Stop();
-                    var timeTaken = stopwatch.ElapsedMilliseconds;
-                    
-                    for (var i = 0; i < threadCount; i++)
+                    for (var i = 0; i < TotalAverage10SecondsHashesCalculated.Count; i++)
                     {
                         if (Program.CancellationTokenSource.IsCancellationRequested)
                             break;
 
-                        Average10SecondsHashesCalculated[i] = TotalAverage10SecondsHashesCalculated[i] / (timeTaken / 1000m);
+                        Average10SecondsHashesCalculated[i] = TotalAverage10SecondsHashesCalculated[i] / 10;
                         TotalAverage10SecondsHashesCalculated[i] = 0;
                     }
 
-                    stopwatch.Restart();
-
                     if (Program.CancellationTokenSource.IsCancellationRequested)
                         break;
+
+                    await Task.Delay(new TimeSpan(0, 0, 10), Program.CancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
         }
@@ -203,31 +192,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
         {
             Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
             {
-                var threadCount = TotalAverage60SecondsHashesCalculated.Count;
-
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
-
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    await Task.Delay(60000, Program.CancellationTokenSource.Token).ConfigureAwait(false);
-
-                    stopwatch.Stop();
-                    var timeTaken = stopwatch.ElapsedMilliseconds;
-
-                    for (var i = 0; i < threadCount; i++)
+                    
+                    for (var i = 0; i < TotalAverage60SecondsHashesCalculated.Count; i++)
                     {
                         if (Program.CancellationTokenSource.IsCancellationRequested)
                             break;
 
-                        Average60SecondsHashesCalculated[i] = TotalAverage60SecondsHashesCalculated[i] / (timeTaken / 1000m);
+                        Average60SecondsHashesCalculated[i] = TotalAverage60SecondsHashesCalculated[i] / 60;
                         TotalAverage60SecondsHashesCalculated[i] = 0;
                     }
 
-                    stopwatch.Restart();
-
                     if (Program.CancellationTokenSource.IsCancellationRequested)
                         break;
+
+                    await Task.Delay(new TimeSpan(0, 0, 60), Program.CancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
         }
@@ -236,31 +216,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
         {
             Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
             {
-                var threadCount = TotalAverage15MinutesHashesCalculated.Count;
-
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
-
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    await Task.Delay(900000, Program.CancellationTokenSource.Token).ConfigureAwait(false);
-
-                    stopwatch.Stop();
-                    var timeTaken = stopwatch.ElapsedMilliseconds;
-
-                    for (var i = 0; i < threadCount; i++)
+                    for (var i = 0; i < TotalAverage15MinutesHashesCalculated.Count; i++)
                     {
                         if (Program.CancellationTokenSource.IsCancellationRequested)
                             break;
 
-                        Average15MinutesHashesCalculated[i] = TotalAverage15MinutesHashesCalculated[i] / (timeTaken / 1000m);
+                        Average15MinutesHashesCalculated[i] = TotalAverage15MinutesHashesCalculated[i] / 900;
                         TotalAverage15MinutesHashesCalculated[i] = 0;
                     }
 
-                    stopwatch.Restart();
-
                     if (Program.CancellationTokenSource.IsCancellationRequested)
                         break;
+
+                    await Task.Delay(new TimeSpan(0, 15, 0), Program.CancellationTokenSource.Token).ConfigureAwait(false);
+
                 }
             }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
         }
