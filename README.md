@@ -1,3 +1,10 @@
+# ATTENTION
+This miner will no longer be updated. I spent so much time on this but all the work is down the drain for censorship done by the coin owner. As such, this miner will be archived and no longer be updated to give any beneficial gains of the tricks I used for optimizing the miner.
+
+I have left and no longer mine this coin. As such, I am unable to provide much technical help on this. Invest this coin at your own risk.
+
+If you wish to fork this code, please ensure that you include proper credit on your miner.
+
 # Xirorig
 ***The name is inspired by [XMRig](https://github.com/xmrig/xmrig) and thus the similarity in design. The codes are 100% original.***
 
@@ -44,7 +51,6 @@ Please note performance is highly dependent on system load. The numbers above ar
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`
 - LTC: `LUU9Avuanafmq1vMp53AWS1mr3GCCc2X42`
 - XMR: `42oj7eV68BK8Z8wcGzLMFEJgAQG22Z3ajGdtpmJx5p7iDqEgG91wNybWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm3zwfwWN`
-- Xiropht: `brjxVl3Ge1Sv60vXFDarqqQds5cxiS4Bec2p4Zld1v1yvslgY7caGebIF83mSb`
 
 ## Developers
 - The Dialga Team (Yong Jian Ming)
