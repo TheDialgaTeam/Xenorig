@@ -4,20 +4,24 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
+using TheDialgaTeam.Xiropht.Xirorig.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 {
     public sealed class LoggerService : IInitializable, IDisposable
     {
+        private Program Program { get; }
+
         private FilePathService FilePathService { get; }
 
         private SemaphoreSlim SemaphoreSlim { get; set; }
 
         private StreamWriter StreamWriter { get; set; }
 
-        public LoggerService(FilePathService filePathService)
+        public LoggerService(Program program, FilePathService filePathService)
         {
+            Program = program;
             FilePathService = filePathService;
         }
 
@@ -29,12 +33,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
         public void LogMessage(string message, ConsoleColor consoleColor = ConsoleColor.White)
         {
-            LogMessageAsync(message, consoleColor).GetAwaiter().GetResult();
+            LogMessageAsync(message, consoleColor).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         public void LogMessage(IEnumerable<ConsoleMessage> consoleMessages)
         {
-            LogMessageAsync(consoleMessages).GetAwaiter().GetResult();
+            LogMessageAsync(consoleMessages).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         public async Task LogMessageAsync(string message, ConsoleColor consoleColor = ConsoleColor.White)
@@ -59,18 +63,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
         private async Task LogMessageAsync(TextWriter writer, ConsoleColor consoleColor, string message)
         {
-            if (string.IsNullOrWhiteSpace(message))
+            try
+            {
+                await SemaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
                 return;
+            }
 
             try
             {
-                await SemaphoreSlim.WaitAsync().ConfigureAwait(false);
-
                 System.Console.ForegroundColor = ConsoleColor.Gray;
                 await writer.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
 
                 System.Console.ForegroundColor = consoleColor;
-                await writer.WriteLineAsync($"{message}").ConfigureAwait(false);
+                await writer.WriteLineAsync(message).ConfigureAwait(false);
                 await writer.FlushAsync().ConfigureAwait(false);
 
                 if (writer != System.Console.Error)
@@ -94,8 +102,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
         {
             try
             {
-                await SemaphoreSlim.WaitAsync().ConfigureAwait(false);
+                await SemaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                return;
+            }
 
+            try
+            {
                 foreach (var consoleMessage in consoleMessages)
                 {
                     if (consoleMessage.IncludeDateTime)

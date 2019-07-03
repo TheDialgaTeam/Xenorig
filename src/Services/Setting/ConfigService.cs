@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
+using TheDialgaTeam.Xiropht.Xirorig.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
+using TheDialgaTeam.Xiropht.Xirorig.Setting;
 using Xiropht_Connector_All.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
@@ -59,7 +61,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                         jsonSerializer.Serialize(streamWriter, Config);
                     }
 
-                    LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Running configuration setup...", includeDateTime: false).Build());
+                    LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Running configuration setup...", false).Build());
 
                     var walletAddress = "";
                     var host = "";
@@ -68,7 +70,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     do
                     {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write your wallet address (Append a period with the difficulty number if you wish to use static difficulty):", includeDateTime: false).Build());
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write your wallet address (Append a period with the difficulty number if you wish to use static difficulty):", false).Build());
                         walletAddress = System.Console.ReadLine();
 
                         if (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
@@ -77,7 +79,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     do
                     {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool host:", includeDateTime: false).Build());
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool host:", false).Build());
                         host = System.Console.ReadLine();
 
                         if (string.IsNullOrWhiteSpace(host))
@@ -86,7 +88,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     do
                     {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool port:", includeDateTime: false).Build());
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool port:", false).Build());
 
                         if (!ushort.TryParse(System.Console.ReadLine(), out port))
                             LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid port.", ConsoleColor.Red, false).Build());
@@ -96,7 +98,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
                     do
                     {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine($"Select the number of thread to use, detected thread {Environment.ProcessorCount}:", includeDateTime: false).Build());
+                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine($"Select the number of thread to use, detected thread {Environment.ProcessorCount}:", false).Build());
 
                         if (!int.TryParse(System.Console.ReadLine(), out threads))
                             LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid thread count.", ConsoleColor.Red, false).Build());
@@ -159,23 +161,135 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
             }
 
             var consoleMessages = new ConsoleMessageBuilder()
-                .Write(" * ", ConsoleColor.Green)
-                .Write("THREADS".PadRight(13))
-                .Write(Config.Threads.Length.ToString(), ConsoleColor.Cyan)
-                .Write(", ")
-                .Write($"donate={Config.DonateLevel}%", Config.DonateLevel > 0 ? ConsoleColor.White : ConsoleColor.Red)
-                .WriteLine("", includeDateTime: false);
+                .Write(" * ", ConsoleColor.Green, false)
+                .Write("THREADS".PadRight(13), false)
+                .Write(Config.Threads.Length.ToString(), ConsoleColor.Cyan, false)
+                .Write(", ", false)
+                .Write($"donate={Config.DonateLevel}%", Config.DonateLevel > 0 ? ConsoleColor.White : ConsoleColor.Red, false)
+                .WriteLine("", false);
 
             for (var i = 0; i < Config.Pools.Length; i++)
             {
                 consoleMessages
-                    .Write(" * ", ConsoleColor.Green)
-                    .Write($"POOL #{i + 1}".PadRight(13))
-                    .Write($"{Config.Pools[i].Host}:{Config.Pools[i].Port}", ConsoleColor.Cyan)
-                    .WriteLine("", includeDateTime: false);
+                    .Write(" * ", ConsoleColor.Green, false)
+                    .Write($"POOL #{i + 1}".PadRight(13), false)
+                    .Write($"{Config.Pools[i].Host}:{Config.Pools[i].Port}", ConsoleColor.Cyan, false)
+                    .WriteLine("", false);
             }
 
             LoggerService.LogMessage(consoleMessages.Build());
+        }
+
+        private void DoStartUpConfiguration()
+        {
+            LoggerService.LogMessage(new ConsoleMessageBuilder()
+                .WriteLine("==================================================", false)
+                .WriteLine("Configuration Helper:", false)
+                .WriteLine("==================================================", false).Build());
+
+            int mode;
+
+            do
+            {
+                LoggerService.LogMessage(new ConsoleMessageBuilder()
+                    .WriteLine("Please select a mining mode:", false)
+                    .WriteLine("1. Solo (Only available on mono build)", false)
+                    .WriteLine("2. Solo Proxy", false)
+                    .WriteLine("3. Pool", false)
+                    .WriteLine("4. Pool Proxy (Reserved option)", false).Build());
+
+                if (int.TryParse(System.Console.In.ReadLine(), out mode) && mode >= 0 && mode <= 4)
+                    continue;
+
+                LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid mining mode! Please try again.", ConsoleColor.Red, false).Build());
+            } while (mode < 0 || mode > 4);
+
+            Config.Mode = (Config.MiningMode)(mode - 1);
+
+            switch (Config.Mode)
+            {
+                case Config.MiningMode.Solo:
+                    DoConfigureSolo();
+                    break;
+
+                case Config.MiningMode.SoloProxy:
+                    break;
+
+                case Config.MiningMode.Pool:
+                    break;
+
+                case Config.MiningMode.PoolProxy:
+                    break;
+            }
+        }
+
+        private void DoConfigureSolo()
+        {
+            LoggerService.LogMessage(new ConsoleMessageBuilder()
+                .WriteLine("==================================================", false)
+                .WriteLine("Solo Mining Mode Configuration:", false)
+                .WriteLine("==================================================", false).Build());
+
+            string walletAddress, setWorkerId, workerId = null;
+
+            do
+            {
+                LoggerService.LogMessage("Please enter your wallet address:");
+                walletAddress = System.Console.In.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize || walletAddress.Length > ClassConnectorSetting.MaxWalletAddressSize)
+                    LoggerService.LogMessage("Invalid wallet address. Please check your wallet address again.", ConsoleColor.Red);
+            } while (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize || walletAddress.Length > ClassConnectorSetting.MaxWalletAddressSize);
+
+            do
+            {
+                LoggerService.LogMessage("Do you wish to set worker id? (This is used for API reporting) [Y/N]:");
+                setWorkerId = System.Console.In.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(setWorkerId) || !setWorkerId.Equals("y", StringComparison.OrdinalIgnoreCase) && !setWorkerId.Equals("n", StringComparison.OrdinalIgnoreCase))
+                    LoggerService.LogMessage("Invalid option. Please try again.", ConsoleColor.Red);
+            } while (string.IsNullOrWhiteSpace(setWorkerId) || !setWorkerId.Equals("y", StringComparison.OrdinalIgnoreCase) && !setWorkerId.Equals("n", StringComparison.OrdinalIgnoreCase));
+
+            if (setWorkerId.Equals("y", StringComparison.OrdinalIgnoreCase))
+            {
+                do
+                {
+                    LoggerService.LogMessage("Please enter your worker id:");
+                    workerId = System.Console.In.ReadLine();
+
+                    if (string.IsNullOrWhiteSpace(workerId))
+                        LoggerService.LogMessage("Invalid worker id.", ConsoleColor.Red);
+                } while (string.IsNullOrWhiteSpace(workerId));
+            }
+
+            Config.Solo = new Config.MiningSolo { WalletAddress = walletAddress, WorkerId = workerId ?? "" };
+        }
+
+        private void DoConfigureSoloProxy()
+        {
+            //LoggerService.LogMessage("==================================================");
+            //LoggerService.LogMessage("Solo Proxy Mining Mode configuration:");
+            //LoggerService.LogMessage("==================================================");
+
+            //string addFailBack;
+
+            //do
+            //{
+            //    string host;
+            //    ushort port;
+            //    string workerId;
+
+            //    do
+            //    {
+            //        LoggerService.LogMessage("Please enter your solo proxy address (127.0.0.1 for local):");
+            //        host = System.Console.In.ReadLine();
+
+            //        if (string.IsNullOrWhiteSpace(host))
+            //            LoggerService.LogMessage("Invalid address. Please try again.", ConsoleColor.Red);
+            //    } while (string.IsNullOrWhiteSpace(host));
+
+            //    LoggerService.LogMessage("Do you wish to add a fail back solo proxy? [Y/N]:");
+            //} while (addFailBack != null && addFailBack.Equals("y", StringComparison.OrdinalIgnoreCase));
         }
 
         private void ValidateSettings()

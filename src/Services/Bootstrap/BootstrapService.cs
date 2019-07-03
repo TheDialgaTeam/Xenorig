@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.Versioning;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
+using TheDialgaTeam.Xiropht.Xirorig.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
@@ -18,17 +19,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
         public void Initialize()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            System.Console.Title = $"Xirorig v{version} {Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName}";
+            var frameworkVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName;
+            System.Console.Title = $"Xirorig v{version} ({frameworkVersion})";
 
-            var consoleMessages = new ConsoleMessageBuilder()
-                .Write(" * ", ConsoleColor.Green)
-                .Write("ABOUT".PadRight(13))
-                .Write($"Xirorig/{version} ", ConsoleColor.Cyan)
-                .Write(Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName)
-                .WriteLine("", includeDateTime: false)
-                .Build();
-
-            LoggerService.LogMessage(consoleMessages);
+            LoggerService.LogMessage(new ConsoleMessageBuilder()
+                .Write(" * ", ConsoleColor.Green, false)
+                .Write("ABOUT".PadRight(13), false)
+                .Write($"Xirorig/{version} ", ConsoleColor.Cyan, false)
+                .WriteLine(frameworkVersion, false)
+                .Build());
         }
     }
 }

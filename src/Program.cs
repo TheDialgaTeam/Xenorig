@@ -60,7 +60,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 Task.WaitAll(TasksToAwait.ToArray());
 
                 ServiceProvider.DisposeServices();
-                ServiceProvider.Dispose();
+                Environment.Exit(0);
             }
             catch (AggregateException ex)
             {
@@ -78,12 +78,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 }
 
                 CancellationTokenSource?.Cancel();
-
                 ServiceProvider?.DisposeServices();
-                ServiceProvider?.Dispose();
 
                 Environment.Exit(1);
-                return;
             }
             catch (Exception ex)
             {
@@ -93,23 +90,19 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                     await loggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
 
                 CancellationTokenSource?.Cancel();
-
                 ServiceProvider?.DisposeServices();
-                ServiceProvider?.Dispose();
 
                 Environment.Exit(1);
-                return;
             }
-
-            Environment.Exit(0);
         }
 
         public void Dispose()
         {
-            CancellationTokenSource?.Dispose();
-
             foreach (var task in TasksToAwait)
                 task.Dispose();
+
+            CancellationTokenSource?.Dispose();
+            ServiceProvider?.Dispose();
         }
     }
 }

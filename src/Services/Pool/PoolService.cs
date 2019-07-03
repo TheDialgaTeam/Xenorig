@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
+using TheDialgaTeam.Xiropht.Xirorig.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
 
@@ -168,7 +169,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             if (success)
             {
                 await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
-                    .Write("use pool ", includeDateTime: true)
+                    .Write("use pool ", true)
                     .WriteLine($"{poolListener.Host}:{poolListener.Port}", ConsoleColor.Cyan, false)
                     .Build()).ConfigureAwait(false);
             }
@@ -182,7 +183,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
                 .Write("new job ", ConsoleColor.Magenta, true)
-                .WriteLine($"from {poolListener.Host}:{poolListener.Port} diff {PoolMiner.JobDifficulty}/{PoolMiner.BlockDifficulty} algo {PoolMiner.JobMethodName} height {PoolMiner.BlockId}", includeDateTime: false)
+                .WriteLine($"from {poolListener.Host}:{poolListener.Port} diff {PoolMiner.JobDifficulty}/{PoolMiner.BlockDifficulty} algo {PoolMiner.JobMethodName} height {PoolMiner.BlockId}", false)
                 .Build()).ConfigureAwait(false);
         }
 
@@ -192,7 +193,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
                 .Write("accepted ", ConsoleColor.Green, true)
-                .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted})", includeDateTime: false)
+                .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted})", false)
                 .Build()).ConfigureAwait(false);
         }
 
@@ -202,7 +203,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
                 .Write("rejected ", ConsoleColor.Red, true)
-                .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted}) - {reason}", includeDateTime: false)
+                .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted}) - {reason}", false)
                 .Build()).ConfigureAwait(false);
         }
 

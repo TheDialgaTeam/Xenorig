@@ -4,70 +4,61 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace TheDialgaTeam.Xiropht.Xirorig
+namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 {
     public static class MiningUtility
     {
-        public static string[] RandomOperatorCalculation = { "+", "*", "%", "-", "/" };
+        public static string[] RandomOperatorCalculation { get; } = { "+", "-", "*", "/", "%" };
 
-        private static string[] RandomNumberCalculation { get; } = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+        private static char[] Base10CharRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-        private static char[] HexStringRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+        private static char[] Base16CharRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
         private static SHA512 Sha512 { get; } = SHA512.Create();
 
         private static RNGCryptoServiceProvider RngCryptoServiceProvider { get; } = new RNGCryptoServiceProvider();
 
-        public static string EncryptStringWithStringHexAndXor(string value, string key)
+        public static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
         {
-#if NETCOREAPP
-            return string.Create(value.Length * 2, (value, key), (result, state) =>
+            var base16CharRepresentation = Base16CharRepresentation;
+            var valueLength = value.Length;
+            var keyLength = key.Length;
+            var result = new string('\0', valueLength * 2);
+
+            fixed (char* strResult = result)
             {
-                var valueLength = state.value.Length;
-                var keyLength = state.key.Length;
+                var charPtr = strResult;
 
                 for (var i = 0; i < valueLength; i++)
                 {
-                    result[i * 2] = (char) (HexStringRepresentation[state.value[i] >> 4] ^ state.key[i * 2 % keyLength]);
-                    result[i * 2 + 1] = (char) (HexStringRepresentation[state.value[i] & 15] ^ state.key[(i * 2 + 1) % keyLength]);
+                    *charPtr = (char) (base16CharRepresentation[value[i] >> 4] ^ key[i * 2 % keyLength]);
+                    charPtr++;
+                    *charPtr = (char) (base16CharRepresentation[value[i] & 15] ^ key[(i * 2 + 1) % keyLength]);
+                    charPtr++;
                 }
-            });
-#else
-            var valueLength = value.Length;
-            var keyLength = key.Length;
-            var result = new char[valueLength * 2];
-
-            for (var i = 0; i < valueLength; i++)
-            {
-                result[i * 2] = (char) (HexStringRepresentation[value[i] >> 4] ^ key[i * 2 % keyLength]);
-                result[i * 2 + 1] = (char) (HexStringRepresentation[value[i] & 15] ^ key[(i * 2 + 1) % keyLength]);
             }
 
-            return new string(result);
-#endif
+            return result;
         }
 
-        public static string EncryptXorShare(string text, string key)
+        public static unsafe string EncryptXorShare(string value, string key)
         {
-#if NETCOREAPP
-            return string.Create(text.Length, (text, key), (result, state) =>
-            {
-                var textLength = state.text.Length;
-                var keyLength = state.key.Length;
-
-                for (var i = 0; i < textLength; i++)
-                    result[i] = (char) (state.text[i] ^ state.key[i % keyLength]);
-            });
-#else
-            var textLength = text.Length;
+            var valueLength = value.Length;
             var keyLength = key.Length;
-            var result = new char[textLength];
+            var result = new string('\0', valueLength);
 
-            for (var i = 0; i < textLength; i++)
-                result[i] = (char) (text[i] ^ key[i % keyLength]);
+            fixed (char* strResult = result)
+            {
+                var charPtr = strResult;
 
-            return new string(result);
-#endif
+                for (var i = 0; i < valueLength; i++)
+                {
+                    *charPtr = (char) (value[i] ^ key[i % keyLength]);
+                    charPtr++;
+                }
+            }
+
+            return result;
         }
 
         public static string EncryptAesShare(ICryptoTransform aesCryptoTransform, string text)
@@ -92,98 +83,110 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             return textToEncrypt;
         }
 
-        public static string GenerateSha512(string input)
+        public static unsafe string GenerateSha512(string value)
         {
-            var hashedInputBytes = Sha512.ComputeHash(Encoding.UTF8.GetBytes(input));
+            var base16CharRepresentation = Base16CharRepresentation;
+            var hashedInputBytes = Sha512.ComputeHash(Encoding.UTF8.GetBytes(value));
+            var hashedInputBytesLength = hashedInputBytes.Length;
+            var result = new string('\0', 128);
 
-            var hashedInputStringBuilder = new StringBuilder(128);
+            fixed (char* strResult = result)
+            {
+                var charPtr = strResult;
 
-            foreach (var b in hashedInputBytes)
-                hashedInputStringBuilder.Append(b.ToString("X2"));
+                for (var i = 0; i < hashedInputBytesLength; i++)
+                {
+                    *charPtr = base16CharRepresentation[hashedInputBytes[i] >> 4];
+                    charPtr++;
+                    *charPtr = base16CharRepresentation[hashedInputBytes[i] & 15];
+                    charPtr++;
+                }
+            }
 
-            return hashedInputStringBuilder.ToString();
+            return result;
         }
 
-        public static string HashJobToHexString(string str)
+        public static string HashJobToHexString(string value)
         {
-            var sb = new StringBuilder();
+#if NETCOREAPP
+            return string.Create(512, Encoding.Unicode.GetBytes(value), (result, bytes) =>
+            {
+                var hexCharRepresentation = Base16CharRepresentation;
 
-            var bytes = Encoding.Unicode.GetBytes(str);
+                for (var i = 0; i < bytes.Length; i++)
+                {
+                    result[i * 2] = hexCharRepresentation[bytes[i] >> 4];
+                    result[i * 2 + 1] = hexCharRepresentation[bytes[i] & 15];
+                }
+            });
+#else
+            var hexCharRepresentation = Base16CharRepresentation;
+            var bytes = Encoding.Unicode.GetBytes(value);
+            var bytesLength = bytes.Length;
+            var result = new char[512];
 
-            foreach (var t in bytes)
-                sb.Append(t.ToString("X2"));
+            for (var i = 0; i < bytesLength; i++)
+            {
+                result[i * 2] = hexCharRepresentation[bytes[i] >> 4];
+                result[i * 2 + 1] = hexCharRepresentation[bytes[i] & 15];
+            }
 
-            return sb.ToString();
+            return new string(result);
+#endif
         }
 
         public static int GetRandomBetween(int minimumValue, int maximumValue)
         {
-            var randomNumber = new byte[sizeof(int)];
-
+            var randomNumber = new byte[1];
             RngCryptoServiceProvider.GetBytes(randomNumber);
-
-            var asciiValueOfRandomCharacter = Convert.ToDouble(randomNumber[0]);
-            var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255d - 0.00000000001d);
-            var range = maximumValue - minimumValue + 1;
-            var randomValueInRange = Math.Floor(multiplier * range);
-
-            return (int) (minimumValue + randomValueInRange);
+            return (int) (minimumValue + Math.Floor(Math.Max(0, randomNumber[0] / 255d - 0.00000000001d) * (maximumValue - minimumValue + 1)));
         }
 
         public static decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
         {
-            var randomNumber = new byte[sizeof(decimal)];
-
+            var randomNumber = new byte[1];
             RngCryptoServiceProvider.GetBytes(randomNumber);
-
-            var asciiValueOfRandomCharacter = (decimal) Convert.ToDouble(randomNumber[0]);
-            var multiplier = Math.Max(0, asciiValueOfRandomCharacter / 255m - 0.00000000001m);
-            var range = maximumValue - minimumValue + 1;
-            var randomValueInRange = Math.Floor(multiplier * range);
-
-            return minimumValue + randomValueInRange;
+            return minimumValue + Math.Floor(Math.Max(0, randomNumber[0] / 255m - 0.00000000001m) * (maximumValue - minimumValue + 1));
         }
 
-        public static string GenerateNumberMathCalculation(decimal minRange, decimal maxRange, int currentBlockDifficultyLength)
+        public static decimal GenerateNumberMathCalculation(decimal minRange, decimal maxRange)
         {
-            var number = "0";
-            var numberBuilder = new StringBuilder();
+#if NETCOREAPP
+            decimal resultDecimal;
 
-            while (decimal.Parse(number) > maxRange || decimal.Parse(number) <= 1 || number.Length > currentBlockDifficultyLength)
+            do
             {
-                var randomJobSize = GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length;
+                var randomSize = GetRandomBetween(1, GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length);
 
-                var randomSize = GetRandomBetween(1, randomJobSize);
-                var counter = 0;
-
-                while (counter < randomSize)
+                var resultString = string.Create(randomSize, randomSize, (result, state) =>
                 {
-                    if (randomSize > 1)
-                    {
-                        var numberRandom = RandomNumberCalculation[GetRandomBetween(0, RandomNumberCalculation.Length - 1)];
+                    var digitCharRepresentation = Base10CharRepresentation;
 
-                        if (counter == 0)
-                        {
-                            while (numberRandom == "0")
-                                numberRandom = RandomNumberCalculation[GetRandomBetween(0, RandomNumberCalculation.Length - 1)];
-                            numberBuilder.Append(numberRandom);
-                        }
-                        else
-                            numberBuilder.Append(numberRandom);
-                    }
-                    else
-                        numberBuilder.Append(RandomNumberCalculation[GetRandomBetween(0, RandomNumberCalculation.Length - 1)]);
+                    for (var i = 0; i < state; i++)
+                        result[i] = digitCharRepresentation[GetRandomBetween(i == 0 ? 1 : 0, digitCharRepresentation.Length - 1)];
+                });
 
-                    counter++;
-                }
+                resultDecimal = Convert.ToDecimal(resultString);
+            } while (resultDecimal < minRange || resultDecimal > maxRange);
 
-                number = numberBuilder.ToString();
-                numberBuilder.Clear();
+            return resultDecimal;
+#else
+            decimal resultDecimal;
+            var digitCharRepresentation = Base10CharRepresentation;
 
-                return number;
-            }
+            do
+            {
+                var randomSize = GetRandomBetween(1, GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length);
+                var resultString = new char[randomSize];
 
-            return number;
+                for (var i = 0; i < randomSize; i++)
+                    resultString[i] = digitCharRepresentation[GetRandomBetween(i == 0 ? 1 : 0, digitCharRepresentation.Length - 1)];
+
+                resultDecimal = Convert.ToDecimal(new string(resultString));
+            } while (resultDecimal < minRange || resultDecimal > maxRange);
+
+            return resultDecimal;
+#endif
         }
 
         public static (decimal, decimal) GetJobRange(decimal totalPossibilities, int totalThread, int threadIndex, decimal offset)

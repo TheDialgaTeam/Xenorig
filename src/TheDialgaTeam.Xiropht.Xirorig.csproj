@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
     <PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>
-    <Version>0.0.1.2</Version>
+    <Version>0.0.1.4</Version>
     <Authors>Yong Jian Ming</Authors>
     <Company>The Dialga Team</Company>
     <Product>Xirorig</Product>
@@ -38,6 +38,10 @@
   <ItemGroup>
     <ProjectReference Include="..\TheDialgaTeam.Microsoft.Extensions.DependencyInjection\src\TheDialgaTeam.Microsoft.Extensions.DependencyInjection.csproj" />
     <ProjectReference Include="..\Xiropht-Connector-All\Xiropht-Connector-All\Xiropht-Connector-All.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Mining\" />
   </ItemGroup>
 
 </Project>

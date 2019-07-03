@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,9 +8,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TheDialgaTeam.Xiropht.Xirorig.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Mining;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Pool.Packet;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
+using TheDialgaTeam.Xiropht.Xirorig.Setting;
 using Xiropht_Connector_All.Utils;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
@@ -99,7 +101,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             loggerService.LogMessage(new ConsoleMessageBuilder()
                 .Write("READY (CPU) ", ConsoleColor.Green, true)
-                .Write("threads ")
+                .Write("threads ", false)
                 .WriteLine(JobThreads.Count.ToString(), ConsoleColor.Cyan, false)
                 .Build());
         }
@@ -194,7 +196,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             {
                 while (!Program.CancellationTokenSource.IsCancellationRequested)
                 {
-                    
                     for (var i = 0; i < TotalAverage60SecondsHashesCalculated.Count; i++)
                     {
                         if (Program.CancellationTokenSource.IsCancellationRequested)
@@ -231,7 +232,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                         break;
 
                     await Task.Delay(new TimeSpan(0, 15, 0), Program.CancellationTokenSource.Token).ConfigureAwait(false);
-
                 }
             }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
         }
@@ -258,12 +258,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     MaxHashes = Math.Max(MaxHashes, average10SecondsSum);
 
                     await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
-                        .Write("speed 10s/60s/15m ", includeDateTime: true)
-                        .Write($"{average10SecondsSum:F1} ", ConsoleColor.Cyan)
-                        .Write($"{average60SecondsSum:F1} ", ConsoleColor.DarkCyan)
-                        .Write($"{average15MinutesSum:F1} ", ConsoleColor.DarkCyan)
-                        .Write("H/s ", ConsoleColor.Cyan)
-                        .Write("max ")
+                        .Write("speed 10s/60s/15m ", true)
+                        .Write($"{average10SecondsSum:F1} ", ConsoleColor.Cyan, false)
+                        .Write($"{average60SecondsSum:F1} ", ConsoleColor.DarkCyan, false)
+                        .Write($"{average15MinutesSum:F1} ", ConsoleColor.DarkCyan, false)
+                        .Write("H/s ", ConsoleColor.Cyan, false)
+                        .Write("max ", false)
                         .WriteLine($"{MaxHashes:F1} H/s", ConsoleColor.Cyan, false)
                         .Build()).ConfigureAwait(false);
                 }
@@ -422,8 +422,30 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     if (currentJobIndication != JobIndication)
                         break;
 
-                    var firstNumber = MiningUtility.GetRandomBetween(0, 100) >= MiningUtility.GetRandomBetween(0, 100) ? Convert.ToDecimal(MiningUtility.GenerateNumberMathCalculation(startRange, endRange, BlockDifficulty.ToString("F0").Length)) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
-                    var secondNumber = MiningUtility.GetRandomBetween(0, 100) >= MiningUtility.GetRandomBetween(0, 100) ? Convert.ToDecimal(MiningUtility.GenerateNumberMathCalculation(startRange, endRange, BlockDifficulty.ToString("F0").Length)) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
+                    // ReSharper disable EqualExpressionComparison
+                    var firstNumber = MiningUtility.GetRandomBetween(0, 100) > MiningUtility.GetRandomBetween(0, 100) ? MiningUtility.GenerateNumberMathCalculation(startRange, endRange) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
+                    var secondNumber = MiningUtility.GetRandomBetween(0, 100) > MiningUtility.GetRandomBetween(0, 100) ? MiningUtility.GenerateNumberMathCalculation(startRange, endRange) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
+                    // ReSharper restore EqualExpressionComparison
+
+                    switch (miningThread.MiningPriority)
+                    {
+                        case Config.MiningPriority.Shares:
+                            if (firstNumber < JobMinRange || firstNumber > JobMaxRange)
+                                continue;
+
+                            if (secondNumber < JobMinRange || secondNumber > JobMaxRange)
+                                continue;
+                            break;
+
+                        case Config.MiningPriority.Normal:
+                        case Config.MiningPriority.Block:
+                            if (firstNumber < 2 || firstNumber > BlockDifficulty)
+                                continue;
+
+                            if (secondNumber < 2 || secondNumber > BlockDifficulty)
+                                continue;
+                            break;
+                    }
 
                     foreach (var randomOperator in MiningUtility.RandomOperatorCalculation)
                     {
@@ -460,12 +482,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private async Task DoCalculationAsync(decimal firstNumber, decimal secondNumber, string operatorSymbol, string jobType, int threadIndex)
         {
-            if (firstNumber < 2 || firstNumber > BlockDifficulty)
-                return;
-
-            if (secondNumber < 2 || secondNumber > BlockDifficulty)
-                return;
-
             if (SharesSubmitted.Values.Contains(BlockIndication))
                 return;
 
@@ -553,7 +569,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
         {
             try
             {
-                var encryptedShare = MiningUtility.EncryptStringWithStringHexAndXor(calculation + BlockTimestampCreate, JobXorKey.ToString());
+                var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(calculation + BlockTimestampCreate, JobXorKey.ToString());
 
                 // Dynamic AES Encryption -> Size and Key's from the current mining method and the current block key encryption.
                 encryptedShare = MiningUtility.EncryptAesShareRound(JobAesCryptoTransform, encryptedShare, JobAesRound);
@@ -570,7 +586,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 TotalAverage10SecondsHashesCalculated[threadIndex]++;
                 TotalAverage60SecondsHashesCalculated[threadIndex]++;
                 TotalAverage15MinutesHashesCalculated[threadIndex]++;
-                
+
                 return encryptedShare;
             }
             catch
