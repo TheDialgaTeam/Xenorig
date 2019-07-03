@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 {
+    [Config(typeof(Config))]
     public class EncryptXorShareBenchmark
     {
         private string TestData { get; }

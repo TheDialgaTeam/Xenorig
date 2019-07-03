@@ -15,24 +15,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
             TestData = "50000000 + 50000000" + DateTimeOffset.Now.ToUnixTimeSeconds();
         }
 
-#if NETCOREAPP
-        private static string ConvertStringToHexAndEncryptXorShare(string value, string key)
-#else
         private static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
-#endif
         {
-#if NETCOREAPP
-            return string.Create(value.Length * 2, (value, key), (result, state) =>
-            {
-                var base16CharRepresentation = Base16CharRepresentation;
-
-                for (var i = 0; i < state.value.Length; i++)
-                {
-                    result[i * 2] = (char) (base16CharRepresentation[state.value[i] >> 4] ^ key[i * 2 % state.key.Length]);
-                    result[i * 2 + 1] = (char) (base16CharRepresentation[state.value[i] & 15] ^ key[i * 2 % state.key.Length]);
-                }
-            });
-#else
             var base16CharRepresentation = Base16CharRepresentation;
             var valueLength = value.Length;
             var keyLength = key.Length;
@@ -52,7 +36,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
             }
 
             return result;
-#endif
         }
 
         [Benchmark]

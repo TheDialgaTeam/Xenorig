@@ -18,24 +18,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         private static RNGCryptoServiceProvider RngCryptoServiceProvider { get; } = new RNGCryptoServiceProvider();
 
-#if NETCOREAPP
-        public static string ConvertStringToHexAndEncryptXorShare(string value, string key)
-#else
         public static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
-#endif
         {
-#if NETCOREAPP
-            return string.Create(value.Length * 2, (value, key), (result, state) =>
-            {
-                var base16CharRepresentation = Base16CharRepresentation;
-
-                for (var i = 0; i < state.value.Length; i++)
-                {
-                    result[i * 2] = (char)(base16CharRepresentation[state.value[i] >> 4] ^ key[i * 2 % state.key.Length]);
-                    result[i * 2 + 1] = (char)(base16CharRepresentation[state.value[i] & 15] ^ key[i * 2 % state.key.Length]);
-                }
-            });
-#else
             var base16CharRepresentation = Base16CharRepresentation;
             var valueLength = value.Length;
             var keyLength = key.Length;
@@ -55,7 +39,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             }
 
             return result;
-#endif
         }
 
         public static unsafe string EncryptXorShare(string value, string key)
@@ -64,9 +47,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             var keyLength = key.Length;
             var result = new string('\0', valueLength);
 
-            fixed (char* strResult = result)
+            fixed (char* charResult = result)
             {
-                var charPtr = strResult;
+                var charPtr = charResult;
 
                 for (var i = 0; i < valueLength; i++)
                 {
