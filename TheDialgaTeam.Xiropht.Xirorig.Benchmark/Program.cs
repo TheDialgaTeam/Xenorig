@@ -6,7 +6,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
     {
         public static void Main(string[] args)
         {
-            BenchmarkRunner.Run<GenerateSha512Benchmark>();
+            BenchmarkRunner.Run<ConvertStringToHexAndEncryptXorShareBenchmark>();
         }
     }
 }
