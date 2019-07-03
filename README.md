@@ -1,10 +1,3 @@
-# ATTENTION
-This miner will no longer be updated. I spent so much time on this but all the work is down the drain for censorship done by the coin owner. As such, this miner will be archived and no longer be updated to give any beneficial gains of the tricks I used for optimizing the miner.
-
-I have left and no longer mine this coin. As such, I am unable to provide much technical help on this. Invest this coin at your own risk.
-
-If you wish to fork this code, please ensure that you include proper credit on your miner.
-
 # Xirorig
 ***The name is inspired by [XMRig](https://github.com/xmrig/xmrig) and thus the similarity in design. The codes are 100% original.***
 
