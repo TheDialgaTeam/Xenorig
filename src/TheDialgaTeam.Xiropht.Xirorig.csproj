@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Xirorig</AssemblyName>
     <RootNamespace>TheDialgaTeam.Xiropht.Xirorig</RootNamespace>
-    <TargetFrameworks>netcoreapp2.2;net461</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.2;net462</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
     <PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>

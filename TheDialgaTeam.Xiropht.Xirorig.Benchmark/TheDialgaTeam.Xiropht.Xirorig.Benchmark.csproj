@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>TheDialgaTeam.Xiropht.Xirorig.Benchmark</AssemblyName>
-    <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.2;netcoreapp2.1;net462;net461</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>embedded</DebugType>

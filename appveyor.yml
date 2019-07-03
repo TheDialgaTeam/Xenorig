@@ -19,7 +19,7 @@ install:
 - cmd: >-
     git submodule update --init --recursive
 
-    choco install dotnetcore-sdk --pre
+    choco install dotnetcore-sdk --version 3.0.100-preview5-011568 --pre
 build_script:
 - cmd: >-
     cd Builder

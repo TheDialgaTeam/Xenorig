@@ -6,7 +6,7 @@ SET project=../src/TheDialgaTeam.Xiropht.Xirorig.Builder.csproj
 SET configuration=Release
 
 SET framework_core=netcoreapp3.0
-SET framework_mono=net461
+SET framework_mono=net462
 
 SET output=../bin/Release
 
