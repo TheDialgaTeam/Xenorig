@@ -22,11 +22,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
             fixed (char* charResult = result)
             {
                 var charPtr = charResult;
+                var keyIndex = 0;
 
                 for (var i = 0; i < valueLength; i++)
                 {
-                    *charPtr = (char) (value[i] ^ key[i % keyLength]);
+                    *charPtr = (char) (value[i] ^ key[keyIndex]);
                     charPtr++;
+                    keyIndex++;
+
+                    if (keyIndex >= keyLength)
+                        keyIndex = 0;
                 }
             }
 

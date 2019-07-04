@@ -25,13 +25,23 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
             fixed (char* charResult = result)
             {
                 var charPtr = charResult;
+                var keyIndex = 0;
 
                 for (var i = 0; i < valueLength; i++)
                 {
-                    *charPtr = (char) (base16CharRepresentation[value[i] >> 4] ^ key[i * 2 % keyLength]);
+                    *charPtr = (char) (base16CharRepresentation[value[i] >> 4] ^ key[keyIndex]);
                     charPtr++;
-                    *charPtr = (char) (base16CharRepresentation[value[i] & 15] ^ key[(i * 2 + 1) % keyLength]);
+                    keyIndex++;
+
+                    if (keyIndex >= keyLength)
+                        keyIndex = 0;
+
+                    *charPtr = (char) (base16CharRepresentation[value[i] & 15] ^ key[keyIndex]);
                     charPtr++;
+                    keyIndex++;
+
+                    if (keyIndex >= keyLength)
+                        keyIndex = 0;
                 }
             }
 
