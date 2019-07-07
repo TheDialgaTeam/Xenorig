@@ -12,7 +12,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 
         public ConvertStringToHexAndEncryptXorShareBenchmark()
         {
-            TestData = "50000000 + 50000000" + DateTimeOffset.Now.ToUnixTimeSeconds();
+            TestData = "100000000 + 100000000" + DateTimeOffset.Now.ToUnixTimeSeconds();
         }
 
         private static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)

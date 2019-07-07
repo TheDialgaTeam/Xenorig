@@ -570,17 +570,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             try
             {
                 var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(calculation + BlockTimestampCreate, JobXorKey.ToString());
-
-                // Dynamic AES Encryption -> Size and Key's from the current mining method and the current block key encryption.
-                encryptedShare = MiningUtility.EncryptAesShareRound(JobAesCryptoTransform, encryptedShare, JobAesRound);
-
-                // Static XOR Encryption -> Key from the current mining method
-                encryptedShare = MiningUtility.EncryptXorShare(encryptedShare, JobXorKey.ToString());
-
-                // Static AES Encryption -> Size and Key's from the current mining method.
+                encryptedShare = MiningUtility.EncryptAesShareRoundAndEncryptXorShare(JobAesCryptoTransform, encryptedShare, JobAesRound, JobXorKey.ToString());
                 encryptedShare = MiningUtility.EncryptAesShare(JobAesCryptoTransform, encryptedShare);
-
-                // Generate SHA512 HASH for the share.
                 encryptedShare = MiningUtility.GenerateSha512(encryptedShare);
 
                 TotalAverage10SecondsHashesCalculated[threadIndex]++;

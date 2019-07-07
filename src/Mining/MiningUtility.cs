@@ -76,26 +76,140 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return result;
         }
 
-        public static string EncryptAesShare(ICryptoTransform aesCryptoTransform, string text)
+        public static unsafe string EncryptAesShare(ICryptoTransform aesCryptoTransform, string value)
         {
-            var textBytes = Encoding.UTF8.GetBytes(text);
-            var result = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+            var textBytes = Encoding.UTF8.GetBytes(value);
+            var resultBytes = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+            var resultLength = resultBytes.Length;
+            var result = new string('\0', resultLength * 2 + resultLength - 1);
+            var base16CharRepresentation = Base16CharRepresentation;
 
-            return BitConverter.ToString(result);
+            fixed (char* charResult = result)
+            {
+                var charPtr = charResult;
+
+                for (var i = 0; i < resultLength; i++)
+                {
+                    *charPtr = base16CharRepresentation[resultBytes[i] >> 4];
+                    charPtr++;
+
+                    *charPtr = base16CharRepresentation[resultBytes[i] & 15];
+                    charPtr++;
+                    
+                    if (i >= resultLength - 1)
+                        break;
+
+                    *charPtr = '-';
+                    charPtr++;
+                }
+            }
+
+            return result;
         }
 
-        public static string EncryptAesShareRound(ICryptoTransform aesCryptoTransform, string text, int round)
+        public static unsafe string EncryptAesShareRound(ICryptoTransform aesCryptoTransform, string value, int round)
         {
-            var textToEncrypt = text;
+            var result = value;
+            var base16CharRepresentation = Base16CharRepresentation;
 
             for (var i = 0; i < round; i++)
             {
-                var textBytes = Encoding.UTF8.GetBytes(textToEncrypt);
-                var result = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
-                textToEncrypt = BitConverter.ToString(result);
+                var textBytes = Encoding.UTF8.GetBytes(result);
+                var resultBytes = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+                var resultLength = resultBytes.Length;
+
+                result = new string('\0', resultLength * 2 + resultLength - 1);
+                
+                fixed (char* charResult = result)
+                {
+                    var charPtr = charResult;
+
+                    for (var j = 0; j < resultLength; j++)
+                    {
+                        *charPtr = base16CharRepresentation[resultBytes[j] >> 4];
+                        charPtr++;
+
+                        *charPtr = base16CharRepresentation[resultBytes[j] & 15];
+                        charPtr++;
+
+                        if (j >= resultLength - 1)
+                            break;
+
+                        *charPtr = '-';
+                        charPtr++;
+                    }
+                }
             }
 
-            return textToEncrypt;
+            return result;
+        }
+
+        public static unsafe string EncryptAesShareRoundAndEncryptXorShare(ICryptoTransform aesCryptoTransform, string value, int round, string key)
+        {
+            var result = value;
+            var keyLength = key.Length;
+            var base16CharRepresentation = Base16CharRepresentation;
+
+            for (var i = 0; i < round; i++)
+            {
+                var textBytes = Encoding.UTF8.GetBytes(result);
+                var resultBytes = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+                var resultLength = resultBytes.Length;
+
+                result = new string('\0', resultLength * 2 + resultLength - 1);
+
+                fixed (char* charResult = result)
+                {
+                    var charPtr = charResult;
+                    var keyIndex = 0;
+
+                    for (var j = 0; j < resultLength; j++)
+                    {
+                        if (i >= round - 1)
+                        {
+                            *charPtr = (char) (base16CharRepresentation[resultBytes[j] >> 4] ^ key[keyIndex]);
+                            charPtr++;
+                            keyIndex++;
+
+                            if (keyIndex >= keyLength)
+                                keyIndex = 0;
+
+                            *charPtr = (char) (base16CharRepresentation[resultBytes[j] & 15] ^ key[keyIndex]);
+                            charPtr++;
+                            keyIndex++;
+
+                            if (keyIndex >= keyLength)
+                                keyIndex = 0;
+
+                            if (j >= resultLength - 1)
+                                break;
+
+                            *charPtr = (char) ('-' ^ key[keyIndex]);
+                            charPtr++;
+                            keyIndex++;
+
+                            if (keyIndex >= keyLength)
+                                keyIndex = 0;
+                        }
+                        else
+                        {
+                            *charPtr = base16CharRepresentation[resultBytes[j] >> 4];
+                            charPtr++;
+
+                            *charPtr = base16CharRepresentation[resultBytes[j] & 15];
+                            charPtr++;
+
+                            if (j >= resultLength - 1)
+                                break;
+
+                            *charPtr = '-';
+                            charPtr++;
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
 
         public static unsafe string GenerateSha512(string value)
@@ -180,55 +294,35 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return minimumValue + Math.Floor(Math.Max(0, randomNumber[0] / 255m - 0.00000000001m) * (maximumValue - minimumValue + 1));
         }
 
-        public static decimal GenerateNumberMathCalculation(decimal minRange, decimal maxRange)
+        public static unsafe decimal GenerateNumberMathCalculation(decimal minRange, decimal maxRange)
         {
-#if NETCOREAPP
             decimal resultDecimal;
 
             do
             {
                 var randomSize = GetRandomBetween(1, GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length);
+                var resultString = new string('\0', randomSize);
+                var base10CharRepresentation = Base10CharRepresentation;
 
-                var resultString = string.Create(randomSize, randomSize, (result, state) =>
+                fixed (char* charResult = resultString)
                 {
-                    var digitCharRepresentation = Base10CharRepresentation;
+                    var charPtr = charResult;
 
-                    for (var i = 0; i < state; i++)
+                    for (var i = 0; i < randomSize; i++)
                     {
-                        if (state == 1)
-                            result[i] = digitCharRepresentation[GetRandomBetween(2, 9)];
+                        if (randomSize == 1)
+                            *charPtr = base10CharRepresentation[GetRandomBetween(2, 9)];
                         else
-                            result[i] = digitCharRepresentation[GetRandomBetween(i == 0 ? 1 : 0, 9)];
+                            *charPtr = base10CharRepresentation[GetRandomBetween(i == 0 ? 1 : 0, 9)];
+
+                        charPtr++;
                     }
-                });
+                }
 
                 resultDecimal = Convert.ToDecimal(resultString);
             } while (resultDecimal < minRange || resultDecimal > maxRange);
 
             return resultDecimal;
-#else
-            decimal resultDecimal;
-            var digitCharRepresentation = Base10CharRepresentation;
-
-            do
-            {
-                var randomSize = GetRandomBetween(1, GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length);
-                var resultString = new char[randomSize];
-
-                for (var i = 0; i < randomSize; i++)
-                {
-                    if (randomSize == 1)
-                        resultString[i] = digitCharRepresentation[GetRandomBetween(2, 9)];
-                    else
-                        resultString[i] = digitCharRepresentation[GetRandomBetween(i == 0 ? 1 : 0, 9)];
-                }
-                    
-
-                resultDecimal = Convert.ToDecimal(new string(resultString));
-            } while (resultDecimal < minRange || resultDecimal > maxRange);
-
-            return resultDecimal;
-#endif
         }
 
         public static (decimal, decimal) GetJobRange(decimal totalPossibilities, int totalThread, int threadIndex, decimal offset)
