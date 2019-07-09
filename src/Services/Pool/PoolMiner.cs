@@ -480,7 +480,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             }
         }
 
-        private async Task DoCalculationAsync(decimal firstNumber, decimal secondNumber, string operatorSymbol, string jobType, int threadIndex)
+        private async Task DoCalculationAsync(decimal firstNumber, decimal secondNumber, char operatorSymbol, string jobType, int threadIndex)
         {
             if (SharesSubmitted.Values.Contains(BlockIndication))
                 return;
@@ -497,23 +497,23 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
             switch (operatorSymbol)
             {
-                case "+":
+                case '+':
                     result = firstNumber + secondNumber;
                     break;
 
-                case "-":
+                case '-':
                     result = firstNumber - secondNumber;
                     break;
 
-                case "*":
+                case '*':
                     result = firstNumber * secondNumber;
                     break;
 
-                case "/":
+                case '/':
                     result = firstNumber / secondNumber;
                     break;
 
-                case "%":
+                case '%':
                     result = firstNumber % secondNumber;
                     break;
 

@@ -8,7 +8,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 {
     public static class MiningUtility
     {
-        public static string[] RandomOperatorCalculation { get; } = { "+", "-", "*", "/", "%" };
+        public static char[] RandomOperatorCalculation { get; } = { '+', '-', '*', '/', '%' };
 
         private static char[] Base10CharRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
@@ -40,6 +40,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                         keyIndex = 0;
 
                     *charPtr = (char) (base16CharRepresentation[value[i] & 15] ^ key[keyIndex]);
+
+                    if (i >= valueLength - 1)
+                        break;
+
                     charPtr++;
                     keyIndex++;
 
@@ -65,6 +69,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 for (var i = 0; i < valueLength; i++)
                 {
                     *charPtr = (char) (value[i] ^ key[keyIndex]);
+
+                    if (i >= valueLength - 1)
+                        break;
+
                     charPtr++;
                     keyIndex++;
 
@@ -94,10 +102,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                     charPtr++;
 
                     *charPtr = base16CharRepresentation[resultBytes[i] & 15];
-                    charPtr++;
-                    
+
                     if (i >= resultLength - 1)
                         break;
+
+                    charPtr++;
 
                     *charPtr = '-';
                     charPtr++;
@@ -119,7 +128,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 var resultLength = resultBytes.Length;
 
                 result = new string('\0', resultLength * 2 + resultLength - 1);
-                
+
                 fixed (char* charResult = result)
                 {
                     var charPtr = charResult;
@@ -130,10 +139,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                         charPtr++;
 
                         *charPtr = base16CharRepresentation[resultBytes[j] & 15];
-                        charPtr++;
 
                         if (j >= resultLength - 1)
                             break;
+
+                        charPtr++;
 
                         *charPtr = '-';
                         charPtr++;
@@ -175,14 +185,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                                 keyIndex = 0;
 
                             *charPtr = (char) (base16CharRepresentation[resultBytes[j] & 15] ^ key[keyIndex]);
+
+                            if (j >= resultLength - 1)
+                                break;
+
                             charPtr++;
                             keyIndex++;
 
                             if (keyIndex >= keyLength)
                                 keyIndex = 0;
-
-                            if (j >= resultLength - 1)
-                                break;
 
                             *charPtr = (char) ('-' ^ key[keyIndex]);
                             charPtr++;
@@ -197,10 +208,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                             charPtr++;
 
                             *charPtr = base16CharRepresentation[resultBytes[j] & 15];
-                            charPtr++;
 
                             if (j >= resultLength - 1)
                                 break;
+
+                            charPtr++;
 
                             *charPtr = '-';
                             charPtr++;
@@ -436,13 +448,21 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return root;
         }
 
-        private static byte[] GetUtf8Bytes(string value)
+        private static unsafe byte[] GetUtf8Bytes(string value)
         {
             var valueLength = value.Length;
             var result = new byte[valueLength];
 
-            for (var i = 0; i < valueLength; i++)
-                result[i] = (byte) value[i];
+            fixed (byte* byteResult = result)
+            {
+                var bytePtr = byteResult;
+
+                for (var i = 0; i < valueLength; i++)
+                {
+                    *bytePtr = (byte) value[i];
+                    bytePtr++;
+                }
+            }
 
             return result;
         }

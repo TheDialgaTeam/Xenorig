@@ -12,8 +12,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.IO
 
         public void Initialize()
         {
-            var logsDirectory = Path.Combine(Environment.CurrentDirectory, "Logs");
-            var configDirectory = Path.Combine(Environment.CurrentDirectory, "Config");
+            var currentDirectory = Environment.CurrentDirectory;
+            var logsDirectory = Path.Combine(currentDirectory, "Logs");
+            var configDirectory = Path.Combine(currentDirectory, "Config");
 
             if (!Directory.Exists(logsDirectory))
                 Directory.CreateDirectory(logsDirectory);

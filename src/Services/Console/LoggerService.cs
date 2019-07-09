@@ -17,8 +17,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
         private SemaphoreSlim SemaphoreSlim { get; set; }
 
-        private StreamWriter StreamWriter { get; set; }
-
         public LoggerService(Program program, FilePathService filePathService)
         {
             Program = program;
@@ -28,44 +26,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
         public void Initialize()
         {
             SemaphoreSlim = new SemaphoreSlim(1, 1);
-            StreamWriter = new StreamWriter(new FileStream(FilePathService.ConsoleLogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
         }
 
         public void LogMessage(string message, ConsoleColor consoleColor = ConsoleColor.White)
         {
-            LogMessageAsync(message, consoleColor).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+            var semaphoreSlim = SemaphoreSlim;
 
-        public void LogMessage(IEnumerable<ConsoleMessage> consoleMessages)
-        {
-            LogMessageAsync(consoleMessages).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
-        public async Task LogMessageAsync(string message, ConsoleColor consoleColor = ConsoleColor.White)
-        {
-            await LogMessageAsync(System.Console.Out, consoleColor, message).ConfigureAwait(false);
-        }
-
-        public async Task LogMessageAsync(IEnumerable<ConsoleMessage> consoleMessages)
-        {
-            await LogMessageAsync(System.Console.Out, consoleMessages).ConfigureAwait(false);
-        }
-
-        public void LogErrorMessage(Exception exception)
-        {
-            LogErrorMessageAsync(exception).GetAwaiter().GetResult();
-        }
-
-        public async Task LogErrorMessageAsync(Exception exception)
-        {
-            await LogMessageAsync(System.Console.Error, ConsoleColor.Red, exception.ToString()).ConfigureAwait(false);
-        }
-
-        private async Task LogMessageAsync(TextWriter writer, ConsoleColor consoleColor, string message)
-        {
             try
             {
-                await SemaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
+                semaphoreSlim.Wait(Program.CancellationTokenSource.Token);
             }
             catch (Exception)
             {
@@ -74,18 +43,90 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
             try
             {
+                var outWriter = System.Console.Out;
+
                 System.Console.ForegroundColor = ConsoleColor.Gray;
-                await writer.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+                outWriter.Write($"{DateTime.UtcNow:s} ");
 
                 System.Console.ForegroundColor = consoleColor;
-                await writer.WriteLineAsync(message).ConfigureAwait(false);
-                await writer.FlushAsync().ConfigureAwait(false);
+                outWriter.WriteLine(message);
+                outWriter.Flush();
+            }
+            catch (Exception ex)
+            {
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.Error.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                semaphoreSlim.Release();
+            }
+        }
 
-                if (writer != System.Console.Error)
-                    return;
+        public void LogMessage(IEnumerable<ConsoleMessage> consoleMessages)
+        {
+            var semaphoreSlim = SemaphoreSlim;
 
-                await StreamWriter.WriteLineAsync($"{DateTime.UtcNow:s} {message}").ConfigureAwait(false);
-                await StreamWriter.FlushAsync().ConfigureAwait(false);
+            try
+            {
+                semaphoreSlim.Wait(Program.CancellationTokenSource.Token);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
+            try
+            {
+                var outWriter = System.Console.Out;
+
+                foreach (var consoleMessage in consoleMessages)
+                {
+                    if (consoleMessage.IncludeDateTime)
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Gray;
+                        outWriter.Write($"{DateTime.UtcNow:s} ");
+                    }
+
+                    System.Console.ForegroundColor = consoleMessage.Color;
+                    outWriter.Write(consoleMessage.Message);
+                    outWriter.Flush();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.Error.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                semaphoreSlim.Release();
+            }
+        }
+
+        public async Task LogMessageAsync(string message, ConsoleColor consoleColor = ConsoleColor.White)
+        {
+            var semaphoreSlim = SemaphoreSlim;
+
+            try
+            {
+                await semaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
+            try
+            {
+                var outWriter = System.Console.Out;
+
+                System.Console.ForegroundColor = ConsoleColor.Gray;
+                await outWriter.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+
+                System.Console.ForegroundColor = consoleColor;
+                await outWriter.WriteLineAsync(message).ConfigureAwait(false);
+                await outWriter.FlushAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -94,15 +135,17 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
             }
             finally
             {
-                SemaphoreSlim.Release();
+                semaphoreSlim.Release();
             }
         }
 
-        private async Task LogMessageAsync(TextWriter writer, IEnumerable<ConsoleMessage> consoleMessages)
+        public async Task LogMessageAsync(IEnumerable<ConsoleMessage> consoleMessages)
         {
+            var semaphoreSlim = SemaphoreSlim;
+
             try
             {
-                await SemaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
+                await semaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -111,17 +154,19 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
             try
             {
+                var outWriter = System.Console.Out;
+
                 foreach (var consoleMessage in consoleMessages)
                 {
                     if (consoleMessage.IncludeDateTime)
                     {
                         System.Console.ForegroundColor = ConsoleColor.Gray;
-                        await writer.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+                        await outWriter.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
                     }
 
                     System.Console.ForegroundColor = consoleMessage.Color;
-                    await writer.WriteAsync(consoleMessage.Message).ConfigureAwait(false); ;
-                    await writer.FlushAsync().ConfigureAwait(false);
+                    await outWriter.WriteAsync(consoleMessage.Message).ConfigureAwait(false);
+                    await outWriter.FlushAsync().ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -131,14 +176,97 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
             }
             finally
             {
-                SemaphoreSlim.Release();
+                semaphoreSlim.Release();
+            }
+        }
+
+        public void LogErrorMessage(Exception exception)
+        {
+            var semaphoreSlim = SemaphoreSlim;
+            var exceptionMessage = exception.ToString();
+
+            try
+            {
+                semaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
+            try
+            {
+                var outWriter = System.Console.Out;
+
+                System.Console.ForegroundColor = ConsoleColor.Gray;
+                outWriter.Write($"{DateTime.UtcNow:s} ");
+
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                outWriter.WriteLine(exceptionMessage);
+                outWriter.Flush();
+
+                using (var errorWriter = new StreamWriter(new FileStream(FilePathService.ConsoleLogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)))
+                {
+                    errorWriter.WriteLine($"{DateTime.UtcNow:s} {exceptionMessage}");
+                    errorWriter.Flush();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                System.Console.Error.WriteLineAsync(ex.ToString());
+            }
+            finally
+            {
+                semaphoreSlim.Release();
+            }
+        }
+
+        public async Task LogErrorMessageAsync(Exception exception)
+        {
+            var semaphoreSlim = SemaphoreSlim;
+            var exceptionMessage = exception.ToString();
+
+            try
+            {
+                await semaphoreSlim.WaitAsync(Program.CancellationTokenSource.Token).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+
+            try
+            {
+                var outWriter = System.Console.Out;
+
+                System.Console.ForegroundColor = ConsoleColor.Gray;
+                await outWriter.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                await outWriter.WriteLineAsync(exceptionMessage).ConfigureAwait(false);
+                await outWriter.FlushAsync().ConfigureAwait(false);
+
+                using (var errorWriter = new StreamWriter(new FileStream(FilePathService.ConsoleLogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)))
+                {
+                    await errorWriter.WriteLineAsync($"{DateTime.UtcNow:s} {exceptionMessage}").ConfigureAwait(false);
+                    await errorWriter.FlushAsync().ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.ForegroundColor = ConsoleColor.Red;
+                await System.Console.Error.WriteLineAsync(ex.ToString()).ConfigureAwait(false);
+            }
+            finally
+            {
+                semaphoreSlim.Release();
             }
         }
 
         public void Dispose()
         {
             SemaphoreSlim?.Dispose();
-            StreamWriter?.Dispose();
         }
     }
 }

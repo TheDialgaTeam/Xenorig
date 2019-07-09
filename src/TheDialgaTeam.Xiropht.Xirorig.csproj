@@ -41,7 +41,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\Mining\" />
+    <Folder Include="Mining\Pool\" />
+    <Folder Include="Mining\SoloProxy\" />
+    <Folder Include="Mining\Solo\" />
   </ItemGroup>
 
 </Project>

@@ -12,27 +12,14 @@ using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig
 {
-    /// <summary>
-    /// Main program executable code.
-    /// </summary>
     public sealed class Program : IDisposable
     {
-        /// <summary>
-        /// Main program cancellation token source to safely exit this program.
-        /// </summary>
         public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
 
-        /// <summary>
-        /// List of tasks to await before this program exits.
-        /// </summary>
         public List<Task> TasksToAwait { get; } = new List<Task>();
 
         public ServiceProvider ServiceProvider { get; private set; }
 
-        /// <summary>
-        /// Program main entry point.
-        /// </summary>
-        /// <param name="args">List of command line arguments.</param>
         public static async Task Main(string[] args)
         {
             var program = new Program();
