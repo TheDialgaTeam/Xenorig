@@ -304,7 +304,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
                 { PoolSubmitPacket.SubmitHash, hashEncryptedKeyShare }
             };
 
-            await MiningService.Listener.SendPacketToPoolNetworkAsync(share.ToString(Formatting.None)).ConfigureAwait(false);
+            await MiningService.Listener.SendPacketToNetworkAsync(share.ToString(Formatting.None)).ConfigureAwait(false);
         }
     }
 }

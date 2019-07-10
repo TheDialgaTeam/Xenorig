@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.Versioning;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -15,201 +13,36 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
     {
         private string WalletAddress { get; }
 
-        private string WorkerId { get; }
-
-        private Task CheckConnectionFromPoolNetworkTask { get; set; }
-
-        private Task ReadPacketFromPoolNetworkTask { get; set; }
-
-        private TcpClient PoolClient { get; set; }
-
-        private StreamReader PoolClientReader { get; set; }
-
-        private StreamWriter PoolClientWriter { get; set; }
-
-        private DateTimeOffset LastValidPacketBeforeTimeout { get; set; }
-
-        private SemaphoreSlim AtomicOperation { get; } = new SemaphoreSlim(1, 1);
-
-        public PoolListener(string host, ushort port, string walletAddress, string workerId) : base(host, port)
+        public PoolListener(string host, ushort port, string workerId, string walletAddress) : base(host, port, workerId)
         {
             WalletAddress = walletAddress;
-            WorkerId = workerId;
         }
 
-        public override async Task StartConnectToNetworkAsync()
+        protected override async Task OnStartConnectToNetworkAsync()
         {
-            if (ConnectionStatus == ConnectionStatus.Connecting || ConnectionStatus == ConnectionStatus.Connected)
-                return;
-
-            ConnectionStatus = ConnectionStatus.Connecting;
-            IsActive = true;
-
-            if (CheckConnectionFromPoolNetworkTask == null)
+            var loginPacket = new JObject
             {
-                CheckConnectionFromPoolNetworkTask = Task.Factory.StartNew(async () =>
-                {
-                    while (IsActive)
-                    {
-                        if (ConnectionStatus == ConnectionStatus.Connected && DateTimeOffset.Now > LastValidPacketBeforeTimeout)
-                            await DisconnectFromNetworkAsync().ConfigureAwait(false);
+                { PoolPacket.Type, PoolPacketType.Login },
+                { PoolLoginPacket.WalletAddress, WalletAddress },
+                { PoolLoginPacket.Version, $"Xirorig/{Assembly.GetExecutingAssembly().GetName().Version} {Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName}" },
+                { PoolLoginPacket.WorkerId, WorkerId }
+            };
 
-                        if (ConnectionStatus == ConnectionStatus.Disconnected)
-                            await StartConnectToNetworkAsync().ConfigureAwait(false);
-
-                        await Task.Delay(1000).ConfigureAwait(false);
-                    }
-                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
-            }
-
-            try
-            {
-                PoolClient = new TcpClient();
-
-                var connectTask = PoolClient.ConnectAsync(Host, Port);
-                var timeoutTask = Task.Delay(5000);
-
-                await Task.WhenAny(connectTask, timeoutTask).ConfigureAwait(false);
-
-                if (!connectTask.IsCompleted)
-                    throw new Exception();
-
-                ConnectionStatus = ConnectionStatus.Connected;
-
-                LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
-
-                PoolClientReader = new StreamReader(PoolClient.GetStream());
-                PoolClientWriter = new StreamWriter(PoolClient.GetStream());
-
-                ReadPacketFromPoolNetworkTask = Task.Factory.StartNew(async () =>
-                {
-                    while (ConnectionStatus == ConnectionStatus.Connected)
-                    {
-                        try
-                        {
-                            if (PoolClientReader.BaseStream is NetworkStream networkStream)
-                            {
-                                if (networkStream.DataAvailable)
-                                {
-                                    var packet = await PoolClientReader.ReadLineAsync().ConfigureAwait(false);
-                                    _ = Task.Run(async () => await HandlePacketFromPoolNetworkAsync(packet).ConfigureAwait(false));
-                                }
-                            }
-
-                            await Task.Delay(1).ConfigureAwait(false);
-                        }
-                        catch (Exception)
-                        {
-                            await DisconnectFromNetworkAsync().ConfigureAwait(false);
-                        }
-                    }
-                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
-
-                var loginPacket = new JObject
-                {
-                    { PoolPacket.Type, PoolPacketType.Login },
-                    { PoolLoginPacket.WalletAddress, WalletAddress },
-                    { PoolLoginPacket.Version, $"Xirorig/{Assembly.GetExecutingAssembly().GetName().Version} {Assembly.GetExecutingAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName}" },
-                    { PoolLoginPacket.WorkerId, WorkerId }
-                };
-
-                await SendPacketToPoolNetworkAsync(loginPacket.ToString(Formatting.None)).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                await DisconnectFromNetworkAsync().ConfigureAwait(false);
-            }
+            await SendPacketToNetworkAsync(loginPacket.ToString(Formatting.None)).ConfigureAwait(false);
         }
 
-        public override async Task StopConnectToNetworkAsync()
+        protected override async Task<string> OnReceivePacketFromNetworkAsync(StreamReader reader)
         {
-            if (ConnectionStatus == ConnectionStatus.Disconnecting || ConnectionStatus == ConnectionStatus.Disconnected)
-                return;
-
-            ConnectionStatus = ConnectionStatus.Disconnecting;
-            IsActive = false;
-
-            if (CheckConnectionFromPoolNetworkTask != null)
-            {
-                await CheckConnectionFromPoolNetworkTask.ConfigureAwait(false);
-                CheckConnectionFromPoolNetworkTask.Dispose();
-                CheckConnectionFromPoolNetworkTask = null;
-            }
-
-            PoolClientReader?.Close();
-            PoolClientWriter?.Close();
-            PoolClient?.Close();
-
-            PoolClientReader?.Dispose();
-            PoolClientWriter?.Dispose();
-            PoolClient?.Dispose();
-
-            if (ReadPacketFromPoolNetworkTask != null)
-            {
-                await ReadPacketFromPoolNetworkTask.ConfigureAwait(false);
-                ReadPacketFromPoolNetworkTask.Dispose();
-                ReadPacketFromPoolNetworkTask = null;
-            }
-
-            ConnectionStatus = ConnectionStatus.Disconnected;
-            IsLoggedIn = false;
-            RetryCount = 0;
-
-            await OnDisconnectedAsync().ConfigureAwait(false);
+            return await reader.ReadLineAsync().ConfigureAwait(false);
         }
 
-        public override async Task SendPacketToPoolNetworkAsync(string packet)
+        protected override async Task OnSendPacketToNetworkAsync(StreamWriter writer, string packet)
         {
-            try
-            {
-                await AtomicOperation.WaitAsync().ConfigureAwait(false);
-
-                if (ConnectionStatus == ConnectionStatus.Disconnecting || ConnectionStatus == ConnectionStatus.Disconnected)
-                    return;
-
-                await PoolClientWriter.WriteLineAsync(packet).ConfigureAwait(false);
-                await PoolClientWriter.FlushAsync().ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                await DisconnectFromNetworkAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                AtomicOperation.Release();
-            }
+            await writer.WriteLineAsync(packet).ConfigureAwait(false);
+            await writer.FlushAsync().ConfigureAwait(false);
         }
 
-        private async Task DisconnectFromNetworkAsync()
-        {
-            if (ConnectionStatus == ConnectionStatus.Disconnecting || ConnectionStatus == ConnectionStatus.Disconnected)
-                return;
-
-            ConnectionStatus = ConnectionStatus.Disconnecting;
-
-            PoolClientReader?.Close();
-            PoolClientWriter?.Close();
-            PoolClient?.Close();
-
-            PoolClientReader?.Dispose();
-            PoolClientWriter?.Dispose();
-            PoolClient?.Dispose();
-
-            if (ReadPacketFromPoolNetworkTask != null)
-            {
-                await ReadPacketFromPoolNetworkTask.ConfigureAwait(false);
-                ReadPacketFromPoolNetworkTask.Dispose();
-                ReadPacketFromPoolNetworkTask = null;
-            }
-
-            ConnectionStatus = ConnectionStatus.Disconnected;
-            IsLoggedIn = false;
-            RetryCount++;
-
-            await OnDisconnectedAsync().ConfigureAwait(false);
-        }
-
-        private async Task HandlePacketFromPoolNetworkAsync(string packet)
+        protected override async Task OnHandlePacketFromNetworkAsync(string packet)
         {
             try
             {

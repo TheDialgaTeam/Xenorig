@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Xirorig</AssemblyName>
     <RootNamespace>TheDialgaTeam.Xiropht.Xirorig</RootNamespace>
-    <TargetFrameworks>netcoreapp2.2;net462</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp2.2</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
     <PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>
@@ -27,7 +27,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
   </PropertyGroup>
   
   <ItemGroup>
@@ -42,7 +42,6 @@
 
   <ItemGroup>
     <Folder Include="Mining\SoloProxy\" />
-    <Folder Include="Mining\Solo\" />
   </ItemGroup>
 
 </Project>

@@ -20,6 +20,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public Config.MiningMode MiningMode => Config.Mode;
 
+        public Config.MiningSolo Solo => Config.Solo;
+
         public IEnumerable<Config.MiningPool> Pools => Config.Pools;
 
         public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.AdditionJob).ToArray();
