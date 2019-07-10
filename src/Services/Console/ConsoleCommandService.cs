@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Console;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Mining;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 {
@@ -12,13 +12,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
         private LoggerService LoggerService { get; }
 
-        private PoolService PoolService { get; }
+        private MiningService MiningService { get; }
 
-        public ConsoleCommandService(Program program, LoggerService loggerService, PoolService poolService)
+        public ConsoleCommandService(Program program, LoggerService loggerService, MiningService miningService)
         {
             Program = program;
             LoggerService = loggerService;
-            PoolService = poolService;
+            MiningService = miningService;
         }
 
         public void Initialize()
@@ -43,27 +43,27 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                             var tableBuilder = new ConsoleMessageBuilder()
                                 .WriteLine("| THREAD | 10s H/s | 60s H/s | 15m H/s |", false);
 
-                            for (var i = 0; i < PoolService.PoolMiner.Average10SecondsHashesCalculated.Count; i++)
-                                average10SecondsSum += PoolService.PoolMiner.Average10SecondsHashesCalculated[i];
+                            for (var i = 0; i < MiningService.Miner.Average10SecondsHashesCalculated.Count; i++)
+                                average10SecondsSum += MiningService.Miner.Average10SecondsHashesCalculated[i];
 
-                            for (var i = 0; i < PoolService.PoolMiner.Average60SecondsHashesCalculated.Count; i++)
-                                average60SecondsSum += PoolService.PoolMiner.Average60SecondsHashesCalculated[i];
+                            for (var i = 0; i < MiningService.Miner.Average60SecondsHashesCalculated.Count; i++)
+                                average60SecondsSum += MiningService.Miner.Average60SecondsHashesCalculated[i];
 
-                            for (var i = 0; i < PoolService.PoolMiner.Average15MinutesHashesCalculated.Count; i++)
-                                average15MinutesSum += PoolService.PoolMiner.Average15MinutesHashesCalculated[i];
+                            for (var i = 0; i < MiningService.Miner.Average15MinutesHashesCalculated.Count; i++)
+                                average15MinutesSum += MiningService.Miner.Average15MinutesHashesCalculated[i];
 
-                            for (var i = 0; i < PoolService.PoolMiner.Average10SecondsHashesCalculated.Count; i++)
-                                tableBuilder.WriteLine($"| {i.ToString().PadLeft(6)} | {PoolService.PoolMiner.Average10SecondsHashesCalculated[i].ToString("F1").PadLeft(7)} | {PoolService.PoolMiner.Average60SecondsHashesCalculated[i].ToString("F1").PadLeft(7)} | {PoolService.PoolMiner.Average15MinutesHashesCalculated[i].ToString("F1").PadLeft(7)} |", false);
+                            for (var i = 0; i < MiningService.Miner.Average10SecondsHashesCalculated.Count; i++)
+                                tableBuilder.WriteLine($"| {i.ToString().PadLeft(6)} | {MiningService.Miner.Average10SecondsHashesCalculated[i].ToString("F0").PadLeft(7)} | {MiningService.Miner.Average60SecondsHashesCalculated[i].ToString("F0").PadLeft(7)} | {MiningService.Miner.Average15MinutesHashesCalculated[i].ToString("F0").PadLeft(7)} |", false);
 
                             await LoggerService.LogMessageAsync(tableBuilder.Build()).ConfigureAwait(false);
                             await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
                                 .Write("speed 10s/60s/15m ", true)
-                                .Write($"{average10SecondsSum:F1} ", ConsoleColor.Cyan, false)
-                                .Write($"{average60SecondsSum:F1} ", ConsoleColor.DarkCyan, false)
-                                .Write($"{average15MinutesSum:F1} ", ConsoleColor.DarkCyan, false)
+                                .Write($"{average10SecondsSum:F0} ", ConsoleColor.Cyan, false)
+                                .Write($"{average60SecondsSum:F0} ", ConsoleColor.DarkCyan, false)
+                                .Write($"{average15MinutesSum:F0} ", ConsoleColor.DarkCyan, false)
                                 .Write("H/s ", ConsoleColor.Cyan, false)
                                 .Write("max ", false)
-                                .WriteLine($"{PoolService.PoolMiner.MaxHashes:F1} H/s", ConsoleColor.Cyan, false)
+                                .WriteLine($"{MiningService.Miner.MaxHashes:F0} H/s", ConsoleColor.Cyan, false)
                                 .Build()).ConfigureAwait(false);
                         }
                     }
@@ -76,8 +76,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                 .Write(" * ", ConsoleColor.Green, false)
                 .Write("COMMANDS".PadRight(13), false)
                 .Write("h", ConsoleColor.Magenta, false)
-                .Write("ashrate", false)
-                .WriteLine("", false);
+                .WriteLine("ashrate", false);
 
             LoggerService.LogMessage(consoleMessages.Build());
         }

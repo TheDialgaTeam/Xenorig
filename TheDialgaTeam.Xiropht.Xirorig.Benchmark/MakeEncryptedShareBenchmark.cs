@@ -21,13 +21,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 
             using (var pdb = new PasswordDeriveBytes("128", Encoding.UTF8.GetBytes("128")))
             {
-                var jobAesKeyBytes = pdb.GetBytes(128 / 8);
-                var jobAesIvBytes = pdb.GetBytes(128 / 8);
-
                 Aes.BlockSize = 128;
                 Aes.KeySize = 128;
-                Aes.Key = jobAesKeyBytes;
-                Aes.IV = jobAesIvBytes;
+                Aes.Key = pdb.GetBytes(128 / 8);
+                Aes.IV = pdb.GetBytes(128 / 8);
 
                 JobAesCryptoTransform = Aes.CreateEncryptor();
             }
@@ -39,7 +36,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
             var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(TestData, "128");
             encryptedShare = MiningUtility.EncryptAesShareRoundAndEncryptXorShare(JobAesCryptoTransform, encryptedShare, 1, "128");
             encryptedShare = MiningUtility.EncryptAesShare(JobAesCryptoTransform, encryptedShare);
-            encryptedShare = MiningUtility.GenerateSha512(encryptedShare);
+            encryptedShare = MiningUtility.ComputeHash(SHA512.Create(), encryptedShare);
 
             return encryptedShare;
         }

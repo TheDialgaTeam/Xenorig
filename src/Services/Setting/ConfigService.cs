@@ -18,6 +18,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public int PrintTime => Config.PrintTime;
 
+        public Config.MiningMode MiningMode => Config.Mode;
+
         public IEnumerable<Config.MiningPool> Pools => Config.Pools;
 
         public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.AdditionJob).ToArray();
@@ -227,7 +229,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
         {
             LoggerService.LogMessage(new ConsoleMessageBuilder()
                 .WriteLine("==================================================", false)
-                .WriteLine("Solo Mining Mode Configuration:", false)
+                .WriteLine("Solo Mining MiningMode Configuration:", false)
                 .WriteLine("==================================================", false).Build());
 
             string walletAddress, setWorkerId, workerId = null;
@@ -268,7 +270,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
         private void DoConfigureSoloProxy()
         {
             //LoggerService.LogMessage("==================================================");
-            //LoggerService.LogMessage("Solo Proxy Mining Mode configuration:");
+            //LoggerService.LogMessage("Solo Proxy Mining MiningMode configuration:");
             //LoggerService.LogMessage("==================================================");
 
             //string addFailBack;

@@ -1,4 +1,4 @@
-﻿namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool.Packet
+﻿namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool.Packet
 {
     public sealed class PoolSubmitPacket
     {

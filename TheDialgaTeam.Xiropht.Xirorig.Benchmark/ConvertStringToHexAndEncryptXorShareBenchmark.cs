@@ -17,31 +17,34 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 
         private static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
         {
-            var base16CharRepresentation = Base16CharRepresentation;
             var valueLength = value.Length;
-            var keyLength = key.Length;
             var result = new string('\0', valueLength * 2);
 
-            fixed (char* charResult = result)
+            fixed (char* valuePtr = value, keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
             {
-                var charPtr = charResult;
+                var valueCharPtr = valuePtr;
+                var resultCharPtr = resultPtr;
+
+                var keyLength = key.Length;
                 var keyIndex = 0;
 
                 for (var i = 0; i < valueLength; i++)
                 {
-                    *charPtr = (char) (base16CharRepresentation[value[i] >> 4] ^ key[keyIndex]);
-                    charPtr++;
+                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr >> 4)) ^ *(keyPtr + keyIndex));
+                    resultCharPtr++;
                     keyIndex++;
 
-                    if (keyIndex >= keyLength)
+                    if (keyIndex == keyLength)
                         keyIndex = 0;
 
-                    *charPtr = (char) (base16CharRepresentation[value[i] & 15] ^ key[keyIndex]);
-                    charPtr++;
+                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr & 15)) ^ *(keyPtr + keyIndex));
+                    resultCharPtr++;
                     keyIndex++;
 
-                    if (keyIndex >= keyLength)
+                    if (keyIndex == keyLength)
                         keyIndex = 0;
+
+                    valueCharPtr++;
                 }
             }
 

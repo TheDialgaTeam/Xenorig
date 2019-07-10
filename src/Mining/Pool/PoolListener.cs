@@ -7,45 +7,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool.Packet;
+using TheDialgaTeam.Xiropht.Xirorig.Mining.Pool.Packet;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
+namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
 {
-    public enum ConnectionStatus
+    public sealed class PoolListener : AbstractListener
     {
-        Disconnected,
-        Disconnecting,
-        Connecting,
-        Connected
-    }
+        private string WalletAddress { get; }
 
-    public sealed class PoolListener
-    {
-        public event Func<PoolListener, Task> Disconnected; 
-
-        public event Func<PoolListener, bool, Task> LoginResult;
-
-        public event Func<PoolListener, string, Task> NewJob;
-
-        public event Func<PoolListener, Task> ShareAccepted;
-
-        public event Func<PoolListener, string, Task> ShareRejected;
-
-        public ConnectionStatus ConnectionStatus { get; private set; }
-
-        public bool IsLoggedIn { get; private set; }
-
-        public bool IsActive { get; private set; }
-
-        public int RetryCount { get; private set; }
-
-        public string Host { get; }
-
-        public ushort Port { get; }
-
-        public string WalletAddress { get; }
-
-        public string WorkerId { get; }
+        private string WorkerId { get; }
 
         private Task CheckConnectionFromPoolNetworkTask { get; set; }
 
@@ -61,15 +31,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
         private SemaphoreSlim AtomicOperation { get; } = new SemaphoreSlim(1, 1);
 
-        public PoolListener(string host, ushort port, string walletAddress, string workerId)
+        public PoolListener(string host, ushort port, string walletAddress, string workerId) : base(host, port)
         {
-            Host = host;
-            Port = port;
             WalletAddress = walletAddress;
             WorkerId = workerId;
         }
 
-        public async Task StartConnectToNetwork()
+        public override async Task StartConnectToNetworkAsync()
         {
             if (ConnectionStatus == ConnectionStatus.Connecting || ConnectionStatus == ConnectionStatus.Connected)
                 return;
@@ -84,14 +52,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     while (IsActive)
                     {
                         if (ConnectionStatus == ConnectionStatus.Connected && DateTimeOffset.Now > LastValidPacketBeforeTimeout)
-                            await DisconnectFromNetwork().ConfigureAwait(false);
+                            await DisconnectFromNetworkAsync().ConfigureAwait(false);
 
                         if (ConnectionStatus == ConnectionStatus.Disconnected)
-                            await StartConnectToNetwork().ConfigureAwait(false);
+                            await StartConnectToNetworkAsync().ConfigureAwait(false);
 
                         await Task.Delay(1000).ConfigureAwait(false);
                     }
-                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
             }
 
             try
@@ -132,7 +100,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                         }
                         catch (Exception)
                         {
-                            await DisconnectFromNetwork().ConfigureAwait(false);
+                            await DisconnectFromNetworkAsync().ConfigureAwait(false);
                         }
                     }
                 }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
@@ -149,41 +117,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             }
             catch (Exception)
             {
-                await DisconnectFromNetwork().ConfigureAwait(false);
+                await DisconnectFromNetworkAsync().ConfigureAwait(false);
             }
         }
 
-        public async Task DisconnectFromNetwork()
-        {
-            if (ConnectionStatus == ConnectionStatus.Disconnecting || ConnectionStatus == ConnectionStatus.Disconnected)
-                return;
-
-            ConnectionStatus = ConnectionStatus.Disconnecting;
-
-            PoolClientReader?.Close();
-            PoolClientWriter?.Close();
-            PoolClient?.Close();
-
-            PoolClientReader?.Dispose();
-            PoolClientWriter?.Dispose();
-            PoolClient?.Dispose();
-
-            if (ReadPacketFromPoolNetworkTask != null)
-            {
-                await ReadPacketFromPoolNetworkTask.ConfigureAwait(false);
-                ReadPacketFromPoolNetworkTask.Dispose();
-                ReadPacketFromPoolNetworkTask = null;
-            }
-            
-            ConnectionStatus = ConnectionStatus.Disconnected;
-            IsLoggedIn = false;
-            RetryCount++;
-
-            if (Disconnected != null)
-                await Disconnected(this).ConfigureAwait(false);
-        }
-
-        public async Task StopConnectToNetwork()
+        public override async Task StopConnectToNetworkAsync()
         {
             if (ConnectionStatus == ConnectionStatus.Disconnecting || ConnectionStatus == ConnectionStatus.Disconnected)
                 return;
@@ -217,11 +155,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             IsLoggedIn = false;
             RetryCount = 0;
 
-            if (Disconnected != null)
-                await Disconnected(this).ConfigureAwait(false);
+            await OnDisconnectedAsync().ConfigureAwait(false);
         }
 
-        public async Task SendPacketToPoolNetworkAsync(string packet)
+        public override async Task SendPacketToPoolNetworkAsync(string packet)
         {
             try
             {
@@ -235,12 +172,41 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
             }
             catch (Exception)
             {
-                await DisconnectFromNetwork().ConfigureAwait(false);
+                await DisconnectFromNetworkAsync().ConfigureAwait(false);
             }
             finally
             {
                 AtomicOperation.Release();
             }
+        }
+
+        private async Task DisconnectFromNetworkAsync()
+        {
+            if (ConnectionStatus == ConnectionStatus.Disconnecting || ConnectionStatus == ConnectionStatus.Disconnected)
+                return;
+
+            ConnectionStatus = ConnectionStatus.Disconnecting;
+
+            PoolClientReader?.Close();
+            PoolClientWriter?.Close();
+            PoolClient?.Close();
+
+            PoolClientReader?.Dispose();
+            PoolClientWriter?.Dispose();
+            PoolClient?.Dispose();
+
+            if (ReadPacketFromPoolNetworkTask != null)
+            {
+                await ReadPacketFromPoolNetworkTask.ConfigureAwait(false);
+                ReadPacketFromPoolNetworkTask.Dispose();
+                ReadPacketFromPoolNetworkTask = null;
+            }
+
+            ConnectionStatus = ConnectionStatus.Disconnected;
+            IsLoggedIn = false;
+            RetryCount++;
+
+            await OnDisconnectedAsync().ConfigureAwait(false);
         }
 
         private async Task HandlePacketFromPoolNetworkAsync(string packet)
@@ -256,10 +222,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
 
                     if (jsonPacket.ContainsKey(PoolLoginPacket.LoginWrong))
                     {
-                        if (LoginResult != null)
-                            await LoginResult(this, false).ConfigureAwait(false);
-                        
-                        await StopConnectToNetwork().ConfigureAwait(false);
+                        await OnLoginResultAsync(false).ConfigureAwait(false);
+                        await StopConnectToNetworkAsync().ConfigureAwait(false);
                     }
 
                     if (jsonPacket.ContainsKey(PoolLoginPacket.LoginOkay))
@@ -267,8 +231,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                         IsLoggedIn = true;
                         RetryCount = 0;
 
-                        if (LoginResult != null)
-                            await LoginResult(this, true).ConfigureAwait(false);
+                        await OnLoginResultAsync(true).ConfigureAwait(false);
                     }
                 }
 
@@ -279,8 +242,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                 {
                     LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
 
-                    if (NewJob != null)
-                        await NewJob(this, packet).ConfigureAwait(false);
+                    await OnNewJobAsync(packet).ConfigureAwait(false);
                 }
 
                 if (string.Equals(type, PoolPacketType.Share, StringComparison.OrdinalIgnoreCase))
@@ -290,28 +252,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Pool
                     var result = jsonPacket[PoolSharePacket.Result].ToString();
 
                     if (string.Equals(result, PoolSharePacket.ResultShareOk, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (ShareAccepted != null)
-                            await ShareAccepted(this).ConfigureAwait(false);
-                    }
+                        await OnShareResultAsync(true, "Share Accepted.").ConfigureAwait(false);
 
                     if (string.Equals(result, PoolSharePacket.ResultShareInvalid, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (ShareRejected != null)
-                            await ShareRejected(this, "Invalid Share.").ConfigureAwait(false);
-                    }
+                        await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
 
                     if (string.Equals(result, PoolSharePacket.ResultShareDuplicate, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (ShareRejected != null)
-                            await ShareRejected(this, "Duplicate Share.").ConfigureAwait(false);
-                    }
+                        await OnShareResultAsync(false, "Duplicate Share.").ConfigureAwait(false);
 
                     if (string.Equals(result, PoolSharePacket.ResultShareLowDifficulty, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (ShareRejected != null)
-                            await ShareRejected(this, "Low Share Difficulty.").ConfigureAwait(false);
-                    }
+                        await OnShareResultAsync(false, "Low Share Difficulty.").ConfigureAwait(false);
                 }
             }
             catch (Exception)

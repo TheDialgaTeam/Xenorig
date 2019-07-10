@@ -14,41 +14,38 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         private static char[] Base16CharRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-        private static SHA512 Sha512 { get; } = SHA512.Create();
-
         private static RNGCryptoServiceProvider RngCryptoServiceProvider { get; } = new RNGCryptoServiceProvider();
 
         public static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
         {
-            var base16CharRepresentation = Base16CharRepresentation;
             var valueLength = value.Length;
-            var keyLength = key.Length;
             var result = new string('\0', valueLength * 2);
 
-            fixed (char* charResult = result)
+            fixed (char* valuePtr = value, keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
             {
-                var charPtr = charResult;
+                var valueCharPtr = valuePtr;
+                var resultCharPtr = resultPtr;
+
+                var keyLength = key.Length;
                 var keyIndex = 0;
 
                 for (var i = 0; i < valueLength; i++)
                 {
-                    *charPtr = (char) (base16CharRepresentation[value[i] >> 4] ^ key[keyIndex]);
-                    charPtr++;
+                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr >> 4)) ^ *(keyPtr + keyIndex));
+                    resultCharPtr++;
                     keyIndex++;
 
-                    if (keyIndex >= keyLength)
+                    if (keyIndex == keyLength)
                         keyIndex = 0;
 
-                    *charPtr = (char) (base16CharRepresentation[value[i] & 15] ^ key[keyIndex]);
-
-                    if (i >= valueLength - 1)
-                        break;
-
-                    charPtr++;
+                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr & 15)) ^ *(keyPtr + keyIndex));
+                    resultCharPtr++;
                     keyIndex++;
 
-                    if (keyIndex >= keyLength)
+                    if (keyIndex == keyLength)
                         keyIndex = 0;
+
+                    valueCharPtr++;
                 }
             }
 
@@ -58,26 +55,26 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
         public static unsafe string EncryptXorShare(string value, string key)
         {
             var valueLength = value.Length;
-            var keyLength = key.Length;
             var result = new string('\0', valueLength);
 
-            fixed (char* charResult = result)
+            fixed (char* valuePtr = value, keyPtr = key, resultPtr = result)
             {
-                var charPtr = charResult;
+                var valueCharPtr = valuePtr;
+                var resultCharPtr = resultPtr;
+
+                var keyLength = key.Length;
                 var keyIndex = 0;
 
                 for (var i = 0; i < valueLength; i++)
                 {
-                    *charPtr = (char) (value[i] ^ key[keyIndex]);
-
-                    if (i >= valueLength - 1)
-                        break;
-
-                    charPtr++;
+                    *resultCharPtr = (char) (*valueCharPtr ^ *(keyPtr + keyIndex));
+                    resultCharPtr++;
                     keyIndex++;
 
-                    if (keyIndex >= keyLength)
+                    if (keyIndex == keyLength)
                         keyIndex = 0;
+
+                    valueCharPtr++;
                 }
             }
 
@@ -87,67 +84,31 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
         public static unsafe string EncryptAesShare(ICryptoTransform aesCryptoTransform, string value)
         {
             var textBytes = Encoding.UTF8.GetBytes(value);
-            var resultBytes = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
-            var resultLength = resultBytes.Length;
-            var result = new string('\0', resultLength * 2 + resultLength - 1);
-            var base16CharRepresentation = Base16CharRepresentation;
+            var output = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+            var outputLength = output.Length;
+            var result = new string('\0', outputLength * 2 + outputLength - 1);
 
-            fixed (char* charResult = result)
+            fixed (byte* outputPtr = output)
+            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
             {
-                var charPtr = charResult;
+                var outputBytePtr = outputPtr;
+                var resultCharPtr = resultPtr;
 
-                for (var i = 0; i < resultLength; i++)
+                for (var i = 0; i < outputLength; i++)
                 {
-                    *charPtr = base16CharRepresentation[resultBytes[i] >> 4];
-                    charPtr++;
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
+                    resultCharPtr++;
 
-                    *charPtr = base16CharRepresentation[resultBytes[i] & 15];
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
+                    resultCharPtr++;
 
-                    if (i >= resultLength - 1)
+                    if (i == outputLength - 1)
                         break;
 
-                    charPtr++;
+                    *resultCharPtr = '-';
+                    resultCharPtr++;
 
-                    *charPtr = '-';
-                    charPtr++;
-                }
-            }
-
-            return result;
-        }
-
-        public static unsafe string EncryptAesShareRound(ICryptoTransform aesCryptoTransform, string value, int round)
-        {
-            var result = value;
-            var base16CharRepresentation = Base16CharRepresentation;
-
-            for (var i = 0; i < round; i++)
-            {
-                var textBytes = Encoding.UTF8.GetBytes(result);
-                var resultBytes = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
-                var resultLength = resultBytes.Length;
-
-                result = new string('\0', resultLength * 2 + resultLength - 1);
-
-                fixed (char* charResult = result)
-                {
-                    var charPtr = charResult;
-
-                    for (var j = 0; j < resultLength; j++)
-                    {
-                        *charPtr = base16CharRepresentation[resultBytes[j] >> 4];
-                        charPtr++;
-
-                        *charPtr = base16CharRepresentation[resultBytes[j] & 15];
-
-                        if (j >= resultLength - 1)
-                            break;
-
-                        charPtr++;
-
-                        *charPtr = '-';
-                        charPtr++;
-                    }
+                    outputBytePtr++;
                 }
             }
 
@@ -158,65 +119,66 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
         {
             var result = value;
             var keyLength = key.Length;
-            var base16CharRepresentation = Base16CharRepresentation;
 
             for (var i = 0; i < round; i++)
             {
                 var textBytes = Encoding.UTF8.GetBytes(result);
-                var resultBytes = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
-                var resultLength = resultBytes.Length;
+                var output = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+                var outputLength = output.Length;
 
-                result = new string('\0', resultLength * 2 + resultLength - 1);
+                result = new string('\0', outputLength * 2 + outputLength - 1);
 
-                fixed (char* charResult = result)
+                fixed (byte* outputPtr = output)
+                fixed (char* keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
                 {
-                    var charPtr = charResult;
+                    var outputBytePtr = outputPtr;
+                    var resultCharPtr = resultPtr;
                     var keyIndex = 0;
 
-                    for (var j = 0; j < resultLength; j++)
+                    for (var j = 0; j < outputLength; j++)
                     {
                         if (i >= round - 1)
                         {
-                            *charPtr = (char) (base16CharRepresentation[resultBytes[j] >> 4] ^ key[keyIndex]);
-                            charPtr++;
+                            *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr >> 4)) ^ *(keyPtr + keyIndex));
+                            resultCharPtr++;
                             keyIndex++;
 
-                            if (keyIndex >= keyLength)
+                            if (keyIndex == keyLength)
                                 keyIndex = 0;
 
-                            *charPtr = (char) (base16CharRepresentation[resultBytes[j] & 15] ^ key[keyIndex]);
+                            *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr & 15)) ^ *(keyPtr + keyIndex));
+                            resultCharPtr++;
+                            keyIndex++;
 
-                            if (j >= resultLength - 1)
+                            if (keyIndex == keyLength)
+                                keyIndex = 0;
+
+                            if (j == outputLength - 1)
                                 break;
 
-                            charPtr++;
+                            *resultCharPtr = (char) ('-' ^ *(keyPtr + keyIndex));
+                            resultCharPtr++;
                             keyIndex++;
 
-                            if (keyIndex >= keyLength)
-                                keyIndex = 0;
-
-                            *charPtr = (char) ('-' ^ key[keyIndex]);
-                            charPtr++;
-                            keyIndex++;
-
-                            if (keyIndex >= keyLength)
+                            if (keyIndex == keyLength)
                                 keyIndex = 0;
                         }
                         else
                         {
-                            *charPtr = base16CharRepresentation[resultBytes[j] >> 4];
-                            charPtr++;
+                            *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
+                            resultCharPtr++;
 
-                            *charPtr = base16CharRepresentation[resultBytes[j] & 15];
+                            *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
+                            resultCharPtr++;
 
-                            if (j >= resultLength - 1)
+                            if (j == outputLength - 1)
                                 break;
 
-                            charPtr++;
-
-                            *charPtr = '-';
-                            charPtr++;
+                            *resultCharPtr = '-';
+                            resultCharPtr++;
                         }
+
+                        outputBytePtr++;
                     }
                 }
             }
@@ -224,44 +186,52 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return result;
         }
 
-        public static unsafe string GenerateSha512(string value)
+        public static unsafe string ComputeHash(HashAlgorithm hashAlgorithm, string value)
         {
 #if NETCOREAPP
-            var base16CharRepresentation = Base16CharRepresentation;
-            var hashedInputBytes = Sha512.ComputeHash(Encoding.UTF8.GetBytes(value));
-            var result = new string('\0', 128);
+            var output = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(value));
+            var outputLength = output.Length;
+            var result = new string('\0', outputLength * 2);
 
-            fixed (char* charResult = result)
+            fixed (byte* outputPtr = output)
+            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
             {
-                var charPtr = charResult;
+                var outputBytePtr = outputPtr;
+                var resultCharPtr = resultPtr;
 
-                for (var i = 0; i < 64; i++)
+                for (var i = 0; i < outputLength; i++)
                 {
-                    *charPtr = base16CharRepresentation[hashedInputBytes[i] >> 4];
-                    charPtr++;
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
+                    resultCharPtr++;
 
-                    *charPtr = base16CharRepresentation[hashedInputBytes[i] & 15];
-                    charPtr++;
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
+                    resultCharPtr++;
+
+                    outputBytePtr++;
                 }
             }
 
             return result;
 #else
-            var base16CharRepresentation = Base16CharRepresentation;
-            var hashedInputBytes = Sha512.ComputeHash(GetUtf8Bytes(value));
-            var result = new string('\0', 128);
+            var output = hashAlgorithm.ComputeHash(GetUtf8Bytes(value));
+            var outputLength = output.Length;
+            var result = new string('\0', outputLength * 2);
 
-            fixed (char* charResult = result)
+            fixed (byte* outputPtr = output)
+            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
             {
-                var charPtr = charResult;
+                var outputBytePtr = outputPtr;
+                var resultCharPtr = resultPtr;
 
-                for (var i = 0; i < 64; i++)
+                for (var i = 0; i < outputLength; i++)
                 {
-                    *charPtr = base16CharRepresentation[hashedInputBytes[i] >> 4];
-                    charPtr++;
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
+                    resultCharPtr++;
 
-                    *charPtr = base16CharRepresentation[hashedInputBytes[i] & 15];
-                    charPtr++;
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
+                    resultCharPtr++;
+
+                    outputBytePtr++;
                 }
             }
 
@@ -271,21 +241,25 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         public static unsafe string HashJobToHexString(string value)
         {
-            var base16CharRepresentation = Base16CharRepresentation;
-            var bytes = Encoding.Unicode.GetBytes(value);
-            var result = new string('\0', 512);
+            var output = Encoding.Unicode.GetBytes(value);
+            var outputLength = output.Length;
+            var result = new string('\0', outputLength * 2);
 
-            fixed (char* charResult = result)
+            fixed (byte* outputPtr = output)
+            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
             {
-                var charPtr = charResult;
+                var outputBytePtr = outputPtr;
+                var resultCharPtr = resultPtr;
 
-                for (var i = 0; i < 256; i++)
+                for (var i = 0; i < outputLength; i++)
                 {
-                    *charPtr = base16CharRepresentation[bytes[i] >> 4];
-                    charPtr++;
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
+                    resultCharPtr++;
 
-                    *charPtr = base16CharRepresentation[bytes[i] & 15];
-                    charPtr++;
+                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
+                    resultCharPtr++;
+
+                    outputBytePtr++;
                 }
             }
 
@@ -314,20 +288,19 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             {
                 var randomSize = GetRandomBetween(1, GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length);
                 var resultString = new string('\0', randomSize);
-                var base10CharRepresentation = Base10CharRepresentation;
 
-                fixed (char* charResult = resultString)
+                fixed (char* base10CharRepresentationPtr = Base10CharRepresentation, resultPtr = resultString)
                 {
-                    var charPtr = charResult;
+                    var resultCharPtr = resultPtr;
 
                     for (var i = 0; i < randomSize; i++)
                     {
                         if (randomSize == 1)
-                            *charPtr = base10CharRepresentation[GetRandomBetween(2, 9)];
+                            *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(2, 9));
                         else
-                            *charPtr = base10CharRepresentation[GetRandomBetween(i == 0 ? 1 : 0, 9)];
+                            *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(i == 0 ? 1 : 0, 9));
 
-                        charPtr++;
+                        resultCharPtr++;
                     }
                 }
 
@@ -453,14 +426,17 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             var valueLength = value.Length;
             var result = new byte[valueLength];
 
-            fixed (byte* byteResult = result)
+            fixed (char* valuePtr = value)
+            fixed (byte* resultPtr = result)
             {
-                var bytePtr = byteResult;
+                var valueCharPtr = valuePtr;
+                var resultBytePtr = resultPtr;
 
                 for (var i = 0; i < valueLength; i++)
                 {
-                    *bytePtr = (byte) value[i];
-                    bytePtr++;
+                    *resultBytePtr = (byte) *valueCharPtr;
+                    resultBytePtr++;
+                    valueCharPtr++;
                 }
             }
 

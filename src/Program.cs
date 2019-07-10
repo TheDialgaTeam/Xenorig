@@ -7,7 +7,7 @@ using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.IO;
-using TheDialgaTeam.Xiropht.Xirorig.Services.Pool;
+using TheDialgaTeam.Xiropht.Xirorig.Services.Mining;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig
@@ -34,7 +34,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             serviceCollection.AddInterfacesAndSelfAsSingleton<LoggerService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<BootstrapService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<ConfigService>();
-            serviceCollection.AddInterfacesAndSelfAsSingleton<PoolService>();
+            serviceCollection.AddInterfacesAndSelfAsSingleton<MiningService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<ConsoleCommandService>();
 
             ServiceProvider = serviceCollection.BuildServiceProvider();
