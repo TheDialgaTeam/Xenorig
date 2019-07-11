@@ -165,6 +165,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 ReadPacketFromNetworkTask = null;
             }
 
+            await OnStopConnectToNetworkAsync().ConfigureAwait(false);
+
             ConnectionStatus = ConnectionStatus.Disconnected;
             IsLoggedIn = false;
             RetryCount = 0;
@@ -222,6 +224,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 ReadPacketFromNetworkTask = null;
             }
 
+            await OnDisconnectFromNetworkAsync().ConfigureAwait(false);
+
             ConnectionStatus = ConnectionStatus.Disconnected;
             IsLoggedIn = false;
             RetryCount++;
@@ -230,6 +234,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
         }
 
         protected abstract Task OnStartConnectToNetworkAsync();
+
+        protected abstract Task OnStopConnectToNetworkAsync();
+
+        protected abstract Task OnDisconnectFromNetworkAsync();
 
         protected abstract Task<string> OnReceivePacketFromNetworkAsync(StreamReader reader);
 

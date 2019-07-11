@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.Versioning;
+using System.Text;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Console;
+using TheDialgaTeam.Xiropht.Xirorig.Mining;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap

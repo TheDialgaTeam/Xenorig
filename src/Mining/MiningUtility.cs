@@ -188,7 +188,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         public static unsafe string ComputeHash(HashAlgorithm hashAlgorithm, string value)
         {
-#if NETCOREAPP
             var output = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(value));
             var outputLength = output.Length;
             var result = new string('\0', outputLength * 2);
@@ -212,31 +211,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             }
 
             return result;
-#else
-            var output = hashAlgorithm.ComputeHash(GetUtf8Bytes(value));
-            var outputLength = output.Length;
-            var result = new string('\0', outputLength * 2);
-
-            fixed (byte* outputPtr = output)
-            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
-            {
-                var outputBytePtr = outputPtr;
-                var resultCharPtr = resultPtr;
-
-                for (var i = 0; i < outputLength; i++)
-                {
-                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
-                    resultCharPtr++;
-
-                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
-                    resultCharPtr++;
-
-                    outputBytePtr++;
-                }
-            }
-
-            return result;
-#endif
         }
 
         public static unsafe string HashJobToHexString(string value)
@@ -419,28 +393,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 root = (root + square / root) / 2;
 
             return root;
-        }
-
-        private static unsafe byte[] GetUtf8Bytes(string value)
-        {
-            var valueLength = value.Length;
-            var result = new byte[valueLength];
-
-            fixed (char* valuePtr = value)
-            fixed (byte* resultPtr = result)
-            {
-                var valueCharPtr = valuePtr;
-                var resultBytePtr = resultPtr;
-
-                for (var i = 0; i < valueLength; i++)
-                {
-                    *resultBytePtr = (byte) *valueCharPtr;
-                    resultBytePtr++;
-                    valueCharPtr++;
-                }
-            }
-
-            return result;
         }
     }
 }

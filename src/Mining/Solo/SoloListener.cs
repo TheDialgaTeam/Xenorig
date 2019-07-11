@@ -24,6 +24,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
 
         private byte[] AesSaltCertificate { get; }
 
+        private JObject CurrentWorkingBlockTemplate { get; set; }
+
+        private JObject CurrentBlockTemplate { get; set; }
+
         public SoloListener(string host, ushort port, string workerId, string walletAddress) : base(host, port, workerId)
         {
             WalletAddress = walletAddress;
@@ -70,6 +74,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
             };
 
             await SendPacketToNetworkAsync(loginPacket.ToString(Formatting.None)).ConfigureAwait(false);
+        }
+
+        protected override Task OnStopConnectToNetworkAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        protected override Task OnDisconnectFromNetworkAsync()
+        {
+            return Task.CompletedTask;
         }
 
         protected override async Task<string> OnReceivePacketFromNetworkAsync(StreamReader reader)
@@ -124,6 +138,88 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                     RetryCount = 0;
 
                     await OnLoginResultAsync(true).ConfigureAwait(false);
+
+                    var askCurrentBlockTemplate = new JObject
+                    {
+                        { "packet", ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining },
+                        { "isEncrypted", true }
+                    };
+
+                    await SendPacketToNetworkAsync(askCurrentBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                }
+                else if (packetData[0].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendContentBlockMethod, StringComparison.OrdinalIgnoreCase))
+                {
+                    LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
+
+                    var currentBlockData = packetData[1].Split(new[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    CurrentBlockTemplate.Add("AESROUND", currentBlockData[0]);
+                    CurrentBlockTemplate.Add("AESSIZE", currentBlockData[1]);
+                    CurrentBlockTemplate.Add("AESKEY", currentBlockData[2]);
+                    CurrentBlockTemplate.Add("XORKEY", currentBlockData[3]);
+
+                    if (CurrentWorkingBlockTemplate == null)
+                    {
+                        CurrentWorkingBlockTemplate = CurrentBlockTemplate;
+                        await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                    }
+                    else if (CurrentWorkingBlockTemplate["INDICATION"].ToString() != CurrentBlockTemplate["INDICATION"].ToString())
+                    {
+                        CurrentWorkingBlockTemplate = CurrentBlockTemplate;
+                        await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                    }
+
+                    await Task.Delay(1000).ConfigureAwait(false);
+
+                    var askCurrentBlockTemplate = new JObject
+                    {
+                        { "packet", ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining },
+                        { "isEncrypted", true }
+                    };
+
+                    await SendPacketToNetworkAsync(askCurrentBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                }
+                else if (packetData[0].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendCurrentBlockMining, StringComparison.OrdinalIgnoreCase))
+                {
+                    LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
+
+                    var currentBlockData = packetData[1].Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    CurrentBlockTemplate = new JObject();
+
+                    foreach (var data in currentBlockData)
+                    {
+                        var keyValuePair = data.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries);
+                        CurrentBlockTemplate.Add(keyValuePair[0], keyValuePair[1]);
+                    }
+
+                    if (CurrentBlockTemplate.ContainsKey("METHOD"))
+                    {
+                        var askBlockContent = new JObject
+                        {
+                            { "packet", $"{ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskContentBlockMethod}|{CurrentBlockTemplate["METHOD"]}" },
+                            { "isEncrypted", true }
+                        };
+
+                        await SendPacketToNetworkAsync(askBlockContent.ToString(Formatting.None)).ConfigureAwait(false);
+                    }
+                }
+                else if (packetData[0].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendJobStatus, StringComparison.OrdinalIgnoreCase))
+                {
+                    LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
+
+                    if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareUnlock))
+                        await OnShareResultAsync(true, "Share Accepted.").ConfigureAwait(false);
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareWrong))
+                        await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareAleady))
+                        await OnShareResultAsync(false, "Orhpan Share.").ConfigureAwait(false);
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareNotExist))
+                        await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareGood))
+                        await OnShareResultAsync(true, "Share Accepted.").ConfigureAwait(false);
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareBad))
+                        await OnShareResultAsync(false, "Invalid/Orhpan Share.").ConfigureAwait(false);
                 }
             }
         }

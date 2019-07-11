@@ -31,6 +31,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
             await SendPacketToNetworkAsync(loginPacket.ToString(Formatting.None)).ConfigureAwait(false);
         }
 
+        protected override Task OnStopConnectToNetworkAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        protected override Task OnDisconnectFromNetworkAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         protected override async Task<string> OnReceivePacketFromNetworkAsync(StreamReader reader)
         {
             return await reader.ReadLineAsync().ConfigureAwait(false);
@@ -67,18 +77,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
                         await OnLoginResultAsync(true).ConfigureAwait(false);
                     }
                 }
-
-                if (string.Equals(type, PoolPacketType.KeepAlive, StringComparison.OrdinalIgnoreCase))
+                else if (string.Equals(type, PoolPacketType.KeepAlive, StringComparison.OrdinalIgnoreCase))
                     LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
-
-                if (string.Equals(type, PoolPacketType.Job, StringComparison.OrdinalIgnoreCase))
+                else if (string.Equals(type, PoolPacketType.Job, StringComparison.OrdinalIgnoreCase))
                 {
                     LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
 
                     await OnNewJobAsync(packet).ConfigureAwait(false);
                 }
-
-                if (string.Equals(type, PoolPacketType.Share, StringComparison.OrdinalIgnoreCase))
+                else if (string.Equals(type, PoolPacketType.Share, StringComparison.OrdinalIgnoreCase))
                 {
                     LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
 

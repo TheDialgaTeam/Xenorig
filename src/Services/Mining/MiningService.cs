@@ -164,7 +164,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
 
         private void LateInitializeSolo()
         {
-            // TODO
+            Miner = new SoloMiner(Program, LoggerService, ConfigService, this);
 
             Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
             {
