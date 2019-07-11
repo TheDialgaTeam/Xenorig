@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using TheDialgaTeam.Xiropht.Xirorig.Mining.Pool.Packet;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Console;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Mining;
 using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
@@ -52,6 +51,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                 var aes = new RijndaelManaged { BlockSize = JobAesSize, KeySize = JobAesSize, Key = pdb.GetBytes(JobAesSize / 8), IV = pdb.GetBytes(JobAesSize / 8) };
                 CryptoTransform = aes.CreateEncryptor();
             }
+
+            SharesSubmitted.Clear();
         }
 
         protected override async Task DoRandomJobAsync(int threadIndex, Config.MiningThread miningThread)
@@ -87,9 +88,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                 decimal startRange = 0, endRange = 0;
 
                 if (!miningThread.ShareRange)
-                {
                     (startRange, endRange) = MiningUtility.GetJobRangeByPercentage(jobMinRange, jobMaxRange, miningThread.MinMiningRangePercentage, miningThread.MaxMiningRangePercentage);
-                }
                 else
                 {
                     var totalPossibilities = jobMaxRange - jobMinRange + 1;
@@ -159,7 +158,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
         private async Task DoCalculationAsync(decimal firstNumber, decimal secondNumber, char operatorSymbol, string jobType, int threadIndex)
         {
             var sharesSubmitted = SharesSubmitted;
-            var jobIndication = JobIndication;
             var blockIndication = BlockIndication;
 
             if (sharesSubmitted.Values.Contains(blockIndication))

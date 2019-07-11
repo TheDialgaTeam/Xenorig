@@ -124,11 +124,26 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
                 }
             }
 
-            var seedsToLoad = listOfSeeds.OrderBy(a => a.Value);
+            var seedsToLoad = listOfSeeds.OrderBy(a => a.Value).ToDictionary(a => a.Key, a => a.Value);
             var solo = ConfigService.Solo;
 
+            var consoleMessages = new ConsoleMessageBuilder();
+
+            var index = 0;
+
             foreach (var seed in seedsToLoad)
+            {
                 Listeners.Add(new SoloListener(seed.Key, ClassConnectorSetting.SeedNodePort, solo.WorkerId, solo.WalletAddress));
+
+                consoleMessages
+                    .Write(" * ", ConsoleColor.Green, false)
+                    .Write($"SOLO #{index + 1}".PadRight(13), false)
+                    .WriteLine($"{seed.Key}:{ClassConnectorSetting.SeedNodePort}", ConsoleColor.Cyan, false);
+
+                index++;
+            }
+            
+            LoggerService.LogMessage(consoleMessages.Build());
         }
 
         private void InitializeSoloProxy()
@@ -137,25 +152,19 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
 
         private void InitializePool()
         {
-            foreach (var miningPool in ConfigService.Pools)
-                Listeners.Add(new PoolListener(miningPool.Host, miningPool.Port, miningPool.WorkerId, miningPool.WalletAddress));
+            var consoleMessages = new ConsoleMessageBuilder();
+            
+            for (var i = 0; i < ConfigService.Pools.Length; i++)
+            {
+                Listeners.Add(new PoolListener(ConfigService.Pools[i].Host, ConfigService.Pools[i].Port, ConfigService.Pools[i].WorkerId, ConfigService.Pools[i].WalletAddress));
+                
+                consoleMessages
+                    .Write(" * ", ConsoleColor.Green, false)
+                    .Write($"POOL #{i + 1}".PadRight(13), false)
+                    .WriteLine($"{ConfigService.Pools[i].Host}:{ConfigService.Pools[i].Port}", ConsoleColor.Cyan, false);
+            }
 
-            //try
-            //{
-            //    var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            //    var jsonString = httpClient.GetStringAsync("https://raw.githubusercontent.com/TheDialgaTeam/Xirorig/master/Dev_Donate.json").GetAwaiter().GetResult();
-            //    var json = JObject.Parse(jsonString);
-
-            //    if (json.ContainsKey(nameof(Config.Pools)))
-            //    {
-            //        foreach (var child in json[nameof(Config.Pools)].Children())
-            //            DevListeners.Add(new PoolListener(child[nameof(Config.MiningPool.Host)].ToString(), Convert.ToUInt16(child[nameof(Config.MiningPool.Port)].ToString()), child[nameof(Config.MiningPool.WalletAddress)].ToString(), child[nameof(Config.MiningPool.WorkerId)].ToString()));
-            //    }
-            //}
-            //catch (Exception)
-            //{
-            //    // For now, let's just keep this empty.
-            //}
+            LoggerService.LogMessage(consoleMessages.Build());
         }
 
         private void InitializePoolProxy()

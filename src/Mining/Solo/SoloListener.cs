@@ -158,17 +158,20 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                     CurrentBlockTemplate.Add("AESKEY", currentBlockData[2]);
                     CurrentBlockTemplate.Add("XORKEY", currentBlockData[3]);
 
-                    if (CurrentWorkingBlockTemplate == null)
+                    if (!string.IsNullOrWhiteSpace(CurrentBlockTemplate["INDICATION"].ToString()))
                     {
-                        CurrentWorkingBlockTemplate = CurrentBlockTemplate;
-                        await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                        if (CurrentWorkingBlockTemplate == null)
+                        {
+                            CurrentWorkingBlockTemplate = CurrentBlockTemplate;
+                            await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                        }
+                        else if (CurrentWorkingBlockTemplate["INDICATION"].ToString() != CurrentBlockTemplate["INDICATION"].ToString())
+                        {
+                            CurrentWorkingBlockTemplate = CurrentBlockTemplate;
+                            await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                        }
                     }
-                    else if (CurrentWorkingBlockTemplate["INDICATION"].ToString() != CurrentBlockTemplate["INDICATION"].ToString())
-                    {
-                        CurrentWorkingBlockTemplate = CurrentBlockTemplate;
-                        await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
-                    }
-
+                    
                     await Task.Delay(1000).ConfigureAwait(false);
 
                     var askCurrentBlockTemplate = new JObject
@@ -213,13 +216,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareWrong))
                         await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareAleady))
-                        await OnShareResultAsync(false, "Orhpan Share.").ConfigureAwait(false);
+                        await OnShareResultAsync(false, "Orphan Share.").ConfigureAwait(false);
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareNotExist))
                         await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareGood))
                         await OnShareResultAsync(true, "Share Accepted.").ConfigureAwait(false);
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareBad))
-                        await OnShareResultAsync(false, "Invalid/Orhpan Share.").ConfigureAwait(false);
+                        await OnShareResultAsync(false, "Invalid/Orphan Share.").ConfigureAwait(false);
                 }
             }
         }

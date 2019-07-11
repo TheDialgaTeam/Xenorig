@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -22,7 +21,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public Config.MiningSolo Solo => Config.Solo;
 
-        public IEnumerable<Config.MiningPool> Pools => Config.Pools;
+        public Config.MiningPool[] Pools => Config.Pools;
 
         public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.AdditionJob).ToArray();
 
@@ -171,15 +170,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                 .Write(", ", false)
                 .Write($"donate={Config.DonateLevel}%", Config.DonateLevel > 0 ? ConsoleColor.White : ConsoleColor.Red, false)
                 .WriteLine("", false);
-
-            for (var i = 0; i < Config.Pools.Length; i++)
-            {
-                consoleMessages
-                    .Write(" * ", ConsoleColor.Green, false)
-                    .Write($"POOL #{i + 1}".PadRight(13), false)
-                    .Write($"{Config.Pools[i].Host}:{Config.Pools[i].Port}", ConsoleColor.Cyan, false)
-                    .WriteLine("", false);
-            }
 
             LoggerService.LogMessage(consoleMessages.Build());
         }

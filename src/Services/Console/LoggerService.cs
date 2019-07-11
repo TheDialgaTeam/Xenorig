@@ -46,7 +46,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                 var outWriter = System.Console.Out;
 
                 System.Console.ForegroundColor = ConsoleColor.Gray;
-                outWriter.Write($"{DateTime.UtcNow:s} ");
+                outWriter.Write($"{DateTime.Now:s} ");
 
                 System.Console.ForegroundColor = consoleColor;
                 outWriter.WriteLine(message);
@@ -85,7 +85,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                     if (consoleMessage.IncludeDateTime)
                     {
                         System.Console.ForegroundColor = ConsoleColor.Gray;
-                        outWriter.Write($"{DateTime.UtcNow:s} ");
+                        outWriter.Write($"{DateTime.Now:s} ");
                     }
 
                     System.Console.ForegroundColor = consoleMessage.Color;
@@ -122,7 +122,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                 var outWriter = System.Console.Out;
 
                 System.Console.ForegroundColor = ConsoleColor.Gray;
-                await outWriter.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+                await outWriter.WriteAsync($"{DateTime.Now:s} ").ConfigureAwait(false);
 
                 System.Console.ForegroundColor = consoleColor;
                 await outWriter.WriteLineAsync(message).ConfigureAwait(false);
@@ -161,7 +161,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                     if (consoleMessage.IncludeDateTime)
                     {
                         System.Console.ForegroundColor = ConsoleColor.Gray;
-                        await outWriter.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+                        await outWriter.WriteAsync($"{DateTime.Now:s} ").ConfigureAwait(false);
                     }
 
                     System.Console.ForegroundColor = consoleMessage.Color;
@@ -199,7 +199,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                 var outWriter = System.Console.Out;
 
                 System.Console.ForegroundColor = ConsoleColor.Gray;
-                outWriter.Write($"{DateTime.UtcNow:s} ");
+                outWriter.Write($"{DateTime.Now:s} ");
 
                 System.Console.ForegroundColor = ConsoleColor.Red;
                 outWriter.WriteLine(exceptionMessage);
@@ -207,7 +207,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
                 using (var errorWriter = new StreamWriter(new FileStream(FilePathService.ConsoleLogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)))
                 {
-                    errorWriter.WriteLine($"{DateTime.UtcNow:s} {exceptionMessage}");
+                    errorWriter.WriteLine($"{DateTime.Now:s} {exceptionMessage}");
                     errorWriter.Flush();
                 }
             }
@@ -241,7 +241,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
                 var outWriter = System.Console.Out;
 
                 System.Console.ForegroundColor = ConsoleColor.Gray;
-                await outWriter.WriteAsync($"{DateTime.UtcNow:s} ").ConfigureAwait(false);
+                await outWriter.WriteAsync($"{DateTime.Now:s} ").ConfigureAwait(false);
 
                 System.Console.ForegroundColor = ConsoleColor.Red;
                 await outWriter.WriteLineAsync(exceptionMessage).ConfigureAwait(false);
@@ -249,7 +249,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
                 using (var errorWriter = new StreamWriter(new FileStream(FilePathService.ConsoleLogFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)))
                 {
-                    await errorWriter.WriteLineAsync($"{DateTime.UtcNow:s} {exceptionMessage}").ConfigureAwait(false);
+                    await errorWriter.WriteLineAsync($"{DateTime.Now:s} {exceptionMessage}").ConfigureAwait(false);
                     await errorWriter.FlushAsync().ConfigureAwait(false);
                 }
             }
