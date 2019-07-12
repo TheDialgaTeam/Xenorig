@@ -16,19 +16,17 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
     public abstract class AbstractListener
     {
-        public event Func<AbstractListener, Task> Disconnected;
+        public event Action<AbstractListener> Disconnected;
 
-        public event Func<AbstractListener, bool, Task> LoginResult;
+        public event Action<AbstractListener, bool> LoginResult;
 
-        public event Func<AbstractListener, string, Task> NewJob;
+        public event Action<AbstractListener, string> NewJob;
 
-        public event Func<AbstractListener, bool, string, Task> ShareResult;
+        public event Action<AbstractListener, bool, string> ShareResult;
 
         public ConnectionStatus ConnectionStatus { get; private set; }
 
         public bool IsLoggedIn { get; protected set; }
-
-        public bool IsActive { get; protected set; }
 
         public int RetryCount { get; protected set; }
 
@@ -36,13 +34,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         public ushort Port { get; }
 
-        public string WorkerId { get; }
-
         protected DateTimeOffset LastValidPacketBeforeTimeout { private get; set; }
 
         private Task CheckNetworkConnectionTask { get; set; }
 
         private Task ReadPacketFromNetworkTask { get; set; }
+
+        private bool IsActive { get; set; }
 
         private TcpClient TcpClient { get; set; }
 
@@ -52,11 +50,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         private SemaphoreSlim SemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
 
-        protected AbstractListener(string host, ushort port, string workerId)
+        protected AbstractListener(string host, ushort port)
         {
             Host = host;
             Port = port;
-            WorkerId = workerId;
         }
 
         public async Task StartConnectToNetworkAsync()
@@ -69,7 +66,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
             if (CheckNetworkConnectionTask == null)
             {
-                CheckNetworkConnectionTask = Task.Factory.StartNew(async () =>
+                CheckNetworkConnectionTask = Task.Run(async () =>
                 {
                     while (IsActive)
                     {
@@ -79,9 +76,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                         if (ConnectionStatus == ConnectionStatus.Disconnected)
                             await StartConnectToNetworkAsync().ConfigureAwait(false);
 
-                        await Task.Delay(1000).ConfigureAwait(false);
+                        await Task.Delay(1).ConfigureAwait(false);
                     }
-                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+                });
             }
 
             try
@@ -103,7 +100,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 TcpClientReader = new StreamReader(TcpClient.GetStream());
                 TcpClientWriter = new StreamWriter(TcpClient.GetStream());
 
-                ReadPacketFromNetworkTask = Task.Factory.StartNew(async () =>
+                ReadPacketFromNetworkTask = Task.Run(async () =>
                 {
                     while (ConnectionStatus == ConnectionStatus.Connected)
                     {
@@ -125,7 +122,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                             await DisconnectFromNetworkAsync().ConfigureAwait(false);
                         }
                     }
-                }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+                });
 
                 await OnStartConnectToNetworkAsync().ConfigureAwait(false);
             }
@@ -171,7 +168,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             IsLoggedIn = false;
             RetryCount = 0;
 
-            await OnDisconnectedAsync().ConfigureAwait(false);
+            OnDisconnected();
         }
 
         public async Task SendPacketToNetworkAsync(string packet)
@@ -230,7 +227,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             IsLoggedIn = false;
             RetryCount++;
 
-            await OnDisconnectedAsync().ConfigureAwait(false);
+            OnDisconnected();
         }
 
         protected abstract Task OnStartConnectToNetworkAsync();
@@ -245,28 +242,24 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         protected abstract Task OnHandlePacketFromNetworkAsync(string packet);
 
-        protected async Task OnLoginResultAsync(bool success)
+        protected void OnLoginResult(bool success)
         {
-            if (LoginResult != null)
-                await LoginResult(this, success).ConfigureAwait(false);
+            LoginResult?.Invoke(this, success);
         }
 
-        protected async Task OnNewJobAsync(string packet)
+        protected void OnNewJob(string packet)
         {
-            if (NewJob != null)
-                await NewJob(this, packet).ConfigureAwait(false);
+            NewJob?.Invoke(this, packet);
         }
 
-        protected async Task OnShareResultAsync(bool accepted, string reason)
+        protected void OnShareResult(bool accepted, string reason)
         {
-            if (ShareResult != null)
-                await ShareResult(this, accepted, reason).ConfigureAwait(false);
+            ShareResult?.Invoke(this, accepted, reason);
         }
 
-        private async Task OnDisconnectedAsync()
+        private void OnDisconnected()
         {
-            if (Disconnected != null)
-                await Disconnected(this).ConfigureAwait(false);
+            Disconnected?.Invoke(this);
         }
     }
 }

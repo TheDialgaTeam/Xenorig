@@ -32,8 +32,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Setting
         public sealed class MiningSolo
         {
             public string WalletAddress { get; set; } = "";
-
-            public string WorkerId { get; set; } = "";
         }
 
         public sealed class MiningSoloProxy
@@ -77,7 +75,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Setting
 
         public bool Safe { get; set; } = true;
 
-        public MiningMode Mode { get; set; } = MiningMode.Pool;
+        public MiningMode Mode { get; set; } = MiningMode.Solo;
 
         public MiningSolo Solo { get; set; } = new MiningSolo();
 

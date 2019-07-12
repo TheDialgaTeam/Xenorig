@@ -5,6 +5,7 @@
     <RootNamespace>TheDialgaTeam.Xiropht.Xirorig</RootNamespace>
     <TargetFrameworks>netcoreapp3.0;net462</TargetFrameworks>
     <OutputType>Exe</OutputType>
+	<StartupObject>TheDialgaTeam.Xiropht.Xirorig.Program</StartupObject>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
     <PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>
     <Version>0.0.2.0</Version>

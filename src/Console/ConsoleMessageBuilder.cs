@@ -55,7 +55,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Console
             return this;
         }
 
-        public IEnumerable<ConsoleMessage> Build()
+        public List<ConsoleMessage> Build()
         {
             return MessagesToLog;
         }

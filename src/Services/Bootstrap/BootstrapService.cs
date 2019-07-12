@@ -24,7 +24,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Bootstrap
 
             LoggerService.LogMessage(new ConsoleMessageBuilder()
                 .Write(" * ", ConsoleColor.Green, false)
-                .Write("ABOUT".PadRight(13), false)
+                .Write("ABOUT        ", false)
                 .Write($"Xirorig/{version} ", ConsoleColor.Cyan, false)
                 .WriteLine(frameworkVersion, false)
                 .Build());

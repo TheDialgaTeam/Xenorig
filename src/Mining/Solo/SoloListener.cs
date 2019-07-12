@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -28,10 +29,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
 
         private JObject CurrentBlockTemplate { get; set; }
 
-        public SoloListener(string host, ushort port, string workerId, string walletAddress) : base(host, port, workerId)
+        private Stopwatch Stopwatch { get; }
+
+        public SoloListener(string host, ushort port, string walletAddress) : base(host, port)
         {
             WalletAddress = walletAddress;
             ConnectionCertificate = ClassUtils.GenerateCertificate();
+            Stopwatch = new Stopwatch();
+            Stopwatch.Stop();
 
             using (var password = new PasswordDeriveBytes(ConnectionCertificate, ClassUtils.GetByteArrayFromString(ClassUtils.FromHex(ConnectionCertificate.Substring(0, 8)))))
             {
@@ -53,7 +58,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
 
                 if (result.StartsWith(ClassRpcWalletCommand.SendTokenCheckWalletAddressInvalid))
                 {
-                    await OnLoginResultAsync(false).ConfigureAwait(false);
+                    OnLoginResult(false);
                     await DisconnectFromNetworkAsync().ConfigureAwait(false);
                     return;
                 }
@@ -137,42 +142,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                     IsLoggedIn = true;
                     RetryCount = 0;
 
-                    await OnLoginResultAsync(true).ConfigureAwait(false);
-
-                    var askCurrentBlockTemplate = new JObject
-                    {
-                        { "packet", ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining },
-                        { "isEncrypted", true }
-                    };
-
-                    await SendPacketToNetworkAsync(askCurrentBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
-                }
-                else if (packetData[0].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendContentBlockMethod, StringComparison.OrdinalIgnoreCase))
-                {
-                    LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
-
-                    var currentBlockData = packetData[1].Split(new[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    CurrentBlockTemplate.Add("AESROUND", currentBlockData[0]);
-                    CurrentBlockTemplate.Add("AESSIZE", currentBlockData[1]);
-                    CurrentBlockTemplate.Add("AESKEY", currentBlockData[2]);
-                    CurrentBlockTemplate.Add("XORKEY", currentBlockData[3]);
-
-                    if (!string.IsNullOrWhiteSpace(CurrentBlockTemplate["INDICATION"].ToString()))
-                    {
-                        if (CurrentWorkingBlockTemplate == null)
-                        {
-                            CurrentWorkingBlockTemplate = CurrentBlockTemplate;
-                            await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
-                        }
-                        else if (CurrentWorkingBlockTemplate["INDICATION"].ToString() != CurrentBlockTemplate["INDICATION"].ToString())
-                        {
-                            CurrentWorkingBlockTemplate = CurrentBlockTemplate;
-                            await OnNewJobAsync(CurrentWorkingBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
-                        }
-                    }
-                    
-                    await Task.Delay(1000).ConfigureAwait(false);
+                    OnLoginResult(true);
 
                     var askCurrentBlockTemplate = new JObject
                     {
@@ -185,6 +155,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                 else if (packetData[0].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendCurrentBlockMining, StringComparison.OrdinalIgnoreCase))
                 {
                     LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
+                    Stopwatch.Restart();
 
                     var currentBlockData = packetData[1].Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -207,22 +178,58 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
                         await SendPacketToNetworkAsync(askBlockContent.ToString(Formatting.None)).ConfigureAwait(false);
                     }
                 }
+                else if (packetData[0].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendContentBlockMethod, StringComparison.OrdinalIgnoreCase))
+                {
+                    LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
+
+                    var currentBlockData = packetData[1].Split(new[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    CurrentBlockTemplate.Add("AESROUND", currentBlockData[0]);
+                    CurrentBlockTemplate.Add("AESSIZE", currentBlockData[1]);
+                    CurrentBlockTemplate.Add("AESKEY", currentBlockData[2]);
+                    CurrentBlockTemplate.Add("XORKEY", currentBlockData[3]);
+
+                    if (!string.IsNullOrWhiteSpace(CurrentBlockTemplate["INDICATION"].ToString()))
+                    {
+                        if (CurrentWorkingBlockTemplate == null)
+                        {
+                            CurrentWorkingBlockTemplate = CurrentBlockTemplate;
+                            OnNewJob(CurrentWorkingBlockTemplate.ToString(Formatting.None));
+                        }
+                        else if (CurrentWorkingBlockTemplate["INDICATION"].ToString() != CurrentBlockTemplate["INDICATION"].ToString())
+                        {
+                            CurrentWorkingBlockTemplate = CurrentBlockTemplate;
+                            OnNewJob(CurrentWorkingBlockTemplate.ToString(Formatting.None));
+                        }
+                    }
+
+                    while (IsLoggedIn && Stopwatch.ElapsedMilliseconds < 1000)
+                        await Task.Delay(1).ConfigureAwait(false);
+
+                    var askCurrentBlockTemplate = new JObject
+                    {
+                        { "packet", ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining },
+                        { "isEncrypted", true }
+                    };
+
+                    await SendPacketToNetworkAsync(askCurrentBlockTemplate.ToString(Formatting.None)).ConfigureAwait(false);
+                }
                 else if (packetData[0].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendJobStatus, StringComparison.OrdinalIgnoreCase))
                 {
                     LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
 
                     if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareUnlock))
-                        await OnShareResultAsync(true, "Share Accepted.").ConfigureAwait(false);
+                        OnShareResult(true, "Share Accepted.");
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareWrong))
-                        await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
+                        OnShareResult(false, "Invalid Share.");
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareAleady))
-                        await OnShareResultAsync(false, "Orphan Share.").ConfigureAwait(false);
+                        OnShareResult(false, "Orphan Share.");
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareNotExist))
-                        await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
+                        OnShareResult(false, "Invalid Share.");
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareGood))
-                        await OnShareResultAsync(true, "Share Accepted.").ConfigureAwait(false);
+                        OnShareResult(true, "Share Accepted.");
                     else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareBad))
-                        await OnShareResultAsync(false, "Invalid/Orphan Share.").ConfigureAwait(false);
+                        OnShareResult(false, "Invalid/Orphan Share.");
                 }
             }
         }

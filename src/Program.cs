@@ -12,24 +12,17 @@ using TheDialgaTeam.Xiropht.Xirorig.Services.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig
 {
-    public sealed class Program : IDisposable
+    public static class Program
     {
-        public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
+        public static CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
 
-        public List<Task> TasksToAwait { get; } = new List<Task>();
+        public static List<Task> TasksToAwait { get; } = new List<Task>();
 
-        public ServiceProvider ServiceProvider { get; private set; }
+        public static ServiceProvider ServiceProvider { get; private set; }
 
-        public static async Task Main(string[] args)
-        {
-            var program = new Program();
-            await program.Start(args).ConfigureAwait(false);
-        }
-
-        private async Task Start(string[] args)
+        public static void Main(string[] args)
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddInterfacesAndSelfAsSingleton(this);
             serviceCollection.AddInterfacesAndSelfAsSingleton<FilePathService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<LoggerService>();
             serviceCollection.AddInterfacesAndSelfAsSingleton<BootstrapService>();
@@ -47,6 +40,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 Task.WaitAll(TasksToAwait.ToArray());
 
                 ServiceProvider.DisposeServices();
+                Dispose();
+
                 Environment.Exit(0);
             }
             catch (AggregateException ex)
@@ -57,36 +52,45 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 {
                     foreach (var exception in ex.InnerExceptions)
                     {
-                        if (exception is TaskCanceledException)
+                        if (exception is OperationCanceledException)
                             continue;
 
-                        await loggerService.LogErrorMessageAsync(exception).ConfigureAwait(false);
+                        loggerService.LogMessage(exception.ToString(), ConsoleColor.Red, false);
+                        loggerService.LogMessage("Press Enter/Return to exit...", false);
+                        System.Console.ReadLine();
                     }
                 }
 
-                CancellationTokenSource?.Cancel();
-                ServiceProvider?.DisposeServices();
-
-                Environment.Exit(1);
+                ExitWithFault();
             }
             catch (Exception ex)
             {
                 var loggerService = ServiceProvider?.GetService<LoggerService>();
 
                 if (loggerService != null)
-                    await loggerService.LogErrorMessageAsync(ex).ConfigureAwait(false);
+                {
+                    loggerService.LogMessage(ex.ToString(), ConsoleColor.Red, false);
+                    loggerService.LogMessage("Press Enter/Return to exit...", false);
+                    System.Console.ReadLine();
+                }
 
-                CancellationTokenSource?.Cancel();
-                ServiceProvider?.DisposeServices();
-
-                Environment.Exit(1);
+                ExitWithFault();
             }
         }
 
-        public void Dispose()
+        private static void ExitWithFault()
+        {
+            CancellationTokenSource?.Cancel();
+            ServiceProvider?.DisposeServices();
+            Dispose();
+
+            Environment.Exit(1);
+        }
+
+        private static void Dispose()
         {
             foreach (var task in TasksToAwait)
-                task.Dispose();
+                task?.Dispose();
 
             CancellationTokenSource?.Dispose();
             ServiceProvider?.Dispose();

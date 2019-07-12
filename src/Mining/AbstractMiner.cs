@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,8 +53,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         public decimal MaxHashes { get; private set; }
 
-        protected Program Program { get; }
-
         protected LoggerService LoggerService { get; }
 
         protected ConfigService ConfigService { get; }
@@ -64,6 +63,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         protected HashAlgorithm HashAlgorithm { get; }
 
+        protected ConcurrentDictionary<string, string> SharesSubmitted { get; } = new ConcurrentDictionary<string, string>();
+
+        protected int SharesToFind { get; set; }
+
         private ConcurrentDictionary<int, decimal> TotalAverage10SecondsHashesCalculated { get; } = new ConcurrentDictionary<int, decimal>();
 
         private ConcurrentDictionary<int, decimal> TotalAverage60SecondsHashesCalculated { get; } = new ConcurrentDictionary<int, decimal>();
@@ -72,9 +75,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         private List<Thread> JobThreads { get; } = new List<Thread>();
 
-        protected AbstractMiner(Program program, LoggerService loggerService, ConfigService configService, MiningService miningService)
+        protected AbstractMiner(LoggerService loggerService, ConfigService configService, MiningService miningService)
         {
-            Program = program;
             LoggerService = loggerService;
             ConfigService = configService;
             MiningService = miningService;
@@ -96,58 +98,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         public abstract void UpdateJob(string packet);
 
-        protected async Task WaitForNextJobAsync(string currentJob)
-        {
-            var cancellationTokenSource = Program.CancellationTokenSource;
-
-            while (currentJob == JobIndication)
-            {
-                if (cancellationTokenSource.IsCancellationRequested)
-                    break;
-
-                await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
-            }
-        }
-
-        protected async Task WaitForNextBlockAsync(string currentBlock)
-        {
-            var cancellationTokenSource = Program.CancellationTokenSource;
-
-            while (currentBlock == BlockIndication)
-            {
-                if (cancellationTokenSource.IsCancellationRequested)
-                    break;
-
-                await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
-            }
-        }
-
-        protected abstract Task DoRandomJobAsync(int threadIndex, Config.MiningThread miningThread);
-
-        protected string MakeEncryptedShare(string calculation, int threadIndex)
-        {
-            try
-            {
-                var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(calculation + BlockTimestampCreate, JobXorKey);
-                encryptedShare = MiningUtility.EncryptAesShareRoundAndEncryptXorShare(CryptoTransform, encryptedShare, JobAesRound, JobXorKey);
-                encryptedShare = MiningUtility.EncryptAesShare(CryptoTransform, encryptedShare);
-                encryptedShare = MiningUtility.ComputeHash(HashAlgorithm, encryptedShare);
-
-                TotalAverage10SecondsHashesCalculated[threadIndex]++;
-                TotalAverage60SecondsHashesCalculated[threadIndex]++;
-                TotalAverage15MinutesHashesCalculated[threadIndex]++;
-
-                return encryptedShare;
-            }
-            catch
-            {
-                return ClassAlgoErrorEnumeration.AlgoError;
-            }
-        }
+        protected abstract Task ValidateAndSubmitAsync(decimal firstNumber, decimal secondNumber, char operatorSymbol, string jobType, int threadIndex, decimal result, string encryptedShare, string hashEncryptedShare);
 
         private void StartAverage10SecondsHashesCalculatedTask()
         {
-            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
+            Program.TasksToAwait.Add(Task.Run(async () =>
             {
                 var cancellationTokenSource = Program.CancellationTokenSource;
                 var totalAverageHashesCalculated = TotalAverage10SecondsHashesCalculated;
@@ -174,12 +129,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
                     await Task.Delay(new TimeSpan(0, 0, 10), cancellationTokenSource.Token).ConfigureAwait(false);
                 }
-            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
+            }, Program.CancellationTokenSource.Token));
         }
 
         private void StartAverage60SecondsHashesCalculatedTask()
         {
-            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
+            Program.TasksToAwait.Add(Task.Run(async () =>
             {
                 var cancellationTokenSource = Program.CancellationTokenSource;
                 var totalAverageHashesCalculated = TotalAverage60SecondsHashesCalculated;
@@ -206,12 +161,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
                     await Task.Delay(new TimeSpan(0, 1, 0), cancellationTokenSource.Token).ConfigureAwait(false);
                 }
-            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
+            }, Program.CancellationTokenSource.Token));
         }
 
         private void StartAverage15MinutesHashesCalculatedTask()
         {
-            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
+            Program.TasksToAwait.Add(Task.Run(async () =>
             {
                 var cancellationTokenSource = Program.CancellationTokenSource;
                 var totalAverageHashesCalculated = TotalAverage15MinutesHashesCalculated;
@@ -238,12 +193,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
                     await Task.Delay(new TimeSpan(0, 15, 0), cancellationTokenSource.Token).ConfigureAwait(false);
                 }
-            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
+            }, Program.CancellationTokenSource.Token));
         }
 
         private void StartCalculateHashesTask()
         {
-            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
+            Program.TasksToAwait.Add(Task.Run(async () =>
             {
                 var cancellationTokenSource = Program.CancellationTokenSource;
                 var printTime = ConfigService.PrintTime;
@@ -271,7 +226,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
                     MaxHashes = Math.Max(MaxHashes, average10SecondsSum);
 
-                    await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                    LoggerService.LogMessage(new ConsoleMessageBuilder()
                         .Write("speed 10s/60s/15m ", true)
                         .Write($"{average10SecondsSum:F0} ", ConsoleColor.Cyan, false)
                         .Write($"{average60SecondsSum:F0} ", ConsoleColor.DarkCyan, false)
@@ -279,9 +234,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                         .Write("H/s ", ConsoleColor.Cyan, false)
                         .Write("max ", false)
                         .WriteLine($"{MaxHashes:F0} H/s", ConsoleColor.Cyan, false)
-                        .Build()).ConfigureAwait(false);
+                        .Build());
                 }
-            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
+            }, Program.CancellationTokenSource.Token));
         }
 
         private void GenerateMiningThreads()
@@ -320,6 +275,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             }
         }
 
+        private async Task WaitForNextJobAsync(string currentJob)
+        {
+            var cancellationTokenSource = Program.CancellationTokenSource;
+
+            while (currentJob == JobIndication)
+                await Task.Delay(1, cancellationTokenSource.Token).ConfigureAwait(false);
+        }
+
+        private async Task WaitForNextBlockAsync(string currentBlock)
+        {
+            var cancellationTokenSource = Program.CancellationTokenSource;
+
+            while (currentBlock == BlockIndication)
+                await Task.Delay(1, cancellationTokenSource.Token).ConfigureAwait(false);
+        }
+
         private async Task DoMiningJobAsync(int threadIndex, Config.MiningThread miningThread)
         {
             var cancellationTokenSource = Program.CancellationTokenSource;
@@ -329,16 +300,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 while (MiningService.Listener == null)
                     await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
 
-                if (cancellationTokenSource.IsCancellationRequested)
-                    return;
-
                 var listener = MiningService.Listener;
 
                 while (listener.ConnectionStatus != ConnectionStatus.Connected || !listener.IsLoggedIn)
                     await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
-
-                if (cancellationTokenSource.IsCancellationRequested)
-                    return;
 
                 switch (miningThread.JobType)
                 {
@@ -361,6 +326,225 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                     case Config.MiningJob.ModulusJob:
                         break;
                 }
+            }
+        }
+
+        private async Task DoRandomJobAsync(int threadIndex, Config.MiningThread miningThread)
+        {
+            var cancellationTokenSource = Program.CancellationTokenSource;
+            var listener = MiningService.Listener;
+            var randomJobThreads = ConfigService.RandomJobThreads;
+            var loggerService = LoggerService;
+
+            var miningPrioritySharesThreads = randomJobThreads.Where(a => a.JobType == Config.MiningJob.RandomJob && a.ShareRange && a.MiningPriority == Config.MiningPriority.Shares).ToArray();
+            var miningPrioritySharesThreadsLength = miningPrioritySharesThreads.Length;
+
+            var miningPriorityBlockThreads = randomJobThreads.Where(a => a.JobType == Config.MiningJob.RandomJob && a.ShareRange && a.MiningPriority != Config.MiningPriority.Shares).ToArray();
+            var miningPriorityBlockThreadsLength = miningPriorityBlockThreads.Length;
+
+            const string jobType = "Random";
+
+            while (listener.ConnectionStatus == ConnectionStatus.Connected && listener.IsLoggedIn)
+            {
+                while (JobIndication == null)
+                {
+                    if (listener.ConnectionStatus != ConnectionStatus.Connected || !listener.IsLoggedIn)
+                        break;
+
+                    await Task.Delay(1, cancellationTokenSource.Token).ConfigureAwait(false);
+                }
+
+                var jobMinRange = JobMinRange;
+                var jobMaxRange = JobMaxRange;
+                var blockDifficulty = BlockDifficulty;
+
+                decimal startRange = 0, endRange = 0;
+
+                if (!miningThread.ShareRange)
+                {
+                    switch (miningThread.MiningPriority)
+                    {
+                        case Config.MiningPriority.Shares:
+                            (startRange, endRange) = MiningUtility.GetJobRangeByPercentage(jobMinRange, jobMaxRange, miningThread.MinMiningRangePercentage, miningThread.MaxMiningRangePercentage);
+                            break;
+
+                        case Config.MiningPriority.Normal:
+                        case Config.MiningPriority.Block:
+                            (startRange, endRange) = MiningUtility.GetJobRangeByPercentage(2, blockDifficulty, miningThread.MinMiningRangePercentage, miningThread.MaxMiningRangePercentage);
+                            break;
+                    }
+                }
+                else
+                {
+                    decimal totalPossibilities;
+                    int index;
+
+                    switch (miningThread.MiningPriority)
+                    {
+                        case Config.MiningPriority.Shares:
+                            totalPossibilities = jobMaxRange - jobMinRange + 1;
+                            index = 0;
+
+                            for (var i = 0; i < miningPrioritySharesThreadsLength; i++)
+                            {
+                                if (miningPrioritySharesThreads[i] != miningThread)
+                                    continue;
+
+                                index = i;
+                            }
+
+                            (startRange, endRange) = MiningUtility.GetJobRange(totalPossibilities, miningPrioritySharesThreadsLength, index, jobMinRange);
+                            break;
+
+                        case Config.MiningPriority.Normal:
+                        case Config.MiningPriority.Block:
+                            totalPossibilities = BlockDifficulty - 2 + 1;
+                            index = 0;
+
+                            for (var i = 0; i < miningPriorityBlockThreadsLength; i++)
+                            {
+                                if (miningPriorityBlockThreads[i] != miningThread)
+                                    continue;
+
+                                index = i;
+                            }
+
+                            (startRange, endRange) = MiningUtility.GetJobRange(totalPossibilities, miningPriorityBlockThreadsLength, index, 2);
+                            break;
+                    }
+                }
+
+                loggerService.LogMessage($"Thread: {threadIndex + 1} | Job Type: Random | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}", ConsoleColor.Blue);
+
+                var currentJobIndication = JobIndication;
+                var currentBlockIndication = BlockIndication;
+                var sharesSubmitted = SharesSubmitted;
+                var sharesToFind = SharesToFind;
+
+                while (currentJobIndication == JobIndication)
+                {
+                    if (listener.ConnectionStatus != ConnectionStatus.Connected || !listener.IsLoggedIn)
+                        break;
+
+                    // ReSharper disable EqualExpressionComparison
+                    var firstNumber = MiningUtility.GetRandomBetween(0, 100) > MiningUtility.GetRandomBetween(0, 100) ? MiningUtility.GenerateNumberMathCalculation(startRange, endRange) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
+                    var secondNumber = MiningUtility.GetRandomBetween(0, 100) > MiningUtility.GetRandomBetween(0, 100) ? MiningUtility.GenerateNumberMathCalculation(startRange, endRange) : MiningUtility.GetRandomBetweenJob(startRange, endRange);
+                    // ReSharper restore EqualExpressionComparison
+
+                    switch (miningThread.MiningPriority)
+                    {
+                        case Config.MiningPriority.Shares:
+                            if (firstNumber < jobMinRange || firstNumber > jobMaxRange)
+                                continue;
+
+                            if (secondNumber < jobMinRange || secondNumber > jobMaxRange)
+                                continue;
+                            break;
+
+                        case Config.MiningPriority.Normal:
+                        case Config.MiningPriority.Block:
+                            if (firstNumber < 2 || firstNumber > blockDifficulty)
+                                continue;
+
+                            if (secondNumber < 2 || secondNumber > blockDifficulty)
+                                continue;
+                            break;
+                    }
+
+                    foreach (var randomOperator in MiningUtility.RandomOperatorCalculation)
+                    {
+                        if (listener.ConnectionStatus != ConnectionStatus.Connected || !listener.IsLoggedIn)
+                            break;
+
+                        if (currentJobIndication != JobIndication)
+                            break;
+
+                        if (sharesSubmitted.Values.Contains(currentBlockIndication))
+                            break;
+
+                        if (sharesSubmitted.Count >= sharesToFind)
+                            break;
+
+                        await DoCalculationAsync(firstNumber, secondNumber, randomOperator, jobType, threadIndex).ConfigureAwait(false);
+                        await DoCalculationAsync(secondNumber, firstNumber, randomOperator, jobType, threadIndex).ConfigureAwait(false);
+                    }
+
+                    if (sharesSubmitted.Values.Contains(currentBlockIndication))
+                        break;
+
+                    if (sharesSubmitted.Count >= sharesToFind)
+                        break;
+                }
+
+                if (sharesSubmitted.Values.Contains(currentBlockIndication))
+                    await WaitForNextBlockAsync(currentBlockIndication).ConfigureAwait(false);
+
+                if (sharesSubmitted.Count >= sharesToFind)
+                    await WaitForNextJobAsync(currentJobIndication).ConfigureAwait(false);
+            }
+        }
+
+        private async Task DoCalculationAsync(decimal firstNumber, decimal secondNumber, char operatorSymbol, string jobType, int threadIndex)
+        {
+            decimal result = 0;
+
+            switch (operatorSymbol)
+            {
+                case '+':
+                    result = firstNumber + secondNumber;
+                    break;
+
+                case '-':
+                    result = firstNumber - secondNumber;
+                    break;
+
+                case '*':
+                    result = firstNumber * secondNumber;
+                    break;
+
+                case '/':
+                    result = firstNumber / secondNumber;
+
+                    if (result - Math.Round(result, 0) != 0)
+                        return;
+                    break;
+
+                case '%':
+                    result = firstNumber % secondNumber;
+                    break;
+            }
+
+            if (result < 2 || result > BlockDifficulty)
+                return;
+
+            var encryptedShare = MakeEncryptedShare($"{firstNumber} {operatorSymbol} {secondNumber}", threadIndex);
+
+            if (encryptedShare == ClassAlgoErrorEnumeration.AlgoError)
+                return;
+
+            var hashEncryptedShare = MiningUtility.ComputeHash(HashAlgorithm, encryptedShare);
+
+            await ValidateAndSubmitAsync(firstNumber, secondNumber, operatorSymbol, jobType, threadIndex, result, encryptedShare, hashEncryptedShare).ConfigureAwait(false);
+        }
+
+        private string MakeEncryptedShare(string calculation, int threadIndex)
+        {
+            try
+            {
+                var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(calculation + BlockTimestampCreate, JobXorKey);
+                encryptedShare = MiningUtility.EncryptAesShareRoundAndEncryptXorShare(CryptoTransform, encryptedShare, JobAesRound, JobXorKey);
+                encryptedShare = MiningUtility.EncryptAesShare(CryptoTransform, encryptedShare);
+                encryptedShare = MiningUtility.ComputeHash(HashAlgorithm, encryptedShare);
+
+                TotalAverage10SecondsHashesCalculated[threadIndex]++;
+                TotalAverage60SecondsHashesCalculated[threadIndex]++;
+                TotalAverage15MinutesHashesCalculated[threadIndex]++;
+
+                return encryptedShare;
+            }
+            catch
+            {
+                return ClassAlgoErrorEnumeration.AlgoError;
             }
         }
 

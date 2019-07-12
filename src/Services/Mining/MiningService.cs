@@ -16,7 +16,7 @@ using Xiropht_Connector_All.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
 {
-    public sealed class MiningService : IInitializable, ILateInitializable
+    public sealed class MiningService : IInitializable, ILateInitializable, IDisposable
     {
         public AbstractListener Listener { get; private set; }
 
@@ -25,8 +25,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
         public decimal TotalGoodSharesSubmitted { get; private set; }
 
         public decimal TotalBadSharesSubmitted { get; private set; }
-
-        private Program Program { get; }
 
         private LoggerService LoggerService { get; }
 
@@ -42,9 +40,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
 
         private bool IsDevRound { get; set; }
 
-        public MiningService(Program program, LoggerService loggerService, ConfigService configService)
+        public MiningService(LoggerService loggerService, ConfigService configService)
         {
-            Program = program;
             LoggerService = loggerService;
             ConfigService = configService;
         }
@@ -57,10 +54,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
             Stopwatch = new Stopwatch();
             Stopwatch.Stop();
 
-            MinerRoundTimer = new Random().Next(1, 101 - ConfigService.DonateLevel);
+            var configService = ConfigService;
+
+            MinerRoundTimer = new Random().Next(1, 101 - configService.DonateLevel);
             IsDevRound = false;
 
-            switch (ConfigService.MiningMode)
+            switch (configService.MiningMode)
             {
                 case Config.MiningMode.Solo:
                     InitializeSolo();
@@ -124,16 +123,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
                 }
             }
 
-            var seedsToLoad = listOfSeeds.OrderBy(a => a.Value).ToDictionary(a => a.Key, a => a.Value);
+            var seedsToLoad = listOfSeeds.OrderBy(a => a.Value);
+            var listeners = Listeners;
             var solo = ConfigService.Solo;
 
             var consoleMessages = new ConsoleMessageBuilder();
-
             var index = 0;
 
             foreach (var seed in seedsToLoad)
             {
-                Listeners.Add(new SoloListener(seed.Key, ClassConnectorSetting.SeedNodePort, solo.WorkerId, solo.WalletAddress));
+                listeners.Add(new SoloListener(seed.Key, ClassConnectorSetting.SeedNodePort, solo.WalletAddress));
 
                 consoleMessages
                     .Write(" * ", ConsoleColor.Green, false)
@@ -148,20 +147,23 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
 
         private void InitializeSoloProxy()
         {
+            throw new NotImplementedException();
         }
 
         private void InitializePool()
         {
             var consoleMessages = new ConsoleMessageBuilder();
+            var pools = ConfigService.Pools;
+            var listeners = Listeners;
             
-            for (var i = 0; i < ConfigService.Pools.Length; i++)
+            for (var i = 0; i < pools.Length; i++)
             {
-                Listeners.Add(new PoolListener(ConfigService.Pools[i].Host, ConfigService.Pools[i].Port, ConfigService.Pools[i].WorkerId, ConfigService.Pools[i].WalletAddress));
+                listeners.Add(new PoolListener(pools[i].Host, pools[i].Port, pools[i].WalletAddress, pools[i].WorkerId));
                 
                 consoleMessages
                     .Write(" * ", ConsoleColor.Green, false)
                     .Write($"POOL #{i + 1}".PadRight(13), false)
-                    .WriteLine($"{ConfigService.Pools[i].Host}:{ConfigService.Pools[i].Port}", ConsoleColor.Cyan, false);
+                    .WriteLine($"{pools[i].Host}:{pools[i].Port}", ConsoleColor.Cyan, false);
             }
 
             LoggerService.LogMessage(consoleMessages.Build());
@@ -169,164 +171,99 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
 
         private void InitializePoolProxy()
         {
+            throw new NotImplementedException();
         }
 
         private void LateInitializeSolo()
         {
-            Miner = new SoloMiner(Program, LoggerService, ConfigService, this);
+            Miner = new SoloMiner(LoggerService, ConfigService, this);
 
-            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
+            Program.TasksToAwait.Add(Task.Run(async () =>
             {
                 var currentIndex = 0;
                 var cancellationTokenSource = Program.CancellationTokenSource;
-                var donateLevel = ConfigService.DonateLevel;
-                var stopwatch = Stopwatch;
-                var loggerService = LoggerService;
+                var listeners = Listeners;
 
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
                     if (Listener == null)
                     {
-                        stopwatch.Restart();
-                        await SwitchListener(Listeners[currentIndex]).ConfigureAwait(false);
+                        await SwitchListener(listeners[currentIndex]).ConfigureAwait(false);
                     }
-                    else
+                    else if (Listener.RetryCount >= 5)
                     {
-                        if (!IsDevRound)
-                        {
-                            //if (donateLevel > 0)
-                            //{
-                            //    if (stopwatch.Elapsed.TotalMinutes >= MinerRoundTimer)
-                            //    {
-                            //        IsDevRound = true;
-                            //        await loggerService.LogMessageAsync("Switching to Dev Round...", ConsoleColor.Yellow).ConfigureAwait(false);
-                            //        await SwitchListener(DevListeners[0]).ConfigureAwait(false);
-                            //        stopwatch.Restart();
-                            //        continue;
-                            //    }
-                            //}
+                        currentIndex++;
 
-                            if (Listener.RetryCount >= 5)
-                            {
-                                currentIndex++;
+                        if (currentIndex > listeners.Count - 1)
+                            currentIndex = 0;
 
-                                if (currentIndex > Listeners.Count - 1)
-                                    currentIndex = 0;
-
-                                await SwitchListener(Listeners[currentIndex]).ConfigureAwait(false);
-                            }
-                        }
-                        else
-                        {
-                            if (Stopwatch.Elapsed.TotalMinutes >= donateLevel)
-                            {
-                                IsDevRound = false;
-                                MinerRoundTimer = 100 - ConfigService.DonateLevel;
-                                await loggerService.LogMessageAsync("Switching to Miner Round...", ConsoleColor.Yellow).ConfigureAwait(false);
-                                await SwitchListener(Listeners[currentIndex]).ConfigureAwait(false);
-                                Stopwatch.Restart();
-                                continue;
-                            }
-                        }
+                        await SwitchListener(listeners[currentIndex]).ConfigureAwait(false);
                     }
 
                     await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
                 }
 
-                foreach (var poolListener in Listeners)
-                    await poolListener.StopConnectToNetworkAsync().ConfigureAwait(false);
-
-                //await DevListeners[0].StopConnectToNetworkAsync().ConfigureAwait(false);
-            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
+                foreach (var listener in listeners)
+                    await listener.StopConnectToNetworkAsync().ConfigureAwait(false);
+            }, Program.CancellationTokenSource.Token));
         }
 
         private void LateInitializeSoloProxy()
         {
+            throw new NotImplementedException();
         }
 
         private void LateInitializePool()
         {
-            Miner = new PoolMiner(Program, LoggerService, ConfigService, this);
+            Miner = new PoolMiner(LoggerService, ConfigService, this);
 
-            Program.TasksToAwait.Add(Task.Factory.StartNew(async () =>
+            Program.TasksToAwait.Add(Task.Run(async () =>
             {
                 var currentIndex = 0;
                 var cancellationTokenSource = Program.CancellationTokenSource;
-                var donateLevel = ConfigService.DonateLevel;
-                var stopwatch = Stopwatch;
-                var loggerService = LoggerService;
+                var listeners = Listeners;
 
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
                     if (Listener == null)
                     {
-                        stopwatch.Restart();
-                        await SwitchListener(Listeners[currentIndex]).ConfigureAwait(false);
+                        await SwitchListener(listeners[currentIndex]).ConfigureAwait(false);
                     }
-                    else
+                    else if (Listener.RetryCount >= 5)
                     {
-                        if (!IsDevRound)
-                        {
-                            //if (donateLevel > 0)
-                            //{
-                            //    if (stopwatch.Elapsed.TotalMinutes >= MinerRoundTimer)
-                            //    {
-                            //        IsDevRound = true;
-                            //        await loggerService.LogMessageAsync("Switching to Dev Round...", ConsoleColor.Yellow).ConfigureAwait(false);
-                            //        await SwitchListener(DevListeners[0]).ConfigureAwait(false);
-                            //        stopwatch.Restart();
-                            //        continue;
-                            //    }
-                            //}
+                        currentIndex++;
 
-                            if (Listener.RetryCount >= 5)
-                            {
-                                currentIndex++;
+                        if (currentIndex > listeners.Count - 1)
+                            currentIndex = 0;
 
-                                if (currentIndex > Listeners.Count - 1)
-                                    currentIndex = 0;
-
-                                await SwitchListener(Listeners[currentIndex]).ConfigureAwait(false);
-                            }
-                        }
-                        else
-                        {
-                            if (Stopwatch.Elapsed.TotalMinutes >= donateLevel)
-                            {
-                                IsDevRound = false;
-                                MinerRoundTimer = 100 - ConfigService.DonateLevel;
-                                await loggerService.LogMessageAsync("Switching to Miner Round...", ConsoleColor.Yellow).ConfigureAwait(false);
-                                await SwitchListener(Listeners[currentIndex]).ConfigureAwait(false);
-                                Stopwatch.Restart();
-                                continue;
-                            }
-                        }
+                        await SwitchListener(listeners[currentIndex]).ConfigureAwait(false);
                     }
 
                     await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
                 }
 
-                foreach (var poolListener in Listeners)
-                    await poolListener.StopConnectToNetworkAsync().ConfigureAwait(false);
-
-                //await DevListeners[0].StopConnectToNetworkAsync().ConfigureAwait(false);
-            }, Program.CancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap());
+                foreach (var listener in listeners)
+                    await listener.StopConnectToNetworkAsync().ConfigureAwait(false);
+            }, Program.CancellationTokenSource.Token));
         }
 
         private void LateInitializePoolProxy()
         {
+            throw new NotImplementedException();
         }
 
         private async Task SwitchListener(AbstractListener listener)
         {
-            if (Listener != null)
-            {
-                Listener.Disconnected -= ListenerOnDisconnected;
-                Listener.LoginResult -= ListenerOnLoginResult;
-                Listener.NewJob -= ListenerOnNewJob;
-                Listener.ShareResult -= ListenerOnShareResult;
+            var currentListener = Listener;
 
-                await Listener.StopConnectToNetworkAsync().ConfigureAwait(false);
+            if (currentListener != null)
+            {
+                currentListener.Disconnected -= ListenerOnDisconnected;
+                currentListener.LoginResult -= ListenerOnLoginResult;
+                currentListener.NewJob -= ListenerOnNewJob;
+                currentListener.ShareResult -= ListenerOnShareResult;
+
+                await currentListener.StopConnectToNetworkAsync().ConfigureAwait(false);
             }
 
             Listener = listener;
@@ -338,12 +275,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
             await Listener.StartConnectToNetworkAsync().ConfigureAwait(false);
         }
 
-        private async Task ListenerOnDisconnected(AbstractListener listener)
+        private void ListenerOnDisconnected(AbstractListener listener)
         {
-            await LoggerService.LogMessageAsync($"[{listener.Host}:{listener.Port}] Disconnected", ConsoleColor.Red).ConfigureAwait(false);
+            LoggerService.LogMessage($"[{listener.Host}:{listener.Port}] Disconnected", ConsoleColor.Red);
         }
 
-        private async Task ListenerOnLoginResult(AbstractListener listener, bool success)
+        private void ListenerOnLoginResult(AbstractListener listener, bool success)
         {
             if (success)
             {
@@ -360,45 +297,63 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
                         break;
                 }
 
-                await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                LoggerService.LogMessage(new ConsoleMessageBuilder()
                     .Write($"use {listenerType} ", true)
                     .WriteLine($"{listener.Host}:{listener.Port}", ConsoleColor.Cyan, false)
-                    .Build()).ConfigureAwait(false);
+                    .Build());
             }
             else
-                await LoggerService.LogMessageAsync($"[{listener.Host}:{listener.Port}] Login failed. Reason: Invalid wallet address.", ConsoleColor.Red).ConfigureAwait(false);
+                LoggerService.LogMessage($"[{listener.Host}:{listener.Port}] Login failed. Reason: Invalid wallet address.", ConsoleColor.Red);
         }
 
-        private async Task ListenerOnNewJob(AbstractListener listener, string packet)
+        private void ListenerOnNewJob(AbstractListener listener, string packet)
         {
-            Miner.UpdateJob(packet);
+            var miner = Miner;
+            miner.UpdateJob(packet);
 
-            await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
-                .Write("new job ", ConsoleColor.Magenta, true)
-                .WriteLine($"from {listener.Host}:{listener.Port} diff {Miner.JobDifficulty}/{Miner.BlockDifficulty} algo {Miner.JobMethodName} height {Miner.BlockId}", false)
-                .Build()).ConfigureAwait(false);
+            switch (listener)
+            {
+                case SoloListener _:
+                    LoggerService.LogMessage(new ConsoleMessageBuilder()
+                        .Write("new job ", ConsoleColor.Magenta, true)
+                        .WriteLine($"from {listener.Host}:{listener.Port} diff {miner.BlockDifficulty} algo {miner.JobMethodName} height {miner.BlockId}", false)
+                        .Build());
+                    break;
+
+                case PoolListener _:
+                    LoggerService.LogMessage(new ConsoleMessageBuilder()
+                        .Write("new job ", ConsoleColor.Magenta, true)
+                        .WriteLine($"from {listener.Host}:{listener.Port} diff {miner.JobDifficulty}/{miner.BlockDifficulty} algo {miner.JobMethodName} height {miner.BlockId}", false)
+                        .Build());
+                    break;
+            }
         }
 
-        private async Task ListenerOnShareResult(AbstractListener listener, bool accepted, string reason)
+        private void ListenerOnShareResult(AbstractListener listener, bool accepted, string reason)
         {
             if (accepted)
             {
                 TotalGoodSharesSubmitted++;
 
-                await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                LoggerService.LogMessage(new ConsoleMessageBuilder()
                     .Write("accepted ", ConsoleColor.Green, true)
                     .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted})", false)
-                    .Build()).ConfigureAwait(false);
+                    .Build());
             }
             else
             {
                 TotalBadSharesSubmitted++;
 
-                await LoggerService.LogMessageAsync(new ConsoleMessageBuilder()
+                LoggerService.LogMessage(new ConsoleMessageBuilder()
                     .Write("rejected ", ConsoleColor.Red, true)
                     .WriteLine($"({TotalGoodSharesSubmitted}/{TotalBadSharesSubmitted}) - {reason}", false)
-                    .Build()).ConfigureAwait(false);
+                    .Build());
             }
+        }
+
+        public void Dispose()
+        {
+            Miner?.Dispose();
         }
     }
 }

@@ -21,6 +21,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public Config.MiningSolo Solo => Config.Solo;
 
+        public Config.MiningSoloProxy[] SoloProxies => Config.SoloProxies;
+
         public Config.MiningPool[] Pools => Config.Pools;
 
         public Config.MiningThread[] AdditionJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.AdditionJob).ToArray();
@@ -35,109 +37,43 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         public Config.MiningThread[] RandomJobThreads => Config.Threads.Where(a => a.JobType == Config.MiningJob.RandomJob).ToArray();
 
-        private Program Program { get; }
-
         private FilePathService FilePathService { get; }
 
         private LoggerService LoggerService { get; }
 
         private Config Config { get; set; }
 
-        public ConfigService(Program program, FilePathService filePathService, LoggerService loggerService)
+        public ConfigService(FilePathService filePathService, LoggerService loggerService)
         {
-            Program = program;
             FilePathService = filePathService;
             LoggerService = loggerService;
         }
 
         public void Initialize()
         {
+            var settingFilePath = FilePathService.SettingFilePath;
+            var loggerService = LoggerService;
+
             Config = new Config();
 
-            if (!File.Exists(FilePathService.SettingFilePath))
+            if (!File.Exists(settingFilePath))
             {
                 try
                 {
-                    using (var streamWriter = new StreamWriter(new FileStream(FilePathService.SettingFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)))
+                    // TODO: Write a easy start up manager to configure the miner.
+
+                    using (var streamWriter = new StreamWriter(new FileStream(settingFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)))
                     {
                         var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
                         jsonSerializer.Serialize(streamWriter, Config);
                     }
 
-                    LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Running configuration setup...", false).Build());
-
-                    var walletAddress = "";
-                    var host = "";
-                    ushort port = 0;
-                    var threads = 0;
-
-                    do
-                    {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write your wallet address (Append a period with the difficulty number if you wish to use static difficulty):", false).Build());
-                        walletAddress = System.Console.ReadLine();
-
-                        if (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
-                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Input wallet address is wrong, Xiropht wallet addresses are between 48 and 96 characters long.", ConsoleColor.Red, false).Build());
-                    } while (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize);
-
-                    do
-                    {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool host:", false).Build());
-                        host = System.Console.ReadLine();
-
-                        if (string.IsNullOrWhiteSpace(host))
-                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid host.", ConsoleColor.Red, false).Build());
-                    } while (string.IsNullOrWhiteSpace(host));
-
-                    do
-                    {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Write the mining pool port:", false).Build());
-
-                        if (!ushort.TryParse(System.Console.ReadLine(), out port))
-                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid port.", ConsoleColor.Red, false).Build());
-                        else if (port == 0)
-                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid port.", ConsoleColor.Red, false).Build());
-                    } while (port == 0);
-
-                    do
-                    {
-                        LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine($"Select the number of thread to use, detected thread {Environment.ProcessorCount}:", false).Build());
-
-                        if (!int.TryParse(System.Console.ReadLine(), out threads))
-                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid thread count.", ConsoleColor.Red, false).Build());
-                        else if (threads <= 0)
-                            LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid thread count.", ConsoleColor.Red, false).Build());
-                    } while (threads <= 0);
-
-                    Config.Pools = new[] { new Config.MiningPool { Host = host, Port = port, WalletAddress = walletAddress } };
-                    Config.Threads = new Config.MiningThread[threads];
-
-                    for (var i = 0; i < Config.Threads.Length; i++)
-                        Config.Threads[i] = new Config.MiningThread();
-
-                    try
-                    {
-                        using (var streamWriter = new StreamWriter(new FileStream(FilePathService.SettingFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)))
-                        {
-                            var jsonSerializer = new JsonSerializer { Formatting = Formatting.Indented };
-                            jsonSerializer.Serialize(streamWriter, Config);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        LoggerService.LogErrorMessage(ex);
-                        Program.CancellationTokenSource.Cancel();
-                    }
-
-                    LoggerService.LogMessage($"Generated Configuration file at: \"{FilePathService.SettingFilePath}\"");
-                    LoggerService.LogMessage("You may want to edit the configuration file for advanced settings :)");
-                    LoggerService.LogMessage("Press Enter/Return to exit...");
+                    loggerService.LogMessage(new ConsoleMessageBuilder()
+                        .WriteLine($"Generated configuration file is at: \"{settingFilePath}\"", false)
+                        .WriteLine("Press Enter/Return to exit...")
+                        .Build());
 
                     System.Console.ReadLine();
-                }
-                catch (Exception ex)
-                {
-                    LoggerService.LogErrorMessage(ex);
                 }
                 finally
                 {
@@ -146,32 +82,24 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
             }
             else
             {
-                try
+                using (var streamReader = new StreamReader(new FileStream(settingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                 {
-                    using (var streamReader = new StreamReader(new FileStream(FilePathService.SettingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
-                    {
-                        var jsonSerializer = new JsonSerializer();
-                        Config = jsonSerializer.Deserialize<Config>(new JsonTextReader(streamReader));
-                    }
+                    var jsonSerializer = new JsonSerializer();
+                    Config = jsonSerializer.Deserialize<Config>(new JsonTextReader(streamReader));
+                }
 
-                    ValidateSettings();
-                }
-                catch (Exception ex)
-                {
-                    LoggerService.LogErrorMessage(ex);
-                    Program.CancellationTokenSource.Cancel();
-                }
+                ValidateSettings();
             }
 
-            var consoleMessages = new ConsoleMessageBuilder()
-                .Write(" * ", ConsoleColor.Green, false)
-                .Write("THREADS".PadRight(13), false)
-                .Write(Config.Threads.Length.ToString(), ConsoleColor.Cyan, false)
-                .Write(", ", false)
-                .Write($"donate={Config.DonateLevel}%", Config.DonateLevel > 0 ? ConsoleColor.White : ConsoleColor.Red, false)
-                .WriteLine("", false);
+            var config = Config;
 
-            LoggerService.LogMessage(consoleMessages.Build());
+            loggerService.LogMessage(new ConsoleMessageBuilder()
+                .Write(" * ", ConsoleColor.Green, false)
+                .Write("THREADS      ", false)
+                .Write(config.Threads.Length.ToString(), ConsoleColor.Cyan, false)
+                .Write(", ", false)
+                .WriteLine($"donate={config.DonateLevel}%", config.DonateLevel > 0 ? ConsoleColor.White : ConsoleColor.Red, false)
+                .Build());
         }
 
         private void DoStartUpConfiguration()
@@ -224,7 +152,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                 .WriteLine("Solo Mining MiningMode Configuration:", false)
                 .WriteLine("==================================================", false).Build());
 
-            string walletAddress, setWorkerId, workerId = null;
+            string walletAddress;
 
             do
             {
@@ -235,28 +163,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                     LoggerService.LogMessage("Invalid wallet address. Please check your wallet address again.", ConsoleColor.Red);
             } while (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize || walletAddress.Length > ClassConnectorSetting.MaxWalletAddressSize);
 
-            do
-            {
-                LoggerService.LogMessage("Do you wish to set worker id? (This is used for API reporting) [Y/N]:");
-                setWorkerId = System.Console.In.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(setWorkerId) || !setWorkerId.Equals("y", StringComparison.OrdinalIgnoreCase) && !setWorkerId.Equals("n", StringComparison.OrdinalIgnoreCase))
-                    LoggerService.LogMessage("Invalid option. Please try again.", ConsoleColor.Red);
-            } while (string.IsNullOrWhiteSpace(setWorkerId) || !setWorkerId.Equals("y", StringComparison.OrdinalIgnoreCase) && !setWorkerId.Equals("n", StringComparison.OrdinalIgnoreCase));
-
-            if (setWorkerId.Equals("y", StringComparison.OrdinalIgnoreCase))
-            {
-                do
-                {
-                    LoggerService.LogMessage("Please enter your worker id:");
-                    workerId = System.Console.In.ReadLine();
-
-                    if (string.IsNullOrWhiteSpace(workerId))
-                        LoggerService.LogMessage("Invalid worker id.", ConsoleColor.Red);
-                } while (string.IsNullOrWhiteSpace(workerId));
-            }
-
-            Config.Solo = new Config.MiningSolo { WalletAddress = walletAddress, WorkerId = workerId ?? "" };
+            Config.Solo = new Config.MiningSolo { WalletAddress = walletAddress };
         }
 
         private void DoConfigureSoloProxy()
@@ -288,35 +195,54 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         private void ValidateSettings()
         {
-            try
+            var config = Config;
+
+            if (config.DonateLevel < 1)
+                config.DonateLevel = 1;
+
+            if (config.DonateLevel > 100)
+                config.DonateLevel = 100;
+
+            if (config.PrintTime < 1)
+                config.PrintTime = 1;
+
+            if (config.Safe && config.Threads.Length > Environment.ProcessorCount)
+                throw new ArgumentException("Excessive amount of thread allocated which may cause unstable results. Use \"Safe: false\" if you intend to use this configuration.");
+
+            switch (config.Mode)
             {
-                if (DonateLevel < 1)
-                    Config.DonateLevel = 1;
-
-                if (DonateLevel > 100)
-                    Config.DonateLevel = 100;
-
-                if (PrintTime < 1)
-                    Config.PrintTime = 1;
-
-                if (Config.Safe && Config.Threads.Length > Environment.ProcessorCount)
-                    throw new ArgumentOutOfRangeException(nameof(Config.Threads), "Excessive amount of thread allocated which may cause unstable results. Use \"Safe: false\" if you intend to use this configuration.");
-
-                foreach (var miningPool in Pools)
-                {
-                    if (miningPool.Host.Contains(":"))
-                        throw new ArgumentException("Invalid pool host. Please remove the port from the host.");
-
-                    if (miningPool.WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
+                case Config.MiningMode.Solo:
+                    if (config.Solo.WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize || config.Solo.WalletAddress.Length > ClassConnectorSetting.MaxWalletAddressSize)
                         throw new ArgumentException("Invalid Xiropht wallet address. Please check your wallet address again.");
-                }
-            }
-            catch (Exception ex)
-            {
-                LoggerService.LogErrorMessage(ex);
-                LoggerService.LogMessage("Press Enter/Return to exit...");
-                System.Console.ReadLine();
-                Program.CancellationTokenSource.Cancel();
+                    break;
+
+                case Config.MiningMode.SoloProxy:
+                    foreach (var soloProxy in config.SoloProxies)
+                    {
+                        if (soloProxy.Host.Contains(":"))
+                            throw new ArgumentException("Invalid solo proxy host. Please remove the port from the host.");
+
+                        if (string.IsNullOrWhiteSpace(soloProxy.WorkerId))
+                            throw new ArgumentException("Worker Id should not be blank.");
+                    }
+                    break;
+
+                case Config.MiningMode.Pool:
+                    foreach (var pool in config.Pools)
+                    {
+                        if (pool.Host.Contains(":"))
+                            throw new ArgumentException("Invalid pool host. Please remove the port from the host.");
+
+                        if (pool.WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
+                            throw new ArgumentException("Invalid Xiropht wallet address. Please check your wallet address again.");
+                    }
+                    break;
+
+                case Config.MiningMode.PoolProxy:
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

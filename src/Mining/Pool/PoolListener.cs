@@ -13,9 +13,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
     {
         private string WalletAddress { get; }
 
-        public PoolListener(string host, ushort port, string workerId, string walletAddress) : base(host, port, workerId)
+        private string WorkerId { get; }
+
+        public PoolListener(string host, ushort port, string walletAddress, string workerId) : base(host, port)
         {
             WalletAddress = walletAddress;
+            WorkerId = workerId;
         }
 
         protected override async Task OnStartConnectToNetworkAsync()
@@ -65,7 +68,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
 
                     if (jsonPacket.ContainsKey(PoolLoginPacket.LoginWrong))
                     {
-                        await OnLoginResultAsync(false).ConfigureAwait(false);
+                        OnLoginResult(false);
                         await StopConnectToNetworkAsync().ConfigureAwait(false);
                     }
 
@@ -74,7 +77,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
                         IsLoggedIn = true;
                         RetryCount = 0;
 
-                        await OnLoginResultAsync(true).ConfigureAwait(false);
+                        OnLoginResult(true);
                     }
                 }
                 else if (string.Equals(type, PoolPacketType.KeepAlive, StringComparison.OrdinalIgnoreCase))
@@ -83,7 +86,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
                 {
                     LastValidPacketBeforeTimeout = DateTimeOffset.Now.AddSeconds(5);
 
-                    await OnNewJobAsync(packet).ConfigureAwait(false);
+                    OnNewJob(packet);
                 }
                 else if (string.Equals(type, PoolPacketType.Share, StringComparison.OrdinalIgnoreCase))
                 {
@@ -92,16 +95,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
                     var result = jsonPacket[PoolSharePacket.Result].ToString();
 
                     if (string.Equals(result, PoolSharePacket.ResultShareOk, StringComparison.OrdinalIgnoreCase))
-                        await OnShareResultAsync(true, "Share Accepted.").ConfigureAwait(false);
+                        OnShareResult(true, "Share Accepted.");
 
                     if (string.Equals(result, PoolSharePacket.ResultShareInvalid, StringComparison.OrdinalIgnoreCase))
-                        await OnShareResultAsync(false, "Invalid Share.").ConfigureAwait(false);
+                        OnShareResult(false, "Invalid Share.");
 
                     if (string.Equals(result, PoolSharePacket.ResultShareDuplicate, StringComparison.OrdinalIgnoreCase))
-                        await OnShareResultAsync(false, "Duplicate Share.").ConfigureAwait(false);
+                        OnShareResult(false, "Duplicate Share.");
 
                     if (string.Equals(result, PoolSharePacket.ResultShareLowDifficulty, StringComparison.OrdinalIgnoreCase))
-                        await OnShareResultAsync(false, "Low Share Difficulty.").ConfigureAwait(false);
+                        OnShareResult(false, "Low Share Difficulty.");
                 }
             }
             catch (Exception)
