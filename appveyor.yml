@@ -29,11 +29,13 @@ test: off
 artifacts:
 - path: bin/Release/mono-portable.zip
   name: mono-portable
-- path: bin/Release/net-core-linux-arm.zip
+- path: bin/Release/mono-portable.tar.gz
+  name: mono-portable-linux
+- path: bin/Release/net-core-linux-arm.tar.gz
   name: net-core-linux-arm
-- path: bin/Release/net-core-linux-x64.zip
+- path: bin/Release/net-core-linux-x64.tar.gz
   name: net-core-linux-x64
-- path: bin/Release/net-core-osx-x64.zip
+- path: bin/Release/net-core-osx-x64.tar.gz
   name: net-core-osx-x64
 - path: bin/Release/net-core-win-arm.zip
   name: net-core-win-arm
@@ -47,6 +49,6 @@ deploy:
   release: Xirorig v$(appveyor_build_version)
   auth_token:
     secure: N+JUPZbbAuyrCHxK+vor2jDWI0867mo0gqA5g0EWPwYgYZmAXztdRUV9rpwQ0TdR
-  artifact: mono-portable, net-core-linux-arm, net-core-linux-x64, net-core-osx-x64, net-core-win-arm, net-core-win-x64, net-core-win-x86
+  artifact: mono-portable, mono-portable-linux, net-core-linux-arm, net-core-linux-x64, net-core-osx-x64, net-core-win-arm, net-core-win-x64, net-core-win-x86
   draft: true
   prerelease: false

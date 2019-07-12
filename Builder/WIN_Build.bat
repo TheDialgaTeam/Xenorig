@@ -18,12 +18,22 @@ dotnet publish %project% /p:PublishSingleFile=true -c %configuration% -f %framew
 dotnet publish %project% /p:PublishSingleFile=true -c %configuration% -f %framework_core% -o %output%/net-core-win-x64 -r win-x64 --self-contained
 dotnet publish %project% /p:PublishSingleFile=true -c %configuration% -f %framework_core% -o %output%/net-core-win-x86 -r win-x86 --self-contained
 
-"%~dp0/7z/7za.exe" a %output%/mono-portable.zip %output%/mono-portable
-"%~dp0/7z/7za.exe" a %output%/net-core-linux-arm.zip %output%/net-core-linux-arm
-"%~dp0/7z/7za.exe" a %output%/net-core-linux-x64.zip %output%/net-core-linux-x64
-"%~dp0/7z/7za.exe" a %output%/net-core-osx-x64.zip %output%/net-core-osx-x64
-"%~dp0/7z/7za.exe" a %output%/net-core-win-arm.zip %output%/net-core-win-arm
-"%~dp0/7z/7za.exe" a %output%/net-core-win-x64.zip %output%/net-core-win-x64
-"%~dp0/7z/7za.exe" a %output%/net-core-win-x86.zip %output%/net-core-win-x86
+7z a %output%/mono-portable.zip %output%/mono-portable -mx=9
+
+7z a %output%/mono-portable.tar %output%/mono-portable
+7z a %output%/mono-portable.tar.gz %output%/mono-portable.tar -mx=9
+
+7z a %output%/net-core-linux-arm.tar %output%/net-core-linux-arm
+7z a %output%/net-core-linux-arm.tar.gz %output%/net-core-linux-arm.tar -mx=9
+
+7z a %output%/net-core-linux-x64.tar %output%/net-core-linux-x64
+7z a %output%/net-core-linux-x64.tar.gz %output%/net-core-linux-x64.tar -mx=9
+
+7z a %output%/net-core-osx-x64.tar %output%/net-core-osx-x64
+7z a %output%/net-core-osx-x64.tar.gz %output%/net-core-osx-x64.tar -mx=9
+
+7z a %output%/net-core-win-arm.zip %output%/net-core-win-arm -mx=9
+7z a %output%/net-core-win-x64.zip %output%/net-core-win-x64 -mx=9
+7z a %output%/net-core-win-x86.zip %output%/net-core-win-x86 -mx=9
 
 ENDLOCAL
