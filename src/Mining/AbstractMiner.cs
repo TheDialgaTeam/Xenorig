@@ -108,23 +108,21 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 var totalAverageHashesCalculated = TotalAverage10SecondsHashesCalculated;
                 var averageHashesCalculated = Average10SecondsHashesCalculated;
                 var stopWatch = new Stopwatch();
+                stopWatch.Start();
 
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
                     var totalAverageHashesCalculatedCount = totalAverageHashesCalculated.Count;
-
+                    
                     for (var i = 0; i < totalAverageHashesCalculatedCount; i++)
                     {
-                        if (cancellationTokenSource.IsCancellationRequested)
+                        if (stopWatch.ElapsedMilliseconds == 0)
                             break;
 
                         averageHashesCalculated[i] = totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000m);
                         totalAverageHashesCalculated[i] = 0;
                     }
-
-                    if (cancellationTokenSource.IsCancellationRequested)
-                        break;
-
+                    
                     stopWatch.Restart();
 
                     await Task.Delay(new TimeSpan(0, 0, 10), cancellationTokenSource.Token).ConfigureAwait(false);
@@ -140,6 +138,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 var totalAverageHashesCalculated = TotalAverage60SecondsHashesCalculated;
                 var averageHashesCalculated = Average60SecondsHashesCalculated;
                 var stopWatch = new Stopwatch();
+                stopWatch.Start();
 
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
@@ -147,15 +146,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
                     for (var i = 0; i < totalAverageHashesCalculatedCount; i++)
                     {
-                        if (cancellationTokenSource.IsCancellationRequested)
+                        if (stopWatch.ElapsedMilliseconds == 0)
                             break;
 
                         averageHashesCalculated[i] = totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000m);
                         totalAverageHashesCalculated[i] = 0;
                     }
-
-                    if (cancellationTokenSource.IsCancellationRequested)
-                        break;
 
                     stopWatch.Restart();
 
@@ -172,6 +168,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 var totalAverageHashesCalculated = TotalAverage15MinutesHashesCalculated;
                 var averageHashesCalculated = Average15MinutesHashesCalculated;
                 var stopWatch = new Stopwatch();
+                stopWatch.Start();
 
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
@@ -179,15 +176,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
                     for (var i = 0; i < totalAverageHashesCalculatedCount; i++)
                     {
-                        if (cancellationTokenSource.IsCancellationRequested)
+                        if (stopWatch.ElapsedMilliseconds == 0)
                             break;
 
                         averageHashesCalculated[i] = totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000m);
                         totalAverageHashesCalculated[i] = 0;
                     }
-
-                    if (cancellationTokenSource.IsCancellationRequested)
-                        break;
 
                     stopWatch.Restart();
 

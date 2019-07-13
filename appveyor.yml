@@ -4,7 +4,7 @@ pull_requests:
 branches:
   only:
   - master
-skip_tags: true
+skip_non_tags: true
 image: Visual Studio 2019
 clone_depth: 1
 dotnet_csproj:
@@ -21,10 +21,7 @@ install:
 
     choco install dotnetcore-sdk --version 3.0.100-preview5-011568 --pre
 build_script:
-- cmd: >-
-    cd Builder
-
-    WIN_Build.bat
+- cmd: appveyor_build.bat
 test: off
 artifacts:
 - path: bin/Release/mono-portable.zip

@@ -28,6 +28,7 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 
 ## Other information
 - Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via option DonateLevel.
+- Default donation have been removed since v0.0.2.x.
 
 ### CPU mining performance
 - Intel i7-8750H - 110 KH/s (1 thread netcore) 55 KH/s (1 thread mono)
@@ -44,6 +45,7 @@ Please note performance is highly dependent on system load. The numbers above ar
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`
 - LTC: `LUU9Avuanafmq1vMp53AWS1mr3GCCc2X42`
 - XMR: `42oj7eV68BK8Z8wcGzLMFEJgAQG22Z3ajGdtpmJx5p7iDqEgG91wNybWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm3zwfwWN`
+- XIRO: `IunrCHs082rMtO2IMwHx4cVHyUFeKM6w3zAt5zN83QayBOP16jqBU9`
 
 ## Developers
 - The Dialga Team (Yong Jian Ming)
