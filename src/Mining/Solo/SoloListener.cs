@@ -31,6 +31,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
 
         private Stopwatch Stopwatch { get; }
 
+        private bool IsWalletAddressValid { get; set; }
+
         public SoloListener(string host, ushort port, string walletAddress) : base(host, port)
         {
             WalletAddress = walletAddress;
@@ -47,21 +49,26 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
 
         protected override async Task OnStartConnectToNetworkAsync()
         {
-            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5), BaseAddress = new Uri($"http://{Host}:{ClassConnectorSetting.SeedNodeTokenPort}/") };
-            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Xirorig", Assembly.GetExecutingAssembly().GetName().Version.ToString()));
-            var jsonString = await httpClient.GetStringAsync($"{ClassConnectorSettingEnumeration.WalletTokenType}|{ClassRpcWalletCommand.TokenCheckWalletAddressExist}|{WalletAddress}").ConfigureAwait(false);
-            var json = JObject.Parse(jsonString);
-
-            if (json.ContainsKey("result"))
+            if (!IsWalletAddressValid)
             {
-                var result = json["result"].ToString();
+                var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5), BaseAddress = new Uri($"http://{Host}:{ClassConnectorSetting.SeedNodeTokenPort}/") };
+                httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Xirorig", Assembly.GetExecutingAssembly().GetName().Version.ToString()));
+                var jsonString = await httpClient.GetStringAsync($"{ClassConnectorSettingEnumeration.WalletTokenType}|{ClassRpcWalletCommand.TokenCheckWalletAddressExist}|{WalletAddress}").ConfigureAwait(false);
+                var json = JObject.Parse(jsonString);
 
-                if (result.StartsWith(ClassRpcWalletCommand.SendTokenCheckWalletAddressInvalid))
+                if (json.ContainsKey("result"))
                 {
-                    OnLoginResult(false);
-                    await DisconnectFromNetworkAsync().ConfigureAwait(false);
-                    return;
+                    var result = json["result"].ToString();
+
+                    if (result.StartsWith(ClassRpcWalletCommand.SendTokenCheckWalletAddressInvalid))
+                    {
+                        OnLoginResult(false);
+                        await DisconnectFromNetworkAsync().ConfigureAwait(false);
+                        return;
+                    }
                 }
+
+                IsWalletAddressValid = true;
             }
 
             var packet = new JObject

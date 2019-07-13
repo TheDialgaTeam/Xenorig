@@ -200,7 +200,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
                         await SwitchListener(listeners[currentIndex]).ConfigureAwait(false);
                     }
 
-                    await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
+                    try
+                    {
+                        await Task.Delay(1, cancellationTokenSource.Token).ConfigureAwait(false);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // Ignore this error.
+                    }
                 }
 
                 foreach (var listener in listeners)
@@ -239,7 +246,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Mining
                         await SwitchListener(listeners[currentIndex]).ConfigureAwait(false);
                     }
 
-                    await Task.Delay(1000, cancellationTokenSource.Token).ConfigureAwait(false);
+                    try
+                    {
+                        await Task.Delay(1, cancellationTokenSource.Token).ConfigureAwait(false);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // Ignore the error.
+                    }
                 }
 
                 foreach (var listener in listeners)

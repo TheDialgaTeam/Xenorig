@@ -124,7 +124,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                     }
                     
                     stopWatch.Restart();
-
                     await Task.Delay(new TimeSpan(0, 0, 10), cancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }, Program.CancellationTokenSource.Token));
@@ -154,7 +153,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                     }
 
                     stopWatch.Restart();
-
                     await Task.Delay(new TimeSpan(0, 1, 0), cancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }, Program.CancellationTokenSource.Token));
@@ -184,7 +182,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                     }
 
                     stopWatch.Restart();
-
                     await Task.Delay(new TimeSpan(0, 15, 0), cancellationTokenSource.Token).ConfigureAwait(false);
                 }
             }, Program.CancellationTokenSource.Token));

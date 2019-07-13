@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Newtonsoft.Json;
 using TheDialgaTeam.Microsoft.Extensions.DependencyInjection;
 using TheDialgaTeam.Xiropht.Xirorig.Console;
@@ -60,7 +61,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
             {
                 try
                 {
-                    // TODO: Write a easy start up manager to configure the miner.
+                    DoStartUpConfiguration();
 
                     using (var streamWriter = new StreamWriter(new FileStream(settingFilePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite)))
                     {
@@ -104,29 +105,33 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         private void DoStartUpConfiguration()
         {
-            LoggerService.LogMessage(new ConsoleMessageBuilder()
+            var loggerService = LoggerService;
+
+            loggerService.LogMessage(new ConsoleMessageBuilder()
                 .WriteLine("==================================================", false)
-                .WriteLine("Configuration Helper:", false)
-                .WriteLine("==================================================", false).Build());
+                .WriteLine("Configuration Setup:", false)
+                .WriteLine("==================================================", false)
+                .Build());
 
             int mode;
 
             do
             {
-                LoggerService.LogMessage(new ConsoleMessageBuilder()
+                loggerService.LogMessage(new ConsoleMessageBuilder()
                     .WriteLine("Please select a mining mode:", false)
                     .WriteLine("1. Solo (Only available on mono build)", false)
-                    .WriteLine("2. Solo Proxy", false)
+                    .WriteLine("2. Solo Proxy (Not implemented)", false)
                     .WriteLine("3. Pool", false)
-                    .WriteLine("4. Pool Proxy (Reserved option)", false).Build());
+                    .WriteLine("4. Pool Proxy (Not implemented)", false)
+                    .Build());
 
-                if (int.TryParse(System.Console.In.ReadLine(), out mode) && mode >= 0 && mode <= 4)
+                if (int.TryParse(System.Console.In.ReadLine(), out mode) && mode >= 1 && mode <= 4)
                     continue;
 
-                LoggerService.LogMessage(new ConsoleMessageBuilder().WriteLine("Invalid mining mode! Please try again.", ConsoleColor.Red, false).Build());
+                loggerService.LogMessage("Invalid mining mode! Please try again.", ConsoleColor.Red, false);
             } while (mode < 0 || mode > 4);
 
-            Config.Mode = (Config.MiningMode)(mode - 1);
+            Config.Mode = (Config.MiningMode) (mode - 1);
 
             switch (Config.Mode)
             {
@@ -147,50 +152,201 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
 
         private void DoConfigureSolo()
         {
-            LoggerService.LogMessage(new ConsoleMessageBuilder()
+            var loggerService = LoggerService;
+
+            loggerService.LogMessage(new ConsoleMessageBuilder()
                 .WriteLine("==================================================", false)
-                .WriteLine("Solo Mining MiningMode Configuration:", false)
-                .WriteLine("==================================================", false).Build());
+                .WriteLine("Solo Mining Mode Configuration:", false)
+                .WriteLine("==================================================", false)
+                .Build());
 
             string walletAddress;
 
             do
             {
-                LoggerService.LogMessage("Please enter your wallet address:");
+                loggerService.LogMessage("Please enter your wallet address:", false);
                 walletAddress = System.Console.In.ReadLine();
 
                 if (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize || walletAddress.Length > ClassConnectorSetting.MaxWalletAddressSize)
-                    LoggerService.LogMessage("Invalid wallet address. Please check your wallet address again.", ConsoleColor.Red);
+                    loggerService.LogMessage("Invalid wallet address. Please check your wallet address again.", ConsoleColor.Red, false);
             } while (string.IsNullOrWhiteSpace(walletAddress) || walletAddress.Length < ClassConnectorSetting.MinWalletAddressSize || walletAddress.Length > ClassConnectorSetting.MaxWalletAddressSize);
 
             Config.Solo = new Config.MiningSolo { WalletAddress = walletAddress };
+
+            DoConfigureThread();
         }
 
-        private void DoConfigureSoloProxy()
+        private void DoConfigureThread()
         {
-            //LoggerService.LogMessage("==================================================");
-            //LoggerService.LogMessage("Solo Proxy Mining MiningMode configuration:");
-            //LoggerService.LogMessage("==================================================");
+            var loggerService = LoggerService;
 
-            //string addFailBack;
+            loggerService.LogMessage(new ConsoleMessageBuilder()
+                .WriteLine("==================================================", false)
+                .WriteLine("Thread Configuration:", false)
+                .WriteLine("==================================================", false)
+                .Build());
 
-            //do
-            //{
-            //    string host;
-            //    ushort port;
-            //    string workerId;
+            int numberOfThreads;
 
-            //    do
-            //    {
-            //        LoggerService.LogMessage("Please enter your solo proxy address (127.0.0.1 for local):");
-            //        host = System.Console.In.ReadLine();
+            do
+            {
+                loggerService.LogMessage(new ConsoleMessageBuilder()
+                    .WriteLine($"Your CPU have {Environment.ProcessorCount} processors.", false)
+                    .WriteLine("Please select the number of threads to mine:", false)
+                    .Build());
 
-            //        if (string.IsNullOrWhiteSpace(host))
-            //            LoggerService.LogMessage("Invalid address. Please try again.", ConsoleColor.Red);
-            //    } while (string.IsNullOrWhiteSpace(host));
+                if (int.TryParse(System.Console.In.ReadLine(), out numberOfThreads) && numberOfThreads > 0 && numberOfThreads <= Environment.ProcessorCount)
+                    continue;
 
-            //    LoggerService.LogMessage("Do you wish to add a fail back solo proxy? [Y/N]:");
-            //} while (addFailBack != null && addFailBack.Equals("y", StringComparison.OrdinalIgnoreCase));
+                loggerService.LogMessage("You have selected invalid number of threads.", ConsoleColor.Red, false);
+            } while (numberOfThreads < 0 || numberOfThreads > Environment.ProcessorCount);
+
+            var miningThreads = new Config.MiningThread[numberOfThreads];
+
+            for (var i = 0; i < numberOfThreads; i++)
+            {
+                var miningThread = new Config.MiningThread();
+
+                loggerService.LogMessage(new ConsoleMessageBuilder()
+                    .WriteLine("==================================================", false)
+                    .WriteLine($"Thread #{i + 1} Configuration:", false)
+                    .WriteLine("==================================================", false)
+                    .Build());
+
+                int jobType;
+
+                do
+                {
+                    loggerService.LogMessage(new ConsoleMessageBuilder()
+                        .WriteLine("Please select mining job type:", false)
+                        .WriteLine("1. Random Job", false)
+                        .WriteLine("2. Addition Job (Not implemented)", false)
+                        .WriteLine("3. Subtraction Job (Not implemented)", false)
+                        .WriteLine("4. Multiplication Job (Not implemented)", false)
+                        .WriteLine("5. Division Job (Not implemented)", false)
+                        .WriteLine("6. Modulus Job (Not implemented)", false)
+                        .Build());
+
+                    if (int.TryParse(System.Console.In.ReadLine(), out jobType) && jobType >= 1 && jobType <= 6)
+                        continue;
+
+                    loggerService.LogMessage("Invalid mining job type! Please try again.", ConsoleColor.Red, false);
+                } while (jobType < 0 || jobType > 6);
+
+                miningThread.JobType = (Config.MiningJob) (jobType - 1);
+
+                int threadPriority;
+
+                do
+                {
+                    loggerService.LogMessage(new ConsoleMessageBuilder()
+                        .WriteLine("Please select thread priority:", false)
+                        .WriteLine("1. Lowest", false)
+                        .WriteLine("2. Below Normal", false)
+                        .WriteLine("3. Normal", false)
+                        .WriteLine("4. Above Normal", false)
+                        .WriteLine("5. Highest", false)
+                        .Build());
+
+                    if (int.TryParse(System.Console.In.ReadLine(), out threadPriority) && threadPriority >= 1 && threadPriority <= 5)
+                        continue;
+
+                    loggerService.LogMessage("Invalid thread priority! Please try again.", ConsoleColor.Red, false);
+                } while (threadPriority < 0 || threadPriority > 5);
+
+                miningThread.ThreadPriority = (ThreadPriority) (threadPriority - 1);
+
+                int miningPriority;
+
+                do
+                {
+                    loggerService.LogMessage(new ConsoleMessageBuilder()
+                        .WriteLine("Please select mining priority:", false)
+                        .WriteLine("1. Prefer shares over block.", false)
+                        .WriteLine("2. Normal Behavior", false)
+                        .WriteLine("3. Prefer block over shares.", false)
+                        .WriteLine("Note: In Solo mining mode, this does not matter.", false)
+                        .Build());
+
+                    if (int.TryParse(System.Console.In.ReadLine(), out miningPriority) && miningPriority >= 1 && miningPriority <= 3)
+                        continue;
+
+                    loggerService.LogMessage("Invalid thread priority! Please try again.", ConsoleColor.Red, false);
+                } while (miningPriority < 0 || miningPriority > 3);
+
+                miningThread.MiningPriority = (Config.MiningPriority) (miningPriority - 1);
+
+                string shareRange;
+
+                do
+                {
+                    loggerService.LogMessage("Do you wish to split the job range evenly with other threads? [Y/N]:", false);
+                    shareRange = System.Console.In.ReadLine();
+
+                    if (!string.IsNullOrWhiteSpace(shareRange) && (shareRange.Equals("y", StringComparison.OrdinalIgnoreCase) || shareRange.Equals("n", StringComparison.OrdinalIgnoreCase)))
+                        continue;
+
+                    loggerService.LogMessage("Invalid option. Please try again.", ConsoleColor.Red, false);
+                } while (string.IsNullOrWhiteSpace(shareRange) || !shareRange.Equals("y", StringComparison.OrdinalIgnoreCase) && !shareRange.Equals("n", StringComparison.OrdinalIgnoreCase));
+
+                miningThread.ShareRange = shareRange.Equals("y", StringComparison.OrdinalIgnoreCase);
+
+                if (miningThread.ShareRange)
+                {
+                    miningThreads[i] = miningThread;
+                    continue;
+                }
+
+                string customRange;
+
+                do
+                {
+                    loggerService.LogMessage("Do you wish to have a custom mining range? [Y/N]:", false);
+                    customRange = System.Console.In.ReadLine();
+
+                    if (!string.IsNullOrWhiteSpace(customRange) && (customRange.Equals("y", StringComparison.OrdinalIgnoreCase) || customRange.Equals("n", StringComparison.OrdinalIgnoreCase)))
+                        continue;
+
+                    loggerService.LogMessage("Invalid option. Please try again.", ConsoleColor.Red, false);
+                } while (string.IsNullOrWhiteSpace(customRange) || !customRange.Equals("y", StringComparison.OrdinalIgnoreCase) && !customRange.Equals("n", StringComparison.OrdinalIgnoreCase));
+
+                if (shareRange.Equals("n", StringComparison.OrdinalIgnoreCase))
+                {
+                    miningThreads[i] = miningThread;
+                    continue;
+                }
+
+                int minMiningRange;
+
+                do
+                {
+                    loggerService.LogMessage("Please enter the minimum mining range in percentage [Min: 0, Max: 99]", false);
+
+                    if (int.TryParse(System.Console.In.ReadLine(), out minMiningRange) && minMiningRange >= 0 && minMiningRange <= 99)
+                        continue;
+
+                    loggerService.LogMessage("Invalid mining range! Please try again.", ConsoleColor.Red, false);
+                } while (minMiningRange < 0 || minMiningRange > 99);
+
+                miningThread.MinMiningRangePercentage = minMiningRange;
+
+                int maxMiningRange;
+
+                do
+                {
+                    loggerService.LogMessage($"Please enter the maximum mining range in percentage [Min: {minMiningRange + 1}, Max: 100]", false);
+
+                    if (int.TryParse(System.Console.In.ReadLine(), out maxMiningRange) && maxMiningRange >= minMiningRange + 1 && maxMiningRange <= 100)
+                        continue;
+
+                    loggerService.LogMessage("Invalid mining range! Please try again.", ConsoleColor.Red, false);
+                } while (maxMiningRange < minMiningRange + 1 || maxMiningRange > 100);
+
+                miningThread.MaxMiningRangePercentage = maxMiningRange;
+                miningThreads[i] = miningThread;
+            }
+
+            Config.Threads = miningThreads;
         }
 
         private void ValidateSettings()
@@ -225,6 +381,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                         if (string.IsNullOrWhiteSpace(soloProxy.WorkerId))
                             throw new ArgumentException("Worker Id should not be blank.");
                     }
+
                     break;
 
                 case Config.MiningMode.Pool:
@@ -236,6 +393,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Setting
                         if (pool.WalletAddress.Length < ClassConnectorSetting.MinWalletAddressSize)
                             throw new ArgumentException("Invalid Xiropht wallet address. Please check your wallet address again.");
                     }
+
                     break;
 
                 case Config.MiningMode.PoolProxy:
