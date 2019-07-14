@@ -210,18 +210,22 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return result;
         }
 
-        public static int GetRandomBetween(int minimumValue, int maximumValue)
+        public static unsafe int GetRandomBetween(int minimumValue, int maximumValue)
         {
             var randomNumber = new byte[1];
             RngCryptoServiceProvider.GetBytes(randomNumber);
-            return (int) (minimumValue + Math.Floor(Math.Max(0, randomNumber[0] / 255d - 0.00000000001d) * (maximumValue - minimumValue + 1)));
+
+            fixed (byte* randomNumberPtr = randomNumber)
+                return (int) (minimumValue + Math.Floor(Math.Max(0, *randomNumberPtr / 255f - 0.0000001f) * (maximumValue - minimumValue + 1)));
         }
 
-        public static decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
+        public static unsafe decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
         {
             var randomNumber = new byte[1];
             RngCryptoServiceProvider.GetBytes(randomNumber);
-            return minimumValue + Math.Floor(Math.Max(0, randomNumber[0] / 255m - 0.00000000001m) * (maximumValue - minimumValue + 1));
+
+            fixed (byte* randomNumberPtr = randomNumber)
+                return minimumValue + Math.Floor((decimal) Math.Max(0, *randomNumberPtr / 255f - 0.0000001f) * (maximumValue - minimumValue + 1));
         }
 
         public static unsafe decimal GenerateNumberMathCalculation(decimal minRange, decimal maxRange)

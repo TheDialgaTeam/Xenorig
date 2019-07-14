@@ -25,7 +25,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Solo
         {
             var json = JObject.Parse(packet);
 
-            BlockId = decimal.Parse(json["ID"].ToString());
+            BlockId = long.Parse(json["ID"].ToString());
             BlockTimestampCreate = json["TIMESTAMP"].ToString();
             BlockKey = json["KEY"].ToString();
             BlockIndication = json["INDICATION"].ToString();

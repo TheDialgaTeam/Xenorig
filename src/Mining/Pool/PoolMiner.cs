@@ -23,7 +23,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining.Pool
         {
             var json = JObject.Parse(packet);
 
-            BlockId = decimal.Parse(json[PoolJobPacket.Block].ToString());
+            BlockId = long.Parse(json[PoolJobPacket.Block].ToString());
             BlockTimestampCreate = json[PoolJobPacket.BlockTimestampCreate].ToString();
             BlockKey = json[PoolJobPacket.BlockKey].ToString();
             BlockIndication = json[PoolJobPacket.BlockIndication].ToString();

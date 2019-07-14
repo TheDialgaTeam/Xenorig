@@ -17,7 +17,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 {
     public abstract class AbstractMiner : IDisposable
     {
-        public decimal BlockId { get; protected set; }
+        public long BlockId { get; protected set; }
 
         public string BlockTimestampCreate { get; protected set; }
 
@@ -113,16 +113,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
                     var totalAverageHashesCalculatedCount = totalAverageHashesCalculated.Count;
-                    
+
                     for (var i = 0; i < totalAverageHashesCalculatedCount; i++)
                     {
                         if (stopWatch.ElapsedMilliseconds == 0)
                             break;
 
-                        averageHashesCalculated[i] = totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000m);
+                        averageHashesCalculated[i] = (decimal) ((float) totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000f));
                         totalAverageHashesCalculated[i] = 0;
                     }
-                    
+
                     stopWatch.Restart();
                     await Task.Delay(new TimeSpan(0, 0, 10), cancellationTokenSource.Token).ConfigureAwait(false);
                 }
@@ -148,7 +148,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                         if (stopWatch.ElapsedMilliseconds == 0)
                             break;
 
-                        averageHashesCalculated[i] = totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000m);
+                        averageHashesCalculated[i] = (decimal)((float)totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000f));
                         totalAverageHashesCalculated[i] = 0;
                     }
 
@@ -177,7 +177,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                         if (stopWatch.ElapsedMilliseconds == 0)
                             break;
 
-                        averageHashesCalculated[i] = totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000m);
+                        averageHashesCalculated[i] = (decimal)((float)totalAverageHashesCalculated[i] / (stopWatch.ElapsedMilliseconds / 1000f));
                         totalAverageHashesCalculated[i] = 0;
                     }
 
@@ -495,26 +495,26 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             switch (operatorSymbol)
             {
                 case '+':
-                    result = firstNumber + secondNumber;
+                    result = (decimal) ((float) firstNumber + (float) secondNumber);
                     break;
 
                 case '-':
-                    result = firstNumber - secondNumber;
+                    result = (decimal) ((float) firstNumber - (float) secondNumber);
                     break;
 
                 case '*':
-                    result = firstNumber * secondNumber;
+                    result = (decimal) ((float) firstNumber * (float) secondNumber);
                     break;
 
                 case '/':
-                    result = firstNumber / secondNumber;
+                    result = (decimal) ((float) firstNumber / (float) secondNumber);
 
                     if (result - Math.Round(result, 0) != 0)
                         return;
                     break;
 
                 case '%':
-                    result = firstNumber % secondNumber;
+                    result = (decimal) ((float) firstNumber % (float) secondNumber);
                     break;
             }
 
