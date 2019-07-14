@@ -34,8 +34,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
         public string MakeEncryptedShare()
         {
             var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(TestData, "128");
-            encryptedShare = MiningUtility.EncryptAesShareRoundAndEncryptXorShare(JobAesCryptoTransform, encryptedShare, 1, "128");
-            encryptedShare = MiningUtility.EncryptAesShare(JobAesCryptoTransform, encryptedShare);
+            encryptedShare = MiningUtility.EncryptAesShareAndEncryptXorShare(JobAesCryptoTransform, encryptedShare, 1, "128");
             encryptedShare = MiningUtility.ComputeHash(SHA512.Create(), encryptedShare);
 
             return encryptedShare;

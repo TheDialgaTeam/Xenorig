@@ -9,11 +9,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 {
     public sealed class LoggerService : IInitializable
     {
-        private ConcurrentQueue<List<ConsoleMessage>> LogsToProcess { get; set; }
+        private ConcurrentQueue<List<ConsoleMessage>> ConsoleMessageQueue { get; set; }
 
         public void Initialize()
         {
-            LogsToProcess = new ConcurrentQueue<List<ConsoleMessage>>();
+            ConsoleMessageQueue = new ConcurrentQueue<List<ConsoleMessage>>();
 
             Program.TasksToAwait.Add(Task.Run(async () =>
             {
@@ -21,7 +21,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
-                    while (LogsToProcess.TryDequeue(out var consoleMessages))
+                    while (ConsoleMessageQueue.TryDequeue(out var consoleMessages))
                     {
                         try
                         {
@@ -54,27 +54,27 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Services.Console
 
         public void LogMessage(string message)
         {
-            LogsToProcess.Enqueue(new ConsoleMessageBuilder().WriteLine(message).Build());
+            ConsoleMessageQueue.Enqueue(new ConsoleMessageBuilder().WriteLine(message).Build());
         }
 
         public void LogMessage(string message, ConsoleColor color)
         {
-            LogsToProcess.Enqueue(new ConsoleMessageBuilder().WriteLine(message, color).Build());
+            ConsoleMessageQueue.Enqueue(new ConsoleMessageBuilder().WriteLine(message, color).Build());
         }
 
         public void LogMessage(string message, bool includeDateTime)
         {
-            LogsToProcess.Enqueue(new ConsoleMessageBuilder().WriteLine(message, includeDateTime).Build());
+            ConsoleMessageQueue.Enqueue(new ConsoleMessageBuilder().WriteLine(message, includeDateTime).Build());
         }
 
         public void LogMessage(string message, ConsoleColor color, bool includeDateTime)
         {
-            LogsToProcess.Enqueue(new ConsoleMessageBuilder().WriteLine(message, color, includeDateTime).Build());
+            ConsoleMessageQueue.Enqueue(new ConsoleMessageBuilder().WriteLine(message, color, includeDateTime).Build());
         }
 
         public void LogMessage(List<ConsoleMessage> consoleMessages)
         {
-            LogsToProcess.Enqueue(consoleMessages);
+            ConsoleMessageQueue.Enqueue(consoleMessages);
         }
     }
 }

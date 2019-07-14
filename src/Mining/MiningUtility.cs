@@ -81,104 +81,74 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return result;
         }
 
-        public static unsafe string EncryptAesShare(ICryptoTransform aesCryptoTransform, string value)
-        {
-            var textBytes = Encoding.UTF8.GetBytes(value);
-            var output = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
-            var outputLength = output.Length;
-            var result = new string('\0', outputLength * 2 + outputLength - 1);
-
-            fixed (byte* outputPtr = output)
-            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
-            {
-                var outputBytePtr = outputPtr;
-                var resultCharPtr = resultPtr;
-
-                for (var i = 0; i < outputLength; i++)
-                {
-                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
-                    resultCharPtr++;
-
-                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
-                    resultCharPtr++;
-
-                    if (i == outputLength - 1)
-                        break;
-
-                    *resultCharPtr = '-';
-                    resultCharPtr++;
-
-                    outputBytePtr++;
-                }
-            }
-
-            return result;
-        }
-
-        public static unsafe string EncryptAesShareRoundAndEncryptXorShare(ICryptoTransform aesCryptoTransform, string value, int round, string key)
+        public static unsafe string EncryptAesShareAndEncryptXorShare(ICryptoTransform aesCryptoTransform, string value, int round, string key)
         {
             var result = value;
             var keyLength = key.Length;
+            var utf8 = Encoding.UTF8;
 
-            for (var i = 0; i < round; i++)
+            fixed (char* keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation)
             {
-                var textBytes = Encoding.UTF8.GetBytes(result);
-                var output = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
-                var outputLength = output.Length;
-
-                result = new string('\0', outputLength * 2 + outputLength - 1);
-
-                fixed (byte* outputPtr = output)
-                fixed (char* keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
+                for (var i = 0; i < round + 1; i++)
                 {
-                    var outputBytePtr = outputPtr;
-                    var resultCharPtr = resultPtr;
-                    var keyIndex = 0;
+                    var textBytes = utf8.GetBytes(result);
+                    var output = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
+                    var outputLength = output.Length;
 
-                    for (var j = 0; j < outputLength; j++)
+                    result = new string('\0', outputLength * 2 + outputLength - 1);
+
+                    fixed (byte* outputPtr = output)
+                    fixed (char* resultPtr = result)
                     {
-                        if (i >= round - 1)
+                        var outputBytePtr = outputPtr;
+                        var resultCharPtr = resultPtr;
+                        var keyIndex = 0;
+
+                        for (var j = 0; j < outputLength; j++)
                         {
-                            *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr >> 4)) ^ *(keyPtr + keyIndex));
-                            resultCharPtr++;
-                            keyIndex++;
+                            if (i == round - 1)
+                            {
+                                *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr >> 4)) ^ *(keyPtr + keyIndex));
+                                resultCharPtr++;
+                                keyIndex++;
 
-                            if (keyIndex == keyLength)
-                                keyIndex = 0;
+                                if (keyIndex == keyLength)
+                                    keyIndex = 0;
 
-                            *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr & 15)) ^ *(keyPtr + keyIndex));
-                            resultCharPtr++;
-                            keyIndex++;
+                                *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr & 15)) ^ *(keyPtr + keyIndex));
+                                resultCharPtr++;
+                                keyIndex++;
 
-                            if (keyIndex == keyLength)
-                                keyIndex = 0;
+                                if (keyIndex == keyLength)
+                                    keyIndex = 0;
 
-                            if (j == outputLength - 1)
-                                break;
+                                if (j == outputLength - 1)
+                                    break;
 
-                            *resultCharPtr = (char) ('-' ^ *(keyPtr + keyIndex));
-                            resultCharPtr++;
-                            keyIndex++;
+                                *resultCharPtr = (char) ('-' ^ *(keyPtr + keyIndex));
+                                resultCharPtr++;
+                                keyIndex++;
 
-                            if (keyIndex == keyLength)
-                                keyIndex = 0;
+                                if (keyIndex == keyLength)
+                                    keyIndex = 0;
+                            }
+                            else
+                            {
+                                *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
+                                resultCharPtr++;
+
+                                *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
+                                resultCharPtr++;
+
+                                if (j == outputLength - 1)
+                                    break;
+
+                                *resultCharPtr = '-';
+                                resultCharPtr++;
+                            }
+
+                            outputBytePtr++;
                         }
-                        else
-                        {
-                            *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
-                            resultCharPtr++;
-
-                            *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
-                            resultCharPtr++;
-
-                            if (j == outputLength - 1)
-                                break;
-
-                            *resultCharPtr = '-';
-                            resultCharPtr++;
-                        }
-
-                        outputBytePtr++;
                     }
                 }
             }

@@ -457,6 +457,19 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                             break;
 
                         await DoCalculationAsync(firstNumber, secondNumber, randomOperator, jobType, threadIndex).ConfigureAwait(false);
+
+                        if (listener.ConnectionStatus != ConnectionStatus.Connected || !listener.IsLoggedIn)
+                            break;
+
+                        if (currentJobIndication != JobIndication)
+                            break;
+
+                        if (sharesSubmitted.Values.Contains(currentBlockIndication))
+                            break;
+
+                        if (sharesSubmitted.Count >= sharesToFind)
+                            break;
+
                         await DoCalculationAsync(secondNumber, firstNumber, randomOperator, jobType, threadIndex).ConfigureAwait(false);
                     }
 
@@ -522,9 +535,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
         {
             try
             {
-                var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(calculation + BlockTimestampCreate, JobXorKey);
-                encryptedShare = MiningUtility.EncryptAesShareRoundAndEncryptXorShare(CryptoTransform, encryptedShare, JobAesRound, JobXorKey);
-                encryptedShare = MiningUtility.EncryptAesShare(CryptoTransform, encryptedShare);
+                var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare($"{calculation}{BlockTimestampCreate}", JobXorKey);
+                encryptedShare = MiningUtility.EncryptAesShareAndEncryptXorShare(CryptoTransform, encryptedShare, JobAesRound, JobXorKey);
                 encryptedShare = MiningUtility.ComputeHash(HashAlgorithm, encryptedShare);
 
                 TotalAverage10SecondsHashesCalculated[threadIndex]++;
