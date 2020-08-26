@@ -11,7 +11,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Add(Job.Clr.With(CsProjClassicNetToolchain.Net462));
+                Add(Job.Clr.With(CsProjClassicNetToolchain.Net472));
                 Add(Job.Core.With(CsProjCoreToolchain.NetCoreApp30));
             }
             else
