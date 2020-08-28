@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Mining
+namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 {
     public static class MiningUtility
     {
@@ -14,71 +15,20 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
 
         private static char[] Base16CharRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-        private static RNGCryptoServiceProvider RngCryptoServiceProvider { get; } = new RNGCryptoServiceProvider();
-
-        public static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
+        public static string ConvertStringToHexAndEncryptXorShare(string value, string key)
         {
             var valueLength = value.Length;
-            var result = new string('\0', valueLength * 2);
 
-            fixed (char* valuePtr = value, keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
+            return string.Create(valueLength * 2, (value, valueLength, key, key.Length, Base16CharRepresentation), (span, state) =>
             {
-                var valueCharPtr = valuePtr;
-                var resultCharPtr = resultPtr;
+                var (valueState, valueLengthState, keyState, keyLengthState, base16CharRepresentation) = state;
 
-                var keyLength = key.Length;
-                var keyIndex = 0;
-
-                for (var i = 0; i < valueLength; i++)
+                for (var i = 0; i < valueLengthState; i++)
                 {
-                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr >> 4)) ^ *(keyPtr + keyIndex));
-                    resultCharPtr++;
-                    keyIndex++;
-
-                    if (keyIndex == keyLength)
-                        keyIndex = 0;
-
-                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr & 15)) ^ *(keyPtr + keyIndex));
-                    resultCharPtr++;
-                    keyIndex++;
-
-                    if (keyIndex == keyLength)
-                        keyIndex = 0;
-
-                    valueCharPtr++;
+                    span[i * 2] = (char) (base16CharRepresentation[valueState[i] >> 4] ^ keyState[i * 2 % keyLengthState]);
+                    span[i * 2 + 1] = (char) (base16CharRepresentation[valueState[i] & 15] ^ keyState[(i * 2 + 1) % keyLengthState]);
                 }
-            }
-
-            return result;
-        }
-
-        public static unsafe string EncryptXorShare(string value, string key)
-        {
-            var valueLength = value.Length;
-            var result = new string('\0', valueLength);
-
-            fixed (char* valuePtr = value, keyPtr = key, resultPtr = result)
-            {
-                var valueCharPtr = valuePtr;
-                var resultCharPtr = resultPtr;
-
-                var keyLength = key.Length;
-                var keyIndex = 0;
-
-                for (var i = 0; i < valueLength; i++)
-                {
-                    *resultCharPtr = (char) (*valueCharPtr ^ *(keyPtr + keyIndex));
-                    resultCharPtr++;
-                    keyIndex++;
-
-                    if (keyIndex == keyLength)
-                        keyIndex = 0;
-
-                    valueCharPtr++;
-                }
-            }
-
-            return result;
+            });
         }
 
         public static unsafe string EncryptAesShareAndEncryptXorShare(ICryptoTransform aesCryptoTransform, string value, int round, string key)
@@ -156,7 +106,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return result;
         }
 
-        public static unsafe string ComputeHash(HashAlgorithm hashAlgorithm, string value)
+        public static unsafe string ComputeHash(SHA512 hashAlgorithm, string value)
         {
             var output = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(value));
             var outputLength = output.Length;
@@ -210,31 +160,25 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return result;
         }
 
-        public static unsafe int GetRandomBetween(int minimumValue, int maximumValue)
+        public static int GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, int minimumValue, int maximumValue)
         {
-            var randomNumber = new byte[1];
-            RngCryptoServiceProvider.GetBytes(randomNumber);
-
-            fixed (byte* randomNumberPtr = randomNumber)
-                return (int) (minimumValue + Math.Floor(Math.Max(0, *randomNumberPtr / 255f - 0.0000001f) * (maximumValue - minimumValue + 1)));
+            rngCryptoServiceProvider.GetBytes(randomNumber);
+            return (int) (minimumValue + MathF.Floor(MathF.Max(0, randomNumber[0] / 255f - 0.0000001f) * (maximumValue - minimumValue + 1)));
         }
 
-        public static unsafe decimal GetRandomBetweenJob(decimal minimumValue, decimal maximumValue)
+        public static decimal GetRandomBetweenJob(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, decimal minimumValue, decimal maximumValue)
         {
-            var randomNumber = new byte[1];
-            RngCryptoServiceProvider.GetBytes(randomNumber);
-
-            fixed (byte* randomNumberPtr = randomNumber)
-                return minimumValue + Math.Floor((decimal) Math.Max(0, *randomNumberPtr / 255f - 0.0000001f) * (maximumValue - minimumValue + 1));
+            rngCryptoServiceProvider.GetBytes(randomNumber);
+            return minimumValue + Math.Floor((decimal) MathF.Max(0, randomNumber[0] / 255f - 0.0000001f) * (maximumValue - minimumValue + 1));
         }
 
-        public static unsafe decimal GenerateNumberMathCalculation(decimal minRange, decimal maxRange)
+        public static unsafe decimal GenerateNumberMathCalculation(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, decimal minRange, decimal maxRange)
         {
             decimal resultDecimal;
 
             do
             {
-                var randomSize = GetRandomBetween(1, GetRandomBetweenJob(minRange, maxRange).ToString("F0").Length);
+                var randomSize = GetRandomBetween(rngCryptoServiceProvider, randomNumber, 1, GetRandomBetweenJob(rngCryptoServiceProvider, randomNumber, minRange, maxRange).ToString("F0").Length);
                 var resultString = new string('\0', randomSize);
 
                 fixed (char* base10CharRepresentationPtr = Base10CharRepresentation, resultPtr = resultString)
@@ -244,9 +188,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
                     for (var i = 0; i < randomSize; i++)
                     {
                         if (randomSize == 1)
-                            *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(2, 9));
+                            *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(rngCryptoServiceProvider, randomNumber, 2, 9));
                         else
-                            *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(i == 0 ? 1 : 0, 9));
+                            *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(rngCryptoServiceProvider, randomNumber, i == 0 ? 1 : 0, 9));
 
                         resultCharPtr++;
                     }
@@ -266,13 +210,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             return (startRange, endRange);
         }
 
-        public static (decimal, decimal) GetJobRangeByPercentage(decimal minRange, decimal maxRange, int minRangePercentage, int maxRangePercentage)
-        {
-            var startRange = Math.Floor(maxRange * minRangePercentage * 0.01m) + minRange;
-            var endRange = Math.Min(maxRange, Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1);
+        //public static (decimal, decimal) GetJobRangeByPercentage(decimal minRange, decimal maxRange, int minRangePercentage, int maxRangePercentage)
+        //{
+        //    var startRange = Math.Floor(maxRange * minRangePercentage * 0.01m) + minRange;
+        //    var endRange = Math.Min(maxRange, Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1);
 
-            return (startRange, endRange);
-        }
+        //    return (startRange, endRange);
+        //}
 
         public static bool IsPrimeNumber(decimal number)
         {

@@ -1,74 +1,79 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Xiropht_Connector_All.Setting;
+using Newtonsoft.Json.Linq;
+using TheDialgaTeam.Xiropht.Xirorig.Network;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 {
     public class MinerHostedService : IHostedService
     {
+        private readonly XirorigToSeedNetwork _xirorigToSeedNetwork;
+        private readonly CpuSoloMiners _cpuSoloMiners;
         private readonly ILogger<MinerHostedService> _logger;
 
-        private string[] _seedNodeIps;
+        public long TotalGoodBlocksSubmitted { get; private set; }
 
-        public long TotalGoodSharesSubmitted { get; private set; }
+        public long TotalBadBlocksSubmitted { get; private set; }
 
-        public long TotalBadSharesSubmitted { get; private set; }
-
-        public MinerHostedService(ILogger<MinerHostedService> logger)
+        public MinerHostedService(XirorigToSeedNetwork xirorigToSeedNetwork, CpuSoloMiners cpuSoloMiners, ILogger<MinerHostedService> logger)
         {
+            _xirorigToSeedNetwork = xirorigToSeedNetwork;
+            _cpuSoloMiners = cpuSoloMiners;
             _logger = logger;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await BuildSeedNodeIpAsync().ConfigureAwait(false);
+            _xirorigToSeedNetwork.Disconnected += XirorigToSeedNetworkOnDisconnected;
+            _xirorigToSeedNetwork.LoginResult += XirorigToSeedNetworkOnLoginResult;
+            _xirorigToSeedNetwork.NewJob += XirorigToSeedNetworkOnNewJob;
+            _xirorigToSeedNetwork.BlockResult += XirorigToSeedNetworkOnBlockResult;
+
+            await _xirorigToSeedNetwork.StartAsync(cancellationToken).ConfigureAwait(false);
+            _cpuSoloMiners.StartMinerService();
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            await _xirorigToSeedNetwork.StopAsync().ConfigureAwait(false);
+
+            _xirorigToSeedNetwork.Disconnected -= XirorigToSeedNetworkOnDisconnected;
+            _xirorigToSeedNetwork.LoginResult -= XirorigToSeedNetworkOnLoginResult;
+            _xirorigToSeedNetwork.NewJob -= XirorigToSeedNetworkOnNewJob;
+            _xirorigToSeedNetwork.BlockResult -= XirorigToSeedNetworkOnBlockResult;
         }
 
-        private async Task BuildSeedNodeIpAsync()
+        private void XirorigToSeedNetworkOnDisconnected(XirorigToSeedNetwork arg1, string arg2)
         {
-            var listOfSeeds = new Dictionary<string, long>();
+            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[31;1m[{host:l}] Disconnected\u001b[0m", DateTimeOffset.Now, arg2);
+        }
 
-            foreach (var (seedNodeIp, _) in ClassConnectorSetting.SeedNodeIp)
+        private void XirorigToSeedNetworkOnLoginResult(XirorigToSeedNetwork arg1, string arg2, bool arg3)
+        {
+            _logger.LogInformation(arg3 ? "\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m use solo \u001b[36;1m{host:l}\u001b[0m" : "\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[31;1m[{host}] Login failed. Reason: Invalid wallet address.\u001b[0m", DateTimeOffset.Now, arg2);
+        }
+
+        private void XirorigToSeedNetworkOnNewJob(XirorigToSeedNetwork arg1, string arg2, JObject arg3)
+        {
+            _cpuSoloMiners.UpdateJob(arg3);
+            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[35;1mnew job\u001b[0m from {host:l} diff {blockDifficulty} algo {algo:l} height {height}", DateTimeOffset.Now, arg2, arg3["DIFFICULTY"]!.Value<decimal>(), arg3["METHOD"]!.Value<string>(), arg3["ID"]!.Value<long>());
+        }
+
+        private void XirorigToSeedNetworkOnBlockResult(XirorigToSeedNetwork arg1, bool arg2, string arg3)
+        {
+            if (arg2)
             {
-                using var ping = new Ping();
-
-                try
-                {
-                    var result = await ping.SendPingAsync(IPAddress.Parse(seedNodeIp), 5000).ConfigureAwait(false);
-
-                    if (result.Status == IPStatus.Success)
-                    {
-                        listOfSeeds.Add(seedNodeIp, result.RoundtripTime);
-                    }
-                }
-                catch (PingException)
-                {
-                    listOfSeeds.Add(seedNodeIp, long.MaxValue);
-                }
+                TotalGoodBlocksSubmitted++;
+                _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1maccepted\u001b[0m ({good}/{bad})", DateTimeOffset.Now, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted);
             }
-
-            var seedsToLoad = listOfSeeds.OrderBy(a => a.Value);
-            var seedNodeIps = new List<string>();
-            var index = 0;
-
-            foreach (var (seedNodeIp, pingValue) in seedsToLoad)
+            else
             {
-                seedNodeIps.Add(seedNodeIp);
-                _logger.LogInformation(" \u001b[32;1m*\u001b[0m SOLO #{index,-7:l}\u001b[36;1m{nodeIp:l}:{nodePort}\u001b[0m ({nodePing}ms)", (++index).ToString(), seedNodeIp, ClassConnectorSetting.SeedNodePort, pingValue);
+                TotalBadBlocksSubmitted++;
+                _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[31;1mrejected\u001b[0m ({good}/{bad}) - {reason:l}", DateTimeOffset.Now, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, arg3);
             }
-
-            _seedNodeIps = seedNodeIps.ToArray();
         }
     }
 }

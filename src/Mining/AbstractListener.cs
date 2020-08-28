@@ -84,7 +84,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Mining
             try
             {
                 TcpClient = new TcpClient();
-
                 var connectTask = TcpClient.ConnectAsync(Host, Port);
                 var timeoutTask = Task.Delay(5000);
 

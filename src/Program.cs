@@ -6,6 +6,7 @@ using TheDialgaTeam.Core.Logger;
 using TheDialgaTeam.Core.Logger.Formatter;
 using TheDialgaTeam.Xiropht.Xirorig.Config;
 using TheDialgaTeam.Xiropht.Xirorig.Miner;
+using TheDialgaTeam.Xiropht.Xirorig.Network;
 
 namespace TheDialgaTeam.Xiropht.Xirorig
 {
@@ -22,6 +23,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 .ConfigureServices((hostBuilderContext, serviceCollection) =>
                 {
                     serviceCollection.AddSingleton<XirorigConfiguration>();
+                    serviceCollection.AddSingleton<XirorigToSeedNetwork>();
+                    serviceCollection.AddSingleton<CpuSoloMiners>();
 
                     serviceCollection.AddHostedService<ProgramHostedService>();
                     serviceCollection.AddHostedService<MinerHostedService>();

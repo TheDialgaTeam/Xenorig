@@ -12,6 +12,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
 
         public string WalletAddress { get; }
 
+        public string[] SeedNodeIpAddresses { get; }
+
+        public int SeedNodePort { get; }
+
+        public int SeedNodeTokenPort { get; }
+
         public MiningThread[] Threads { get; }
 
         public XirorigConfiguration(IConfiguration configuration)
@@ -20,10 +26,23 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
             Safe = configuration.GetValue<bool>("Xirorig:Safe");
             WalletAddress = configuration.GetValue<string>("Xirorig:WalletAddress");
 
-            var threads = configuration.GetSection("Xirorig:Threads").GetChildren();
+            var seedNodeIpAddressesConfig = configuration.GetSection("Xirorig:SeedNodeIpAddresses").GetChildren();
+            var seedNodeIpAddresses = new List<string>();
+
+            foreach (var configurationSection in seedNodeIpAddressesConfig)
+            {
+                seedNodeIpAddresses.Add(configurationSection.Value);
+            }
+
+            SeedNodeIpAddresses = seedNodeIpAddresses.ToArray();
+
+            SeedNodePort = configuration.GetValue<int>("Xirorig:SeedNodePort");
+            SeedNodeTokenPort = configuration.GetValue<int>("Xirorig:SeedNodeTokenPort");
+
+            var threadsConfig = configuration.GetSection("Xirorig:Threads").GetChildren();
             var miningThreads = new List<MiningThread>();
 
-            foreach (var configurationSection in threads)
+            foreach (var configurationSection in threadsConfig)
             {
                 miningThreads.Add(new MiningThread(
                     configurationSection.GetValue<MiningJob>("JobType"),
