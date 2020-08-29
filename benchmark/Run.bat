@@ -2,9 +2,9 @@
 
 SETLOCAL 
 
-SET project=../TheDialgaTeam.Xiropht.Xirorig.Benchmark/TheDialgaTeam.Xiropht.Xirorig.Benchmark.Builder.csproj
+SET project=../TheDialgaTeam.Xiropht.Xirorig.Benchmark/TheDialgaTeam.Xiropht.Xirorig.Benchmark.csproj
 SET configuration=Release
-SET framework=net462
+SET framework=netcoreapp5.0
 
 dotnet run --project %project% -c %configuration% --framework %framework%
 

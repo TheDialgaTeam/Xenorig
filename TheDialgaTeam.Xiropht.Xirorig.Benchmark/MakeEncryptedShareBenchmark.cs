@@ -2,7 +2,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using BenchmarkDotNet.Attributes;
-using TheDialgaTeam.Xiropht.Xirorig.Mining;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 {
@@ -33,11 +32,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
         [Benchmark]
         public string MakeEncryptedShare()
         {
-            var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(TestData, "128");
-            encryptedShare = MiningUtility.EncryptAesShareAndEncryptXorShare(JobAesCryptoTransform, encryptedShare, 1, "128");
-            encryptedShare = MiningUtility.ComputeHash(SHA512.Create(), encryptedShare);
+            //var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(TestData, "128");
+            //encryptedShare = MiningUtility.EncryptAesShareAndEncryptXorShare(JobAesCryptoTransform, encryptedShare, 1, "128");
+            //encryptedShare = MiningUtility.ComputeHash(SHA512.Create(), encryptedShare);
 
-            return encryptedShare;
+            //return encryptedShare;
+            return string.Empty;
         }
     }
 }

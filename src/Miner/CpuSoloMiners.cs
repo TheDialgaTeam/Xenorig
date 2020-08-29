@@ -325,7 +325,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                         totalAverage15MinutesHashesCalculated[threadId]++;
 
                         if (!hashEncryptedShare.Equals(currentBlockIndication, StringComparison.OrdinalIgnoreCase)) return;
-                        logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mThread: {threadId} | Job Type: {jobType:l} | Block found: {firstNumber}{operatorSymbol:l}{secondNumber} = {result}\u001b[0m", DateTimeOffset.Now, threadId, "Random", firstNumber, operatorSymbol, secondNumber, result);
+                        logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mThread: {threadId} | Job Type: {jobType:l} | Block found: {firstNumber}{operatorSymbol:l}{secondNumber} = {result}\u001b[0m", DateTimeOffset.Now, threadId + 1, "Random", firstNumber, operatorSymbol, secondNumber, result);
 
                         blockFound = true;
 

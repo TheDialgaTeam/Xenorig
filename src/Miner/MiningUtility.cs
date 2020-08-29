@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -9,26 +8,48 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 {
     public static class MiningUtility
     {
-        public static char[] RandomOperatorCalculation { get; } = { '+', '-', '*', '/', '%' };
+        private static readonly char[] Base10CharRepresentation = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-        private static char[] Base10CharRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        private static readonly char[] Base16CharRepresentation = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-        private static char[] Base16CharRepresentation { get; } = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-
-        public static string ConvertStringToHexAndEncryptXorShare(string value, string key)
+        public static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
         {
             var valueLength = value.Length;
+            var result = new string('\0', valueLength * 2);
 
-            return string.Create(valueLength * 2, (value, valueLength, key, key.Length, Base16CharRepresentation), (span, state) =>
+            fixed (char* valuePtr = value, keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
             {
-                var (valueState, valueLengthState, keyState, keyLengthState, base16CharRepresentation) = state;
+                var valueCharPtr = valuePtr;
+                var resultCharPtr = resultPtr;
 
-                for (var i = 0; i < valueLengthState; i++)
+                var keyLength = key.Length;
+                var keyIndex = 0;
+
+                for (var i = 0; i < valueLength; i++)
                 {
-                    span[i * 2] = (char) (base16CharRepresentation[valueState[i] >> 4] ^ keyState[i * 2 % keyLengthState]);
-                    span[i * 2 + 1] = (char) (base16CharRepresentation[valueState[i] & 15] ^ keyState[(i * 2 + 1) % keyLengthState]);
+                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr >> 4)) ^ *(keyPtr + keyIndex));
+                    resultCharPtr++;
+                    keyIndex++;
+
+                    if (keyIndex == keyLength)
+                    {
+                        keyIndex = 0;
+                    }
+
+                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr & 15)) ^ *(keyPtr + keyIndex));
+                    resultCharPtr++;
+                    keyIndex++;
+
+                    if (keyIndex == keyLength)
+                    {
+                        keyIndex = 0;
+                    }
+
+                    valueCharPtr++;
                 }
-            });
+            }
+
+            return result;
         }
 
         public static unsafe string EncryptAesShareAndEncryptXorShare(ICryptoTransform aesCryptoTransform, string value, int round, string key)
@@ -63,24 +84,32 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                                 keyIndex++;
 
                                 if (keyIndex == keyLength)
+                                {
                                     keyIndex = 0;
+                                }
 
                                 *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr & 15)) ^ *(keyPtr + keyIndex));
                                 resultCharPtr++;
                                 keyIndex++;
 
                                 if (keyIndex == keyLength)
+                                {
                                     keyIndex = 0;
+                                }
 
                                 if (j == outputLength - 1)
+                                {
                                     break;
+                                }
 
                                 *resultCharPtr = (char) ('-' ^ *(keyPtr + keyIndex));
                                 resultCharPtr++;
                                 keyIndex++;
 
                                 if (keyIndex == keyLength)
+                                {
                                     keyIndex = 0;
+                                }
                             }
                             else
                             {
@@ -91,7 +120,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                                 resultCharPtr++;
 
                                 if (j == outputLength - 1)
+                                {
                                     break;
+                                }
 
                                 *resultCharPtr = '-';
                                 resultCharPtr++;
@@ -109,33 +140,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         public static unsafe string ComputeHash(SHA512 hashAlgorithm, string value)
         {
             var output = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(value));
-            var outputLength = output.Length;
-            var result = new string('\0', outputLength * 2);
-
-            fixed (byte* outputPtr = output)
-            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
-            {
-                var outputBytePtr = outputPtr;
-                var resultCharPtr = resultPtr;
-
-                for (var i = 0; i < outputLength; i++)
-                {
-                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
-                    resultCharPtr++;
-
-                    *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
-                    resultCharPtr++;
-
-                    outputBytePtr++;
-                }
-            }
-
-            return result;
-        }
-
-        public static unsafe string HashJobToHexString(string value)
-        {
-            var output = Encoding.Unicode.GetBytes(value);
             var outputLength = output.Length;
             var result = new string('\0', outputLength * 2);
 
@@ -188,9 +192,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                     for (var i = 0; i < randomSize; i++)
                     {
                         if (randomSize == 1)
+                        {
                             *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(rngCryptoServiceProvider, randomNumber, 2, 9));
+                        }
                         else
+                        {
                             *resultCharPtr = *(base10CharRepresentationPtr + GetRandomBetween(rngCryptoServiceProvider, randomNumber, i == 0 ? 1 : 0, 9));
+                        }
 
                         resultCharPtr++;
                     }
@@ -210,31 +218,39 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             return (startRange, endRange);
         }
 
-        //public static (decimal, decimal) GetJobRangeByPercentage(decimal minRange, decimal maxRange, int minRangePercentage, int maxRangePercentage)
-        //{
-        //    var startRange = Math.Floor(maxRange * minRangePercentage * 0.01m) + minRange;
-        //    var endRange = Math.Min(maxRange, Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1);
+        public static (decimal, decimal) GetJobRangeByPercentage(decimal minRange, decimal maxRange, int minRangePercentage, int maxRangePercentage)
+        {
+            var startRange = Math.Floor(maxRange * minRangePercentage * 0.01m) + minRange;
+            var endRange = Math.Min(maxRange, Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1);
 
-        //    return (startRange, endRange);
-        //}
+            return (startRange, endRange);
+        }
 
         public static bool IsPrimeNumber(decimal number)
         {
             if (number <= 1)
+            {
                 return false;
+            }
 
             if (number == 2)
+            {
                 return true;
+            }
 
             if (number % 2 == 0)
+            {
                 return false;
+            }
 
             var boundary = Math.Floor(SquareRoot(number));
 
             for (var i = 3m; i <= boundary; i += 2)
             {
                 if (number % i == 0)
+                {
                     return false;
+                }
             }
 
             return true;
@@ -243,7 +259,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         public static IEnumerable<(decimal, decimal)> SumOf(decimal result, decimal minRange)
         {
             if (result == 2 || result == 3)
+            {
                 yield break;
+            }
 
             for (var i = minRange; i < result - 1; i++)
             {
@@ -252,14 +270,18 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                 yield return (i, result - i);
 
                 if (i != number)
+                {
                     yield return (result - i, i);
+                }
             }
         }
 
         public static IEnumerable<Tuple<decimal, decimal>> SubtractOf(decimal result, decimal maxRange)
         {
             for (var i = maxRange; i > result + 1; i--)
+            {
                 yield return new Tuple<decimal, decimal>(i, i - result);
+            }
         }
 
         public static IEnumerable<(decimal, decimal)> FactorOf(decimal result, decimal minRange)
@@ -269,14 +291,18 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             for (var i = minRange; i <= meanAverage; i++)
             {
                 if (result % i != 0)
+                {
                     continue;
+                }
 
                 var number = result / i;
 
                 yield return (i, number);
 
                 if (i != number)
+                {
                     yield return (number, i);
+                }
             }
         }
 
@@ -285,7 +311,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             for (var i = maxRange; i >= result; i--)
             {
                 if (i % result != 0)
+                {
                     continue;
+                }
 
                 yield return new Tuple<decimal, decimal>(i, i / result);
             }
@@ -297,18 +325,24 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             var remainder = totalPossibilities % totalThread;
 
             for (var i = 0; i < totalThread; i++)
+            {
                 yield return i < remainder ? div + 1 : div;
+            }
         }
 
         private static decimal SquareRoot(decimal square)
         {
             if (square < 0)
+            {
                 return 0;
+            }
 
             var root = square / 3;
 
             for (var i = 0; i < 32; i++)
+            {
                 root = (root + square / root) / 2;
+            }
 
             return root;
         }

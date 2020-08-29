@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Toolchains.CsProj;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 {
@@ -11,11 +11,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Add(Job.Clr.With(CsProjClassicNetToolchain.Net472));
-                Add(Job.Core.With(CsProjCoreToolchain.NetCoreApp30));
+                AddJob(Job.Default.WithRuntime(ClrRuntime.Net462));
+                AddJob(Job.Default.WithRuntime(CoreRuntime.Core50));
             }
             else
-                Add(Job.Mono);
+            {
+                AddJob(Job.Default.WithRuntime(MonoRuntime.Default));
+            }
         }
     }
 }
