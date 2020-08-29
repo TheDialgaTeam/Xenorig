@@ -11,7 +11,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                AddJob(Job.Default.WithRuntime(ClrRuntime.Net462));
                 AddJob(Job.Default.WithRuntime(CoreRuntime.Core50));
             }
             else

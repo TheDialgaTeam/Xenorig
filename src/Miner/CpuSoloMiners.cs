@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -7,7 +6,6 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -25,30 +23,29 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         private readonly ILogger<CpuSoloMiners> _logger;
 
         private long _blockId;
-        private string _blockTimestampCreate;
-        private string _blockKey;
-        private string _blockIndication;
+        private string? _blockTimestampCreate;
+        private string? _blockKey;
+        private string? _blockIndication;
         private decimal _blockDifficulty;
 
         private decimal _jobMinRange;
         private decimal _jobMaxRange;
-        private string _jobMethodName;
         private int _jobAesRound;
         private int _jobAesSize;
-        private string _jobAesKey;
-        private string _jobXorKey;
+        private string? _jobAesKey;
+        private string? _jobXorKey;
 
         private bool _isActive;
-        private string _userAgent;
-        
+        private readonly string _userAgent;
+
         private Timer? _calculateAverage10SecondsHashTimer;
         private Timer? _calculateAverage60SecondsHashTimer;
         private Timer? _calculateAverage15MinutesHashTimer;
         private Timer? _printAverageHashTimer;
 
-        private ConcurrentDictionary<int, int> _totalAverage10SecondsHashesCalculated = new ConcurrentDictionary<int, int>();
-        private ConcurrentDictionary<int, int> _totalAverage60SecondsHashesCalculated = new ConcurrentDictionary<int, int>();
-        private ConcurrentDictionary<int, int> _totalAverage15MinutesHashesCalculated = new ConcurrentDictionary<int, int>();
+        private readonly ConcurrentDictionary<int, int> _totalAverage10SecondsHashesCalculated = new ConcurrentDictionary<int, int>();
+        private readonly ConcurrentDictionary<int, int> _totalAverage60SecondsHashesCalculated = new ConcurrentDictionary<int, int>();
+        private readonly ConcurrentDictionary<int, int> _totalAverage15MinutesHashesCalculated = new ConcurrentDictionary<int, int>();
 
         private float _maxHash;
 
@@ -103,7 +100,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             _jobMinRange = decimal.Parse(job[0]);
             _jobMaxRange = decimal.Parse(job[1]);
 
-            _jobMethodName = jobObject["METHOD"]!.Value<string>();
             _jobAesRound = jobObject["AESROUND"]!.Value<int>();
             _jobAesSize = jobObject["AESSIZE"]!.Value<int>();
             _jobAesKey = jobObject["AESKEY"]!.Value<string>();
@@ -205,7 +201,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             var sha512 = SHA512.Create();
             var easyBlockRandomNumber = new decimal[256];
             var randomNumberBuffer = new byte[1];
-            
+
+            const string additionOperator = " + ";
+            const string subtractionOperator = " - ";
+            const string multiplicationOperator = " * ";
+            const string divisionOperator = " / ";
+            const string moduloOperator = " % ";
+
             try
             {
                 while (_isActive)
@@ -232,11 +234,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                     var currentJobXorKey = cpuSoloMiners._jobXorKey;
 
                     ICryptoTransform currentAesCryptoTransform;
-                    var easyBlockDone = false;
-                    var startRandomBlock = false;
                     var blockFound = false;
 
-                    using (var pdb = new PasswordDeriveBytes(currentBlockKey, Encoding.UTF8.GetBytes(currentJobAesKey)))
+                    using (var pdb = new PasswordDeriveBytes(currentBlockKey!, Encoding.UTF8.GetBytes(currentJobAesKey!)))
                     {
 #pragma warning disable 618
                         var aes = new RijndaelManaged { BlockSize = currentJobAesSize, KeySize = currentJobAesSize, Key = pdb.GetBytes(currentJobAesSize / 8), IV = pdb.GetBytes(currentJobAesSize / 8) };
@@ -258,14 +258,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                         if (additionResult >= currentJobMinRange && additionResult <= currentJobMaxRange)
                         {
-                            ValidateAndSubmitShare(firstNumber, secondNumber, " + ", additionResult);
+                            ValidateAndSubmitShare(firstNumber, secondNumber, additionOperator, additionResult);
                         }
 
                         var multiplicationResult = firstNumber * secondNumber;
 
                         if (multiplicationResult >= currentJobMinRange && multiplicationResult <= currentJobMaxRange)
                         {
-                            ValidateAndSubmitShare(firstNumber, secondNumber, " * ", multiplicationResult);
+                            ValidateAndSubmitShare(firstNumber, secondNumber, multiplicationOperator, multiplicationResult);
                         }
 
                         if (firstNumber < secondNumber)
@@ -274,7 +274,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                             if (moduloResult >= currentJobMinRange && moduloResult <= currentJobMaxRange)
                             {
-                                ValidateAndSubmitShare(firstNumber, secondNumber, " % ", moduloResult);
+                                ValidateAndSubmitShare(firstNumber, secondNumber, moduloOperator, moduloResult);
                             }
                         }
                         else
@@ -283,7 +283,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                             if (moduloResult >= currentJobMinRange && moduloResult <= currentJobMaxRange)
                             {
-                                ValidateAndSubmitShare(firstNumber, secondNumber, " % ", moduloResult);
+                                ValidateAndSubmitShare(firstNumber, secondNumber, moduloOperator, moduloResult);
                             }
                         }
 
@@ -293,7 +293,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                         if (subtractResult >= currentJobMinRange && subtractResult <= currentJobMaxRange)
                         {
-                            ValidateAndSubmitShare(firstNumber, secondNumber, " - ", subtractResult);
+                            ValidateAndSubmitShare(firstNumber, secondNumber, subtractionOperator, subtractResult);
                         }
 
                         var divisionResult = firstNumber / secondNumber;
@@ -302,23 +302,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                         if (divisionResult == Math.Floor(divisionResult))
                         {
-                            ValidateAndSubmitShare(firstNumber, secondNumber, " / ", divisionResult);
+                            ValidateAndSubmitShare(firstNumber, secondNumber, divisionOperator, divisionResult);
                         }
                     }
 
                     void ValidateAndSubmitShare(decimal firstNumber, decimal secondNumber, string operatorSymbol, decimal result)
                     {
-                        var resultBuilder = new StringBuilder();
-                        resultBuilder.Append(firstNumber);
-                        resultBuilder.Append(operatorSymbol);
-                        resultBuilder.Append(secondNumber);
-                        resultBuilder.Append(currentBlockTimestampCreate);
-
-                        var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(resultBuilder.ToString(), currentJobXorKey!);
-                        encryptedShare = MiningUtility.EncryptAesShareAndEncryptXorShare(currentAesCryptoTransform, encryptedShare, currentJobAesRound, currentJobXorKey!);
-                        encryptedShare = MiningUtility.ComputeHash(sha512, encryptedShare);
-
-                        var hashEncryptedShare = MiningUtility.ComputeHash(sha512!, encryptedShare);
+                        var encryptedShare = MiningUtility.MakeEncryptedShare($"{firstNumber}{operatorSymbol}{secondNumber}{currentBlockTimestampCreate}", currentJobXorKey!, currentJobAesRound, currentAesCryptoTransform, sha512);
+                        var hashEncryptedShare = MiningUtility.ComputeHash(sha512, encryptedShare);
 
                         totalAverage10SecondsHashesCalculated[threadId]++;
                         totalAverage60SecondsHashesCalculated[threadId]++;
@@ -351,39 +342,30 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                     try
                     {
-                        while (currentBlockIndication!.Equals(cpuSoloMiners._blockIndication, StringComparison.OrdinalIgnoreCase) && !blockFound)
+                        if (threadId == 0)
                         {
-                            if (threadId == 0)
+                            logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId + 1, "Easy Block", currentBlockDifficulty, startRange, endRange);
+
+                            for (var i = 256 - 1; i >= 0; i--)
                             {
-                                if (!easyBlockDone)
+                                for (var j = 256 - 1; j >= 0; j--)
                                 {
-                                    logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId + 1, "Easy Block", currentBlockDifficulty, startRange, endRange);
-
-                                    for (var i = 0; i < 256; i++)
-                                    {
-                                        for (var j = 0; j < 256; j++)
-                                        {
-                                            DoMathCalculation(easyBlockRandomNumber[i], easyBlockRandomNumber[j]);
-                                        }
-                                    }
-
-                                    easyBlockDone = true;
+                                    DoMathCalculation(easyBlockRandomNumber[i], easyBlockRandomNumber[j]);
                                 }
                             }
+                        }
 
-                            if (!startRandomBlock)
-                            {
-                                logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId + 1, "Random", currentBlockDifficulty, startRange, endRange);
-                                startRandomBlock = true;
-                            }
+                        logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId + 1, "Random", currentBlockDifficulty, startRange, endRange);
 
+                        while (currentBlockIndication!.Equals(cpuSoloMiners._blockIndication, StringComparison.OrdinalIgnoreCase) && !blockFound)
+                        {
                             var firstNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange);
                             var secondNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange);
 
                             DoMathCalculation(firstNumber, secondNumber);
                             DoMathCalculation(secondNumber, firstNumber);
 
-                            for (var i = 0; i < 256; i++)
+                            for (var i = 256 - 1; i >= 0; i--)
                             {
                                 if (!currentBlockIndication!.Equals(cpuSoloMiners._blockIndication, StringComparison.OrdinalIgnoreCase)) break;
 

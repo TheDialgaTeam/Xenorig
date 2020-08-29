@@ -8,8 +8,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
     {
         public int PrintTime { get; }
 
-        public bool Safe { get; }
-
         public string WalletAddress { get; }
 
         public string[] SeedNodeIpAddresses { get; }
@@ -23,7 +21,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
         public XirorigConfiguration(IConfiguration configuration)
         {
             PrintTime = configuration.GetValue<int>("Xirorig:PrintTime");
-            Safe = configuration.GetValue<bool>("Xirorig:Safe");
             WalletAddress = configuration.GetValue<string>("Xirorig:WalletAddress");
 
             var seedNodeIpAddressesConfig = configuration.GetSection("Xirorig:SeedNodeIpAddresses").GetChildren();

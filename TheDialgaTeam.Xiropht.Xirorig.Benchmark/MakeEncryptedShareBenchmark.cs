@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using BenchmarkDotNet.Attributes;
+using TheDialgaTeam.Xiropht.Xirorig.Miner;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 {
@@ -12,32 +13,35 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 
         private RijndaelManaged Aes { get; } = new RijndaelManaged();
 
+        private SHA512 Sha512 { get; } = SHA512.Create();
+
         private ICryptoTransform JobAesCryptoTransform { get; }
+
+        private string key { get; } = "128";
+
+        private byte[] keyBytes { get; }
 
         public MakeEncryptedShareBenchmark()
         {
             TestData = "100000000 + 100000000" + DateTimeOffset.Now.ToUnixTimeSeconds();
 
-            using (var pdb = new PasswordDeriveBytes("128", Encoding.UTF8.GetBytes("128")))
-            {
-                Aes.BlockSize = 128;
-                Aes.KeySize = 128;
-                Aes.Key = pdb.GetBytes(128 / 8);
-                Aes.IV = pdb.GetBytes(128 / 8);
+            using var pdb = new PasswordDeriveBytes("128", Encoding.UTF8.GetBytes("128"));
 
-                JobAesCryptoTransform = Aes.CreateEncryptor();
-            }
+            Aes.BlockSize = 128;
+            Aes.KeySize = 128;
+            Aes.Key = pdb.GetBytes(128 / 8);
+            Aes.IV = pdb.GetBytes(128 / 8);
+
+            JobAesCryptoTransform = Aes.CreateEncryptor();
+            keyBytes = Encoding.UTF8.GetBytes(key);
         }
 
         [Benchmark]
         public string MakeEncryptedShare()
         {
-            //var encryptedShare = MiningUtility.ConvertStringToHexAndEncryptXorShare(TestData, "128");
-            //encryptedShare = MiningUtility.EncryptAesShareAndEncryptXorShare(JobAesCryptoTransform, encryptedShare, 1, "128");
-            //encryptedShare = MiningUtility.ComputeHash(SHA512.Create(), encryptedShare);
+            var encryptedShare = MiningUtility.MakeEncryptedShare(TestData, key, 1, JobAesCryptoTransform, Sha512);
 
-            //return encryptedShare;
-            return string.Empty;
+            return encryptedShare;
         }
     }
 }

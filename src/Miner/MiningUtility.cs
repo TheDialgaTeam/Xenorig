@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -12,129 +13,156 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
         private static readonly char[] Base16CharRepresentation = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-        public static unsafe string ConvertStringToHexAndEncryptXorShare(string value, string key)
+        private static readonly byte[] Base16ByteRepresentation = { (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) 'A', (byte) 'B', (byte) 'C', (byte) 'D', (byte) 'E', (byte) 'F' };
+
+        public static unsafe string MakeEncryptedShare(string value, string xorKey, int round, ICryptoTransform aesCryptoTransform, SHA512 sha512)
         {
             var valueLength = value.Length;
-            var result = new string('\0', valueLength * 2);
+            var xorKeyLength = xorKey.Length;
 
-            fixed (char* valuePtr = value, keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation, resultPtr = result)
+            var outputLength = valueLength * 2;
+            var output = ArrayPool<byte>.Shared.Rent(outputLength);
+
+            fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, xorKeyPtr = xorKey)
+            fixed (byte* base16ByteRepresentationPtr = Base16ByteRepresentation)
             {
-                var valueCharPtr = valuePtr;
-                var resultCharPtr = resultPtr;
+                var xorKeyIndex = 0;
 
-                var keyLength = key.Length;
-                var keyIndex = 0;
-
-                for (var i = 0; i < valueLength; i++)
+                // First encryption phase convert to hex and xor each result.
+                fixed (byte* outputPtr = output)
+                fixed (char* valuePtr = value)
                 {
-                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr >> 4)) ^ *(keyPtr + keyIndex));
-                    resultCharPtr++;
-                    keyIndex++;
+                    var outputBytePtr = outputPtr;
+                    var valueCharPtr = valuePtr;
 
-                    if (keyIndex == keyLength)
+                    for (var i = valueLength - 1; i >= 0; i--)
                     {
-                        keyIndex = 0;
+                        *outputBytePtr = (byte) (*(base16ByteRepresentationPtr + (*valueCharPtr >> 4)) ^ *(xorKeyPtr + xorKeyIndex));
+                        outputBytePtr++;
+                        xorKeyIndex++;
+
+                        if (xorKeyIndex == xorKeyLength)
+                        {
+                            xorKeyIndex = 0;
+                        }
+
+                        *outputBytePtr = (byte) (*(base16ByteRepresentationPtr + (*valueCharPtr & 15)) ^ *(xorKeyPtr + xorKeyIndex));
+                        outputBytePtr++;
+                        xorKeyIndex++;
+
+                        if (xorKeyIndex == xorKeyLength)
+                        {
+                            xorKeyIndex = 0;
+                        }
+
+                        valueCharPtr++;
                     }
-
-                    *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*valueCharPtr & 15)) ^ *(keyPtr + keyIndex));
-                    resultCharPtr++;
-                    keyIndex++;
-
-                    if (keyIndex == keyLength)
-                    {
-                        keyIndex = 0;
-                    }
-
-                    valueCharPtr++;
                 }
-            }
 
-            return result;
-        }
+                // Second encryption phase: run through aes per round and apply xor at the final round.
+                const byte dash = (byte) '-';
 
-        public static unsafe string EncryptAesShareAndEncryptXorShare(ICryptoTransform aesCryptoTransform, string value, int round, string key)
-        {
-            var result = value;
-            var keyLength = key.Length;
-            var utf8 = Encoding.UTF8;
-
-            fixed (char* keyPtr = key, base16CharRepresentationPtr = Base16CharRepresentation)
-            {
-                for (var i = 0; i < round + 1; i++)
+                for (var i = round; i >= 0; i--)
                 {
-                    var textBytes = utf8.GetBytes(result);
-                    var output = aesCryptoTransform.TransformFinalBlock(textBytes, 0, textBytes.Length);
-                    var outputLength = output.Length;
+                    var aesOutput = aesCryptoTransform.TransformFinalBlock(output, 0, outputLength);
+                    var aesOutputLength = aesOutput.Length;
 
-                    result = new string('\0', outputLength * 2 + outputLength - 1);
+                    ArrayPool<byte>.Shared.Return(output);
 
-                    fixed (byte* outputPtr = output)
-                    fixed (char* resultPtr = result)
+                    outputLength = aesOutputLength * 2 + aesOutputLength - 1;
+                    output = ArrayPool<byte>.Shared.Rent(outputLength);
+
+                    fixed (byte* outputPtr = output, aesOutputPtr = aesOutput)
                     {
                         var outputBytePtr = outputPtr;
-                        var resultCharPtr = resultPtr;
-                        var keyIndex = 0;
+                        var aesOutputBytePtr = aesOutputPtr;
 
-                        for (var j = 0; j < outputLength; j++)
+                        if (i == 1)
                         {
-                            if (i == round - 1)
+                            xorKeyIndex = 0;
+
+                            for (var j = aesOutputLength - 1; j >= 0; j--)
                             {
-                                *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr >> 4)) ^ *(keyPtr + keyIndex));
-                                resultCharPtr++;
-                                keyIndex++;
+                                *outputBytePtr = (byte) (*(base16ByteRepresentationPtr + (*aesOutputBytePtr >> 4)) ^ *(xorKeyPtr + xorKeyIndex));
+                                outputBytePtr++;
+                                xorKeyIndex++;
 
-                                if (keyIndex == keyLength)
+                                if (xorKeyIndex == xorKeyLength)
                                 {
-                                    keyIndex = 0;
+                                    xorKeyIndex = 0;
                                 }
 
-                                *resultCharPtr = (char) (*(base16CharRepresentationPtr + (*outputBytePtr & 15)) ^ *(keyPtr + keyIndex));
-                                resultCharPtr++;
-                                keyIndex++;
+                                *outputBytePtr = (byte) (*(base16ByteRepresentationPtr + (*aesOutputBytePtr & 15)) ^ *(xorKeyPtr + xorKeyIndex));
+                                outputBytePtr++;
+                                xorKeyIndex++;
 
-                                if (keyIndex == keyLength)
+                                if (xorKeyIndex == xorKeyLength)
                                 {
-                                    keyIndex = 0;
+                                    xorKeyIndex = 0;
                                 }
 
-                                if (j == outputLength - 1)
+                                if (j == 0) break;
+
+                                *outputBytePtr = (byte) (dash ^ *(xorKeyPtr + xorKeyIndex));
+                                outputBytePtr++;
+                                xorKeyIndex++;
+
+                                if (xorKeyIndex == xorKeyLength)
                                 {
-                                    break;
+                                    xorKeyIndex = 0;
                                 }
 
-                                *resultCharPtr = (char) ('-' ^ *(keyPtr + keyIndex));
-                                resultCharPtr++;
-                                keyIndex++;
-
-                                if (keyIndex == keyLength)
-                                {
-                                    keyIndex = 0;
-                                }
+                                aesOutputBytePtr++;
                             }
-                            else
+                        }
+                        else
+                        {
+                            for (var j = aesOutputLength - 1; j >= 0; j--)
                             {
-                                *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
-                                resultCharPtr++;
+                                *outputBytePtr = *(base16ByteRepresentationPtr + (*aesOutputBytePtr >> 4));
+                                outputBytePtr++;
 
-                                *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr & 15));
-                                resultCharPtr++;
+                                *outputBytePtr = *(base16ByteRepresentationPtr + (*aesOutputBytePtr & 15));
+                                outputBytePtr++;
 
-                                if (j == outputLength - 1)
-                                {
-                                    break;
-                                }
+                                if (j == 0) break;
 
-                                *resultCharPtr = '-';
-                                resultCharPtr++;
+                                *outputBytePtr = dash;
+                                outputBytePtr++;
+                                aesOutputBytePtr++;
                             }
-
-                            outputBytePtr++;
                         }
                     }
                 }
-            }
 
-            return result;
+                // Third encryption phase: compute hash
+                var hashOutput = sha512.ComputeHash(output, 0, outputLength);
+                var hashOutputLength = hashOutput.Length;
+
+                ArrayPool<byte>.Shared.Return(output);
+
+                var result = new string('\0', hashOutputLength * 2);
+
+                fixed (byte* hashOutputPtr = hashOutput)
+                fixed (char* resultPtr = result)
+                {
+                    var hashOutputBytePtr = hashOutputPtr;
+                    var resultCharPtr = resultPtr;
+
+                    for (var i = hashOutputLength - 1; i >= 0; i--)
+                    {
+                        *resultCharPtr = *(base16CharRepresentationPtr + (*hashOutputBytePtr >> 4));
+                        resultCharPtr++;
+
+                        *resultCharPtr = *(base16CharRepresentationPtr + (*hashOutputBytePtr & 15));
+                        resultCharPtr++;
+
+                        hashOutputBytePtr++;
+                    }
+                }
+
+                return result;
+            }
         }
 
         public static unsafe string ComputeHash(SHA512 hashAlgorithm, string value)
@@ -149,7 +177,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                 var outputBytePtr = outputPtr;
                 var resultCharPtr = resultPtr;
 
-                for (var i = 0; i < outputLength; i++)
+                for (var i = outputLength - 1; i >= 0; i--)
                 {
                     *resultCharPtr = *(base16CharRepresentationPtr + (*outputBytePtr >> 4));
                     resultCharPtr++;
@@ -162,18 +190,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             }
 
             return result;
-        }
-
-        public static int GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, int minimumValue, int maximumValue)
-        {
-            rngCryptoServiceProvider.GetBytes(randomNumber);
-            return (int) (minimumValue + MathF.Floor(MathF.Max(0, randomNumber[0] / 255f - 0.0000001f) * (maximumValue - minimumValue + 1)));
-        }
-
-        public static decimal GetRandomBetweenJob(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, decimal minimumValue, decimal maximumValue)
-        {
-            rngCryptoServiceProvider.GetBytes(randomNumber);
-            return minimumValue + Math.Floor((decimal) MathF.Max(0, randomNumber[0] / 255f - 0.0000001f) * (maximumValue - minimumValue + 1));
         }
 
         public static unsafe decimal GenerateNumberMathCalculation(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, decimal minRange, decimal maxRange)
@@ -317,6 +333,18 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                 yield return new Tuple<decimal, decimal>(i, i / result);
             }
+        }
+
+        private static int GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, int minimumValue, int maximumValue)
+        {
+            rngCryptoServiceProvider.GetBytes(randomNumber);
+            return (int) (minimumValue + MathF.Floor(MathF.Max(0, randomNumber[0] / 255f - 0.0000001f) * (maximumValue - minimumValue + 1)));
+        }
+
+        private static decimal GetRandomBetweenJob(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, decimal minimumValue, decimal maximumValue)
+        {
+            rngCryptoServiceProvider.GetBytes(randomNumber);
+            return minimumValue + Math.Floor((decimal) MathF.Max(0, randomNumber[0] / 255f - 0.0000001f) * (maximumValue - minimumValue + 1));
         }
 
         private static IEnumerable<decimal> DivideEvenly(decimal totalPossibilities, int totalThread)
