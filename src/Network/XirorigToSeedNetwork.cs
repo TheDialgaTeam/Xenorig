@@ -310,7 +310,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             {
                 if (state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState))
                 {
-                    if (xirorigToSeedNetwork._isActive)
+                    while (xirorigToSeedNetwork._isActive)
                     {
                         switch (xirorigToSeedNetwork._connectionStatus)
                         {

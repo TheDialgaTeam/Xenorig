@@ -17,9 +17,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
 
         private ICryptoTransform JobAesCryptoTransform { get; }
 
-        private string key { get; } = "128";
-
-        private byte[] keyBytes { get; }
+        private string Key { get; } = "128";
 
         public MakeEncryptedShareBenchmark()
         {
@@ -33,13 +31,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Benchmark
             Aes.IV = pdb.GetBytes(128 / 8);
 
             JobAesCryptoTransform = Aes.CreateEncryptor();
-            keyBytes = Encoding.UTF8.GetBytes(key);
         }
 
         [Benchmark]
         public string MakeEncryptedShare()
         {
-            var encryptedShare = MiningUtility.MakeEncryptedShare(TestData, key, 1, JobAesCryptoTransform, Sha512);
+            var encryptedShare = MiningUtility.MakeEncryptedShare(TestData, Key, 1, JobAesCryptoTransform, Sha512);
 
             return encryptedShare;
         }

@@ -175,10 +175,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                 _totalAverage60SecondsHashesCalculated[i] = 0;
                 _totalAverage15MinutesHashesCalculated[i] = 0;
 
+                _miningThreadWaitForNextJob[i] = true;
+
                 _miningThreads[i] = new Thread(MiningThreadTask) { IsBackground = true, Priority = jobThreads[i].ThreadPriority };
                 _miningThreads[i].Start((this, i));
-
-                _miningThreadWaitForNextJob[i] = true;
             }
 
             _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mREADY (CPU)\u001b[0m threads \u001b[36;1m{numThreads}\u001b[0m", DateTimeOffset.Now, _xirorigConfiguration.Threads.Length);
@@ -244,12 +244,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 #pragma warning restore 618
                     }
 
-                    var startRange = Math.Floor(cpuSoloMiners._jobMaxRange * miningThread.MinMiningRangePercentage * 0.01m) + cpuSoloMiners._jobMinRange;
-                    var endRange = Math.Min(cpuSoloMiners._jobMaxRange, Math.Floor(cpuSoloMiners._jobMaxRange * miningThread.MaxMiningRangePercentage * 0.01m) + 1);
+                    var startRange = Math.Floor(currentJobMaxRange * miningThread.MinMiningRangePercentage * 0.01m) + currentJobMinRange;
+                    var endRange = Math.Min(currentJobMaxRange, Math.Floor(currentJobMaxRange * miningThread.MaxMiningRangePercentage * 0.01m) + 1);
+                    var startRangeSize = startRange.ToString("F0").Length;
+                    var endRangeSize = endRange.ToString("F0").Length;
 
-                    for (var i = 0; i < 256; i++)
+                    for (var i = 255; i >= 0; i--)
                     {
-                        easyBlockRandomNumber[i] = startRange + Math.Floor(Math.Max(0, i / 255m - 0.0000001m) * (endRange - startRange + 1));
+                        easyBlockRandomNumber[i] = currentJobMinRange + Math.Floor((decimal) MathF.Max(0, i / 255f - 0.0000001f) * (currentJobMaxRange - currentJobMinRange + 1));
                     }
 
                     void DoMathCalculation(decimal firstNumber, decimal secondNumber)
@@ -346,9 +348,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                         {
                             logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId + 1, "Easy Block", currentBlockDifficulty, startRange, endRange);
 
-                            for (var i = 256 - 1; i >= 0; i--)
+                            for (var i = 255; i >= 0; i--)
                             {
-                                for (var j = 256 - 1; j >= 0; j--)
+                                for (var j = 255; j >= 0; j--)
                                 {
                                     DoMathCalculation(easyBlockRandomNumber[i], easyBlockRandomNumber[j]);
                                 }
@@ -359,13 +361,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                         while (currentBlockIndication!.Equals(cpuSoloMiners._blockIndication, StringComparison.OrdinalIgnoreCase) && !blockFound)
                         {
-                            var firstNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange);
-                            var secondNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange);
+                            var firstNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
+                            var secondNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
 
                             DoMathCalculation(firstNumber, secondNumber);
                             DoMathCalculation(secondNumber, firstNumber);
 
-                            for (var i = 256 - 1; i >= 0; i--)
+                            for (var i = 255; i >= 0; i--)
                             {
                                 if (!currentBlockIndication!.Equals(cpuSoloMiners._blockIndication, StringComparison.OrdinalIgnoreCase)) break;
 
