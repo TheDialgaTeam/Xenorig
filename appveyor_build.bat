@@ -2,10 +2,10 @@
 
 SETLOCAL 
 
-SET project=src/TheDialgaTeam.Xiropht.Xirorig.Builder.csproj
+SET project=src/TheDialgaTeam.Xiropht.Xirorig.csproj
 SET configuration=Release
 
-SET framework_core=netcoreapp3.0
+SET framework_core=netcoreapp5.0
 SET framework_mono=net462
 
 SET output=./bin/Release
