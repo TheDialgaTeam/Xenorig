@@ -25,10 +25,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 {
     public class XirorigToSeedNetwork : IDisposable
     {
-        public event Action<XirorigToSeedNetwork, string>? Disconnected;
-        public event Action<XirorigToSeedNetwork, string, bool>? LoginResult;
-        public event Action<XirorigToSeedNetwork, string, JObject>? NewJob;
-        public event Action<XirorigToSeedNetwork, bool, string>? BlockResult;
+        public event Action<string>? Disconnected;
+        public event Action<string, bool>? LoginResult;
+        public event Action<string, JObject>? NewJob;
+        public event Action<bool, string, string>? BlockResult;
 
         private readonly XirorigConfiguration _xirorigConfiguration;
         private readonly ILogger<XirorigToSeedNetwork> _logger;
@@ -262,7 +262,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
                         if (result.StartsWith(ClassRpcWalletCommand.SendTokenCheckWalletAddressInvalid))
                         {
-                            LoginResult?.Invoke(this, $"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}", false);
+                            LoginResult?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}", false);
                             await DisconnectFromSeedNetworkAsync().ConfigureAwait(false);
                             return;
                         }
@@ -299,7 +299,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             _tcpClient?.Dispose();
 
             _connectionStatus = ConnectionStatus.Disconnected;
-            Disconnected?.Invoke(this, $"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}");
+            Disconnected?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}");
         }
 
         private void StartCheckingNetworkConnection()
@@ -400,16 +400,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         {
             foreach (var packet in packets)
             {
-                if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendLoginAccepted, StringComparison.OrdinalIgnoreCase))
+                if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendLoginAccepted))
                 {
                     _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
                     _seedNodeIpAddressRetryCount = 0;
 
-                    LoginResult?.Invoke(this, $"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}", true);
+                    LoginResult?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}", true);
 
                     await SendPacketToNetworkAsync(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true).ConfigureAwait(false);
                 }
-                else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendCurrentBlockMining, StringComparison.OrdinalIgnoreCase))
+                else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendCurrentBlockMining))
                 {
                     _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
 
@@ -428,7 +428,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                         await SendPacketToNetworkAsync($"{ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskContentBlockMethod}|{_currentBlockTemplate["METHOD"]}", true).ConfigureAwait(false);
                     }
                 }
-                else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendContentBlockMethod, StringComparison.OrdinalIgnoreCase))
+                else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendContentBlockMethod))
                 {
                     _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
 
@@ -444,41 +444,41 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                         if (_currentWorkingBlockTemplate == null || _currentWorkingBlockTemplate["INDICATION"]!.Value<string>() != _currentBlockTemplate["INDICATION"]!.Value<string>())
                         {
                             _currentWorkingBlockTemplate = _currentBlockTemplate;
-                            NewJob?.Invoke(this, $"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}", _currentWorkingBlockTemplate);
+                            NewJob?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}", _currentWorkingBlockTemplate);
                         }
                     }
 
                     await SendPacketToNetworkAsync(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true).ConfigureAwait(false);
                 }
-                else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendJobStatus, StringComparison.OrdinalIgnoreCase))
+                else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendJobStatus))
                 {
                     _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
 
-                    var packetData = packet.Substring(packet.IndexOf('|') + 1);
+                    var packetData = packet.Split('|', StringSplitOptions.RemoveEmptyEntries);
 
-                    if (packetData.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareUnlock, StringComparison.OrdinalIgnoreCase))
+                    if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareUnlock))
                     {
-                        BlockResult?.Invoke(this, true, "Share Accepted");
+                        BlockResult?.Invoke(true, "Share Accepted", packetData[2]);
                     }
-                    else if (packetData.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareWrong, StringComparison.OrdinalIgnoreCase))
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareWrong))
                     {
-                        BlockResult?.Invoke(this, false, "Invalid Share");
+                        BlockResult?.Invoke(false, "Invalid Share", packetData[2]);
                     }
-                    else if (packetData.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareAleady, StringComparison.OrdinalIgnoreCase))
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareAleady))
                     {
-                        BlockResult?.Invoke(this, false, "Orphan Share");
+                        BlockResult?.Invoke(false, "Orphan Share", packetData[2]);
                     }
-                    else if (packetData.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareNotExist, StringComparison.OrdinalIgnoreCase))
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareNotExist))
                     {
-                        BlockResult?.Invoke(this, false, "Invalid Share");
+                        BlockResult?.Invoke(false, "Invalid Share", packetData[2]);
                     }
-                    else if (packetData.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareGood, StringComparison.OrdinalIgnoreCase))
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareGood))
                     {
-                        BlockResult?.Invoke(this, true, "Share Accepted");
+                        BlockResult?.Invoke(true, "Share Accepted", packetData[2]);
                     }
-                    else if (packetData.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareBad, StringComparison.OrdinalIgnoreCase))
+                    else if (packetData[1].Equals(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.ShareBad))
                     {
-                        BlockResult?.Invoke(this, false, "Invalid/Orphan Share");
+                        BlockResult?.Invoke(false, "Invalid/Orphan Share", packetData[2]);
                     }
                 }
             }

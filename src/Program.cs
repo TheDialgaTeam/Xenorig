@@ -24,7 +24,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig
                 {
                     serviceCollection.AddSingleton<XirorigConfiguration>();
                     serviceCollection.AddSingleton<XirorigToSeedNetwork>();
-                    serviceCollection.AddSingleton<CpuSoloMiners>();
 
                     serviceCollection.AddHostedService<ProgramHostedService>();
                     serviceCollection.AddHostedService<MinerHostedService>();

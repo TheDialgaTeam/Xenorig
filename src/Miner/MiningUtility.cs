@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -9,6 +7,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 {
     public static class MiningUtility
     {
+        private const int MaxFloatPrecision = 16777216;
+        private const long MaxDoublePrecision = 9007199254740992;
+
         private static readonly char[] Base16CharRepresentation = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
         private static readonly byte[] Base16ByteRepresentation = { (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7', (byte) '8', (byte) '9', (byte) 'A', (byte) 'B', (byte) 'C', (byte) 'D', (byte) 'E', (byte) 'F' };
@@ -191,191 +192,126 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             return result;
         }
 
-        public static decimal GenerateNumberMathCalculation(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, decimal minRange, decimal maxRange, int minSize, int maxSize)
+        public static int GenerateNumberMathCalculation(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, int minRange, int maxRange, int minSize, int maxSize)
         {
             do
             {
-                var randomSize = GetRandomBetween(rngCryptoServiceProvider, randomNumber, minSize, maxSize);
+                var randomSize = GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, minSize, maxSize);
 
                 if (randomSize == 1)
                 {
-                    return GetRandomBetween(rngCryptoServiceProvider, randomNumber, decimal.ToInt32(minRange), 9);
+                    return GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, minRange, 9);
                 }
+
+                var result = 0;
+                var digit = 1;
 
                 if (randomSize < 10)
                 {
-                    var result = 0;
-                    var digit = 1;
-
                     for (var i = randomSize - 1; i >= 0; i--)
                     {
-                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumber, digit == 1 ? 1 : 0, 9);
+                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, i == 0 ? 1 : 0, 9);
                         digit *= 10;
                     }
-
-                    if (result > minRange && result < maxRange) return result;
                 }
                 else
                 {
-                    var result = 0m;
-                    var digit = 1m;
-
-                    for (var i = randomSize - 1; i >= 0; i--)
+                    for (var i = randomSize - 2; i >= 0; i--)
                     {
-                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumber, digit == 1 ? 1 : 0, 9);
-                        digit *= 10m;
+                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, 0, 9);
+                        digit *= 10;
                     }
 
-                    if (result > minRange && result < maxRange) return result;
+                    if (result <= 147483647)
+                    {
+                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, 1, 2);
+                    }
+                    else
+                    {
+                        result += digit * 1;
+                    }
                 }
+
+                if (result > minRange && result < maxRange) return result;
             } while (true);
         }
 
-        public static (decimal, decimal) GetJobRange(decimal totalPossibilities, int totalThread, int threadIndex, decimal offset)
+        public static long GenerateNumberMathCalculation(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, long minRange, long maxRange, int minSize, int maxSize)
         {
-            var startRange = DivideEvenly(totalPossibilities, totalThread).Take(threadIndex + 1).Sum() - DivideEvenly(totalPossibilities, totalThread).ElementAt(threadIndex) + offset;
-            var endRange = DivideEvenly(totalPossibilities, totalThread).Take(threadIndex + 1).Sum() + offset - 1;
-
-            return (startRange, endRange);
-        }
-
-        public static (decimal, decimal) GetJobRangeByPercentage(decimal minRange, decimal maxRange, int minRangePercentage, int maxRangePercentage)
-        {
-            var startRange = Math.Floor(maxRange * minRangePercentage * 0.01m) + minRange;
-            var endRange = Math.Min(maxRange, Math.Floor(maxRange * maxRangePercentage * 0.01m) + 1);
-
-            return (startRange, endRange);
-        }
-
-        public static bool IsPrimeNumber(decimal number)
-        {
-            if (number <= 1)
+            do
             {
-                return false;
-            }
+                var randomSize = GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, minSize, maxSize);
 
-            if (number == 2)
-            {
-                return true;
-            }
-
-            if (number % 2 == 0)
-            {
-                return false;
-            }
-
-            var boundary = Math.Floor(SquareRoot(number));
-
-            for (var i = 3m; i <= boundary; i += 2)
-            {
-                if (number % i == 0)
+                if (randomSize == 1)
                 {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public static IEnumerable<(decimal, decimal)> SumOf(decimal result, decimal minRange)
-        {
-            if (result == 2 || result == 3)
-            {
-                yield break;
-            }
-
-            for (var i = minRange; i < result - 1; i++)
-            {
-                var number = result - i;
-
-                yield return (i, result - i);
-
-                if (i != number)
-                {
-                    yield return (result - i, i);
-                }
-            }
-        }
-
-        public static IEnumerable<Tuple<decimal, decimal>> SubtractOf(decimal result, decimal maxRange)
-        {
-            for (var i = maxRange; i > result + 1; i--)
-            {
-                yield return new Tuple<decimal, decimal>(i, i - result);
-            }
-        }
-
-        public static IEnumerable<(decimal, decimal)> FactorOf(decimal result, decimal minRange)
-        {
-            var meanAverage = Math.Ceiling(SquareRoot(result));
-
-            for (var i = minRange; i <= meanAverage; i++)
-            {
-                if (result % i != 0)
-                {
-                    continue;
+                    return GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, minRange, 9);
                 }
 
-                var number = result / i;
+                var result = 0L;
+                var digit = 1L;
 
-                yield return (i, number);
-
-                if (i != number)
+                if (randomSize < 19)
                 {
-                    yield return (number, i);
+                    for (var i = randomSize - 1; i >= 0; i--)
+                    {
+                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, i == 0 ? 1 : 0, 9);
+                        digit *= 10;
+                    }
                 }
-            }
-        }
-
-        public static IEnumerable<Tuple<decimal, decimal>> DivisorOf(decimal result, decimal maxRange)
-        {
-            for (var i = maxRange; i >= result; i--)
-            {
-                if (i % result != 0)
+                else
                 {
-                    continue;
+                    for (var i = randomSize - 2; i >= 0; i--)
+                    {
+                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, 0, 9);
+                        digit *= 10;
+                    }
+
+                    if (result <= 223372036854775807)
+                    {
+                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, 1, 9);
+                    }
+                    else
+                    {
+                        result += digit * GetRandomBetween(rngCryptoServiceProvider, randomNumberBytes, 1, 8);
+                    }
                 }
 
-                yield return new Tuple<decimal, decimal>(i, i / result);
+                if (result > minRange && result < maxRange) return result;
+            } while (true);
+        }
+
+        private static unsafe int GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, int minimumValue, int maximumValue)
+        {
+            rngCryptoServiceProvider.GetBytes(randomNumberBytes);
+
+            fixed (byte* randomNumberPtr = randomNumberBytes)
+            {
+                var factor = maximumValue - minimumValue + 1;
+
+                if (factor <= MaxFloatPrecision)
+                {
+                    return minimumValue + (int) MathF.Max(0, *randomNumberPtr / 255f - 0.0000001f) * factor;
+                }
+
+                return minimumValue + (int) Math.Max(0, *randomNumberPtr / 255d - 0.00000000001) * factor;
             }
         }
 
-        private static unsafe int GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumber, int minimumValue, int maximumValue)
+        private static unsafe long GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, long minimumValue, long maximumValue)
         {
-            rngCryptoServiceProvider.GetBytes(randomNumber);
+            rngCryptoServiceProvider.GetBytes(randomNumberBytes);
 
-            fixed (byte* randomNumberPtr = randomNumber)
+            fixed (byte* randomNumberPtr = randomNumberBytes)
             {
-                return (int) (minimumValue + MathF.Floor(MathF.Max(0, *randomNumberPtr / 255f - 0.0000001f) * (maximumValue - minimumValue + 1)));
+                var factor = maximumValue - minimumValue + 1;
+
+                if (factor <= MaxFloatPrecision)
+                {
+                    return minimumValue + (long) MathF.Max(0, *randomNumberPtr / 255f - 0.0000001f) * factor;
+                }
+
+                return minimumValue + (long) Math.Max(0, *randomNumberPtr / 255d - 0.00000000001) * factor;
             }
-        }
-
-        private static IEnumerable<decimal> DivideEvenly(decimal totalPossibilities, int totalThread)
-        {
-            var div = Math.Truncate(totalPossibilities / totalThread);
-            var remainder = totalPossibilities % totalThread;
-
-            for (var i = 0; i < totalThread; i++)
-            {
-                yield return i < remainder ? div + 1 : div;
-            }
-        }
-
-        private static decimal SquareRoot(decimal square)
-        {
-            if (square < 0)
-            {
-                return 0;
-            }
-
-            var root = square / 3;
-
-            for (var i = 0; i < 32; i++)
-            {
-                root = (root + square / root) / 2;
-            }
-
-            return root;
         }
     }
 }

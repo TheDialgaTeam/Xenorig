@@ -28,7 +28,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
             Console.Title = $"Xirorig v{version} ({frameworkVersion})";
 
             _logger.LogInformation(" \u001b[32;1m*\u001b[0m ABOUT        \u001b[36;1mXirorig/{version:l}\u001b[0m {frameworkVersion:l}", version, frameworkVersion);
-            _logger.LogInformation(" \u001b[32;1m*\u001b[0m THREADS      \u001b[36;1m{numThreads}\u001b[0m", _xirorigConfiguration.Threads.Length);
+            _logger.LogInformation(" \u001b[32;1m*\u001b[0m THREADS      \u001b[36;1m{numThreads}\u001b[0m", _xirorigConfiguration.MinerThreadConfigurations.Length);
 
             return Task.CompletedTask;
         }

@@ -16,7 +16,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
 
         public int SeedNodeTokenPort { get; }
 
-        public MiningThread[] Threads { get; }
+        public MinerThreadConfiguration[] MinerThreadConfigurations { get; }
 
         public XirorigConfiguration(IConfiguration configuration)
         {
@@ -37,12 +37,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
             SeedNodeTokenPort = configuration.GetValue<int>("Xirorig:SeedNodeTokenPort");
 
             var threadsConfig = configuration.GetSection("Xirorig:Threads").GetChildren();
-            var miningThreads = new List<MiningThread>();
+            var miningThreads = new List<MinerThreadConfiguration>();
 
             foreach (var configurationSection in threadsConfig)
             {
-                miningThreads.Add(new MiningThread(
-                    configurationSection.GetValue<MiningJob>("JobType"),
+                miningThreads.Add(new MinerThreadConfiguration(
                     configurationSection.GetValue<ThreadPriority>("ThreadPriority"),
                     configurationSection.GetValue<bool>("ShareRange"),
                     configurationSection.GetValue<int>("MinMiningRangePercentage"),
@@ -50,7 +49,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
                 );
             }
 
-            Threads = miningThreads.ToArray();
+            MinerThreadConfigurations = miningThreads.ToArray();
         }
     }
 }

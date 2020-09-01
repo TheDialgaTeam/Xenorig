@@ -2,10 +2,8 @@
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Config
 {
-    public class MiningThread
+    public class MinerThreadConfiguration
     {
-        public MiningJob JobType { get; }
-
         public ThreadPriority ThreadPriority { get; }
 
         public bool ShareRange { get; }
@@ -14,9 +12,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
 
         public int MaxMiningRangePercentage { get; }
 
-        public MiningThread(MiningJob jobType, ThreadPriority threadPriority, bool shareRange, int minMiningRangePercentage, int maxMiningRangePercentage)
+        public MinerThreadConfiguration(ThreadPriority threadPriority, bool shareRange, int minMiningRangePercentage, int maxMiningRangePercentage)
         {
-            JobType = jobType;
             ThreadPriority = threadPriority;
             ShareRange = shareRange;
             MinMiningRangePercentage = minMiningRangePercentage;
