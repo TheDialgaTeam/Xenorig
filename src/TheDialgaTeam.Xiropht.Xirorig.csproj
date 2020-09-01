@@ -30,21 +30,6 @@
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Console\**" />
-    <Compile Remove="Mining\**" />
-    <Compile Remove="Services\**" />
-    <Compile Remove="Setting\**" />
-    <EmbeddedResource Remove="Console\**" />
-    <EmbeddedResource Remove="Mining\**" />
-    <EmbeddedResource Remove="Services\**" />
-    <EmbeddedResource Remove="Setting\**" />
-    <None Remove="Console\**" />
-    <None Remove="Mining\**" />
-    <None Remove="Services\**" />
-    <None Remove="Setting\**" />
-  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.7" />

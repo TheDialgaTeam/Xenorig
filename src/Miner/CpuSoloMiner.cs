@@ -486,8 +486,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             if (!hashEncryptedShare.Equals(cpuSoloMiner._blockIndication)) return;
 
             cpuSoloMiner._isBlockFound = true;
-            cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mThread: {threadId} | Job Type: {jobType:l} | Block found: {firstNumber} {operatorSymbol:l} {secondNumber} = {result}\u001b[0m", DateTimeOffset.Now, cpuSoloMiner._threadId, jobType, firstNumber, operatorSymbol, secondNumber, result);
             cpuSoloMiner.SubmitBlock(blockId, jobType, $"{ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveJob}|{encryptedShare}|{result}|{firstNumber} {operatorSymbol} {secondNumber}|{hashEncryptedShare}|{blockId}|{cpuSoloMiner._userAgent}");
+            cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mThread: {threadId} | Job Type: {jobType:l} | Block found: {firstNumber} {operatorSymbol:l} {secondNumber} = {result}\u001b[0m", DateTimeOffset.Now, cpuSoloMiner._threadId, jobType, firstNumber, operatorSymbol, secondNumber, result);
         }
 
         private static void ValidateAndSubmitShare(CpuSoloMiner cpuSoloMiner, long firstNumber, long secondNumber, long result, string operatorSymbol, string jobType, string blockId)
@@ -503,8 +503,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             if (!hashEncryptedShare.Equals(cpuSoloMiner._blockIndication)) return;
 
             cpuSoloMiner._isBlockFound = true;
-            cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mThread: {threadId} | Job Type: {jobType:l} | Block found: {firstNumber} {operatorSymbol:l} {secondNumber} = {result}\u001b[0m", DateTimeOffset.Now, cpuSoloMiner._threadId, jobType, firstNumber, operatorSymbol, secondNumber, result);
             cpuSoloMiner.SubmitBlock(blockId, jobType, $"{ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveJob}|{encryptedShare}|{result}|{firstNumber} {operatorSymbol} {secondNumber}|{hashEncryptedShare}|{blockId}|{cpuSoloMiner._userAgent}");
+            cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mThread: {threadId} | Job Type: {jobType:l} | Block found: {firstNumber} {operatorSymbol:l} {secondNumber} = {result}\u001b[0m", DateTimeOffset.Now, cpuSoloMiner._threadId, jobType, firstNumber, operatorSymbol, secondNumber, result);
         }
 
         public void StartMining()

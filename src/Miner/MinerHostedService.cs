@@ -22,6 +22,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         private readonly RNGCryptoServiceProvider _rngCryptoServiceProvider = new RNGCryptoServiceProvider();
         private readonly CpuSoloMiner[] _cpuSoloMiners;
 
+        private string? _jobHost;
+        private string? _blockDifficulty;
+        private string? _blockMethod;
+        private string? _blockId;
+
         private long _totalGoodEasyBlocksSubmitted;
         private long _totalGoodSemiRandomBlocksSubmitted;
         private long _totalGoodRandomBlocksSubmitted;
@@ -43,6 +48,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         private Timer? _averageHashCalculatedIn15MinutesTimer;
         private Timer? _totalAverageHashCalculatedTimer;
 
+        private Task? _consoleOutputTask;
+
         private long TotalGoodBlocksSubmitted => _totalGoodEasyBlocksSubmitted + _totalGoodSemiRandomBlocksSubmitted + _totalGoodRandomBlocksSubmitted;
 
         private long TotalBadBlocksSubmitted => _totalBadEasyBlocksSubmitted + _totalBadSemiRandomBlocksSubmitted + _totalBadRandomBlocksSubmitted;
@@ -61,6 +68,56 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            _consoleOutputTask = Task.Factory.StartNew(async state =>
+            {
+                if (!(state is (MinerHostedService minerHostedService, CancellationToken cancellationTokenState))) return;
+
+                var cpuSoloMiners = minerHostedService._cpuSoloMiners;
+                var threadCount = cpuSoloMiners.Length;
+                var logger = minerHostedService._logger;
+
+                while (!cancellationTokenState.IsCancellationRequested)
+                {
+                    if (Console.KeyAvailable)
+                    {
+                        var keyPressed = Console.ReadKey(true);
+
+                        if (keyPressed.Key == ConsoleKey.H)
+                        {
+                            decimal average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
+
+                            for (var i = 0; i < threadCount; i++)
+                            {
+                                average10SecondsSum += minerHostedService._averageHashCalculatedIn10Seconds[i];
+                                average60SecondsSum += minerHostedService._averageHashCalculatedIn60Seconds[i];
+                                average15MinutesSum += minerHostedService._averageHashCalculatedIn15Minutes[i];
+                            }
+
+                            logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m | THREAD | 10s H/s | 60s H/s | 15m H/s |", DateTimeOffset.Now);
+
+                            for (var i = 0; i < threadCount; i++)
+                            {
+                                logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m | {i,-6} | {j,-7:F0} | {k,-7:F0} | {l,-7:F0} |", DateTimeOffset.Now, i, minerHostedService._averageHashCalculatedIn10Seconds[i], minerHostedService._averageHashCalculatedIn60Seconds[i], minerHostedService._averageHashCalculatedIn15Minutes[i]);
+                            }
+
+                            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m speed 10s/60s/15m \u001b[36;1m{average10SecondsSum:F0}\u001b[0m \u001b[36m{average60SecondsSum:F0} {average15MinutesSum:F0}\u001b[0m \u001b[36;1mH/s\u001b[0m max \u001b[36;1m{maxHash:F0}\u001b[0m", DateTimeOffset.Now, average10SecondsSum, average60SecondsSum, average15MinutesSum, _maxHash);
+                        }
+                        else if (keyPressed.Key == ConsoleKey.S)
+                        {
+                            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m |      | Easy Blocks | Semi Random | Random Blocks | Total Blocks |", DateTimeOffset.Now);
+                            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m | \u001b[32;1mGood\u001b[0m | {easy,-11} | {semi,-11} | {random,-13} | {total,-12} |", DateTimeOffset.Now, minerHostedService._totalGoodEasyBlocksSubmitted, minerHostedService._totalGoodSemiRandomBlocksSubmitted, minerHostedService._totalGoodRandomBlocksSubmitted, minerHostedService.TotalGoodBlocksSubmitted);
+                            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m | \u001b[31;1mBad\u001b[0m  | {easy,-11} | {semi,-11} | {random,-13} | {total,-12} |", DateTimeOffset.Now, minerHostedService._totalBadEasyBlocksSubmitted, minerHostedService._totalBadSemiRandomBlocksSubmitted, minerHostedService._totalBadRandomBlocksSubmitted, minerHostedService.TotalBadBlocksSubmitted);
+                        }
+                        else if (keyPressed.Key == ConsoleKey.J)
+                        {
+                            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[35;1mcurrent job\u001b[0m from {host:l} diff {blockDifficulty:l} algo {algo:l} height {height:l}", DateTimeOffset.Now, minerHostedService._jobHost, minerHostedService._blockDifficulty, minerHostedService._blockMethod, minerHostedService._blockId);
+                        }
+                    }
+
+                    await Task.Delay(1, cancellationTokenState).ConfigureAwait(false);
+                }
+            }, (this, cancellationToken), cancellationToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
+
             _xirorigToSeedNetwork.Disconnected += XirorigToSeedNetworkOnDisconnected;
             _xirorigToSeedNetwork.LoginResult += XirorigToSeedNetworkOnLoginResult;
             _xirorigToSeedNetwork.NewJob += XirorigToSeedNetworkOnNewJob;
@@ -80,6 +137,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
             await _xirorigToSeedNetwork.StartAsync(cancellationToken).ConfigureAwait(false);
 
+            _logger.LogInformation(" \u001b[32;1m*\u001b[0m COMMANDS     \u001b[35;1mh\u001b[0mashrate, \u001b[35;1ms\u001b[0mtats, \u001b[35;1mj\u001b[0mob");
             _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mREADY (CPU)\u001b[0m threads \u001b[36;1m{threadCount}\u001b[0m", DateTimeOffset.Now, minerThreadConfigurations.Length);
 
             _averageHashCalculatedIn10SecondsTimer = new Timer { Enabled = true, AutoReset = true, Interval = TimeSpan.FromSeconds(10).TotalMilliseconds };
@@ -138,6 +196,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             }
 
             _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[35;1mnew job\u001b[0m from {host:l} diff {blockDifficulty:l} algo {algo:l} height {height:l}", DateTimeOffset.Now, arg1, arg2["DIFFICULTY"]!.Value<string>(), arg2["METHOD"]!.Value<string>(), arg2["ID"]!.Value<string>());
+
+            _jobHost = arg1;
+            _blockDifficulty = arg2["DIFFICULTY"]!.Value<string>();
+            _blockMethod = arg2["METHOD"]!.Value<string>();
+            _blockId = arg2["ID"]!.Value<string>();
         }
 
         private void XirorigToSeedNetworkOnBlockResult(bool arg1, string arg2, string arg3)
