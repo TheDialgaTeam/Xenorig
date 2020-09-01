@@ -30,7 +30,8 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 - Pool support has dropped.
 
 ### CPU mining performance
-- Intel i7-8750H - 250 KH/s (1 thread)
+- Intel i7-4790K @ 4.00GHz - 136 KH/s (1 thread)
+- Intel i7-8750H @ 2.22GHz - 250 KH/s (1 thread)
 
 Please note performance is highly dependent on system load. The numbers above are obtained on an idle system. Tasks heavily using a processor, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the number of cores you have on your cpu.
 
