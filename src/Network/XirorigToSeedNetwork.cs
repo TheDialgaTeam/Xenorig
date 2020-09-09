@@ -30,24 +30,29 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         public event Action<string, JObject>? NewJob;
         public event Action<bool, string, string>? BlockResult;
 
-        private readonly XirorigConfiguration _xirorigConfiguration;
         private readonly ILogger<XirorigToSeedNetwork> _logger;
 
-        private string[]? _seedNodeIpAddresses;
+        private string[] _seedNodeIpAddresses;
         private int _seedNodeIpAddressIndex;
         private int _seedNodeIpAddressRetryCount;
+
+        private readonly object _isActiveLock = new object();
+        private readonly object _connectionStatusLock = new object();
+        private readonly object _lastValidPacketDateTimeOffsetLock = new object();
 
         private bool _isActive;
         private ConnectionStatus _connectionStatus = ConnectionStatus.Disconnected;
         private DateTimeOffset _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
+
         private CancellationTokenSource? _cancellationTokenSource;
-        private CancellationTokenSource? _globalCancellationTokenSource;
+        private CancellationTokenSource? _linkedCancellationTokenSource;
 
         private TcpClient? _tcpClient;
         private StreamReader? _tcpClientReader;
         private StreamWriter? _tcpClientWriter;
 
         private readonly string _connectionCertificate;
+        private readonly string? _walletAddress;
         private bool _isWalletAddressValid;
 
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
@@ -64,8 +69,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
         public XirorigToSeedNetwork(XirorigConfiguration xirorigConfiguration, ILogger<XirorigToSeedNetwork> logger)
         {
-            _xirorigConfiguration = xirorigConfiguration;
             _logger = logger;
+
+            _seedNodeIpAddresses = xirorigConfiguration.SeedNodeIpAddresses;
+            _walletAddress = xirorigConfiguration.WalletAddress;
 
             _connectionCertificate = ClassUtils.GenerateCertificate();
 
@@ -75,38 +82,80 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             var aesSaltCertificate = password.GetBytes(16);
 #pragma warning restore 618
 
-            _aes = Aes.Create();
-            _aes.Mode = CipherMode.CFB;
-            _aes.BlockSize = 128;
-            _aes.Padding = PaddingMode.None;
-            _aes.KeySize = ClassConnectorSetting.MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE;
-            _aes.Key = aesIvCertificate;
+            var aes = Aes.Create();
+            aes.Mode = CipherMode.CFB;
+            aes.BlockSize = 128;
+            aes.Padding = PaddingMode.None;
+            aes.KeySize = ClassConnectorSetting.MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE;
+            aes.Key = aesIvCertificate;
 
-            _aesEncryptor = _aes.CreateEncryptor(aesIvCertificate, aesSaltCertificate);
-            _aesDecryptor = _aes.CreateDecryptor(aesIvCertificate, aesSaltCertificate);
+            _aesEncryptor = aes.CreateEncryptor(aesIvCertificate, aesSaltCertificate);
+            _aesDecryptor = aes.CreateDecryptor(aesIvCertificate, aesSaltCertificate);
+            _aes = aes;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             if (_isActive) return;
+            _isActive = true;
 
-            _cancellationTokenSource?.Dispose();
-            _globalCancellationTokenSource?.Dispose();
-            _cancellationTokenSource = new CancellationTokenSource();
-            _globalCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cancellationTokenSource.Token);
+            var cancellationTokenSource = new CancellationTokenSource();
+            _cancellationTokenSource = cancellationTokenSource;
+            _linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
 
-            await GetSeedNodeHostAsync().ConfigureAwait(false);
-            await StartConnectingToSeedNetworkAsync().ConfigureAwait(false);
+            var seedNodeIpAddressesPing = new Dictionary<string, long>();
+
+            using (var ping = new Ping())
+            {
+                var seedNodeIpAddresses = _seedNodeIpAddresses;
+
+                foreach (var seedNodeIpAddress in seedNodeIpAddresses)
+                {
+                    try
+                    {
+                        var result = await ping.SendPingAsync(seedNodeIpAddress).ConfigureAwait(false);
+
+                        if (result.Status == IPStatus.Success)
+                        {
+                            seedNodeIpAddressesPing.Add(seedNodeIpAddress, result.RoundtripTime);
+                        }
+                    }
+                    catch (PingException)
+                    {
+                        seedNodeIpAddressesPing.Add(seedNodeIpAddress, -1);
+                    }
+                }
+            }
+
+            var sortedSeedNodeIpAddressesPing = seedNodeIpAddressesPing.OrderBy(a => a.Value);
+            var newSeedNodeIpAddresses = new List<string>();
+            var index = 1;
+
+            foreach (var (ipAddress, ping) in sortedSeedNodeIpAddressesPing)
+            {
+                if (ping == -1) continue;
+
+                newSeedNodeIpAddresses.Add(ipAddress);
+                _logger.LogInformation(" \u001b[32;1m*\u001b[0m SOLO #{index,-7:l}\u001b[36;1m{nodeIp:l}\u001b[0m ({nodePing}ms)", index.ToString(), ipAddress, ping);
+                index++;
+            }
+
+            _seedNodeIpAddresses = newSeedNodeIpAddresses.ToArray();
+
+            CheckNetworkConnection();
         }
 
         public async Task StopAsync()
         {
-            if (!_isActive) return;
-            _isActive = false;
+            if (!IsActive) return;
+            IsActive = false;
 
             _cancellationTokenSource!.Cancel();
             _cancellationTokenSource!.Dispose();
-            _globalCancellationTokenSource!.Dispose();
+            _linkedCancellationTokenSource!.Dispose();
+
+            _cancellationTokenSource = null;
+            _linkedCancellationTokenSource = null;
 
             if (_checkConnectionNetworkTask != null)
             {
@@ -127,15 +176,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         {
             try
             {
-                await _semaphoreSlim.WaitAsync(_globalCancellationTokenSource!.Token).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                return;
-            }
-
-            try
-            {
                 if (_connectionStatus == ConnectionStatus.Disconnecting || _connectionStatus == ConnectionStatus.Disconnected) return;
 
                 if (isEncrypted)
@@ -143,8 +183,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                     var packetBytes = Encoding.UTF8.GetBytes(packet);
                     var packetLength = packetBytes.Length;
 
-                    var paddingBlockSize = _aes.BlockSize / 8;
-                    var paddingSizeRequired = paddingBlockSize - packetLength % paddingBlockSize;
+                    var paddingSizeRequired = 16 - packetLength % 16;
                     var paddedBytes = ArrayPool<byte>.Shared.Rent(packetLength + paddingSizeRequired);
 
                     try
@@ -154,6 +193,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                         for (var i = 0; i < paddingSizeRequired; i++)
                         {
                             paddedBytes[packetLength + i] = (byte) paddingSizeRequired;
+                        }
+
+                        try
+                        {
+                            await _semaphoreSlim.WaitAsync(_linkedCancellationTokenSource!.Token).ConfigureAwait(false);
+                        }
+                        catch (Exception)
+                        {
+                            return;
                         }
 
                         var encryptedPacketBytes = _aesEncryptor.TransformFinalBlock(paddedBytes, 0, packetLength + paddingSizeRequired);
@@ -168,6 +216,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                 }
                 else
                 {
+                    try
+                    {
+                        await _semaphoreSlim.WaitAsync(_linkedCancellationTokenSource!.Token).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        return;
+                    }
+
                     await _tcpClientWriter!.WriteAsync(packet).ConfigureAwait(false);
                     await _tcpClientWriter.FlushAsync().ConfigureAwait(false);
                 }
@@ -182,56 +239,64 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             }
         }
 
-        private async Task GetSeedNodeHostAsync()
+        private void CheckNetworkConnection()
         {
-            var seedNodeIpAddressesPing = new Dictionary<string, long>();
+            if (_checkConnectionNetworkTask != null) return;
 
-            using (var ping = new Ping())
+            var cancellationToken = _linkedCancellationTokenSource!.Token;
+
+            _checkConnectionNetworkTask = Task.Factory.StartNew(async state =>
             {
-                foreach (var seedNodeIpAddress in _xirorigConfiguration.SeedNodeIpAddresses)
+                if (!(state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState))) return;
+
+                while (xirorigToSeedNetwork.IsActive && !cancellationTokenState.IsCancellationRequested)
                 {
+                    switch (xirorigToSeedNetwork.ConnectionStatus)
+                    {
+                        case ConnectionStatus.Connected when DateTimeOffset.Now - xirorigToSeedNetwork.LastValidPacketDateTimeOffset > TimeSpan.FromSeconds(5000):
+                            await xirorigToSeedNetwork.DisconnectFromSeedNetworkAsync().ConfigureAwait(false);
+                            break;
+
+                        case ConnectionStatus.Disconnected:
+                            await xirorigToSeedNetwork.ConnectToSeedNetworkAsync().ConfigureAwait(false);
+                            break;
+
+                        case ConnectionStatus.Connecting:
+                            break;
+
+                        case ConnectionStatus.Disconnecting:
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
                     try
                     {
-                        var result = await ping.SendPingAsync(seedNodeIpAddress).ConfigureAwait(false);
-
-                        if (result.Status == IPStatus.Success)
-                        {
-                            seedNodeIpAddressesPing.Add(seedNodeIpAddress, result.RoundtripTime);
-                        }
+                        await Task.Delay(1000, cancellationTokenState).ConfigureAwait(false);
                     }
-                    catch (PingException)
+                    catch (TaskCanceledException)
                     {
-                        seedNodeIpAddressesPing.Add(seedNodeIpAddress, -1);
+                        return;
                     }
                 }
-            }
-
-            var sortedSeedNodeIpAddressesPing = seedNodeIpAddressesPing.OrderBy(a => a.Value);
-            var seedNodeIpAddresses = new List<string>();
-            var index = 0;
-
-            foreach (var (ipAddress, ping) in sortedSeedNodeIpAddressesPing)
-            {
-                seedNodeIpAddresses.Add(ipAddress);
-                _logger.LogInformation(" \u001b[32;1m*\u001b[0m SOLO #{index,-7:l}\u001b[36;1m{nodeIp:l}\u001b[0m ({nodePing}ms)", (++index).ToString(), ipAddress, ping);
-            }
-
-            _seedNodeIpAddresses = seedNodeIpAddresses.ToArray();
+            }, (this, cancellationToken), cancellationToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
         }
 
-        private async Task StartConnectingToSeedNetworkAsync()
+        private async Task ConnectToSeedNetworkAsync()
         {
-            if (_connectionStatus == ConnectionStatus.Connecting || _connectionStatus == ConnectionStatus.Connected) return;
+            var currentConnectionStatus = ConnectionStatus;
+            if (currentConnectionStatus == ConnectionStatus.Connecting || currentConnectionStatus == ConnectionStatus.Connected) return;
 
-            _connectionStatus = ConnectionStatus.Connecting;
-            _isActive = true;
+            ConnectionStatus = ConnectionStatus.Connecting;
 
-            StartCheckingNetworkConnection();
-
-            if (++_seedNodeIpAddressRetryCount > 5 && ++_seedNodeIpAddressIndex > _seedNodeIpAddresses!.Length)
+            if (++_seedNodeIpAddressRetryCount > 5 && ++_seedNodeIpAddressIndex > _seedNodeIpAddresses.Length)
             {
                 _seedNodeIpAddressIndex = 0;
             }
+
+            var seedNodeIpAddress = _seedNodeIpAddresses[_seedNodeIpAddressIndex];
+            var linkedCancellationToken = _linkedCancellationTokenSource!.Token;
 
             try
             {
@@ -239,30 +304,30 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
                 using (var connectTimeoutCancellationTokenSource = new CancellationTokenSource(5000))
                 {
-                    using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_globalCancellationTokenSource!.Token, connectTimeoutCancellationTokenSource.Token))
+                    using (var linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(linkedCancellationToken, connectTimeoutCancellationTokenSource.Token))
                     {
-                        await _tcpClient.ConnectAsync(IPAddress.Parse(_seedNodeIpAddresses![_seedNodeIpAddressIndex]), _xirorigConfiguration.SeedNodePort, linkedCancellationTokenSource.Token).ConfigureAwait(false);
+                        await _tcpClient.ConnectAsync(IPAddress.Parse(seedNodeIpAddress), ClassConnectorSetting.SeedNodePort, linkedCancellationTokenSource.Token).ConfigureAwait(false);
                     }
                 }
 
                 _tcpClientReader = new StreamReader(_tcpClient.GetStream());
                 _tcpClientWriter = new StreamWriter(_tcpClient.GetStream());
 
+                var walletAddress = _walletAddress;
+
                 if (!_isWalletAddressValid)
                 {
-                    var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5), BaseAddress = new Uri($"http://{_seedNodeIpAddresses[_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodeTokenPort}/") };
+                    var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5), BaseAddress = new Uri($"http://{seedNodeIpAddress}:{ClassConnectorSetting.SeedNodeTokenPort}/") };
                     httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Xirorig", Assembly.GetExecutingAssembly().GetName().Version?.ToString()));
 
-                    var jsonString = await httpClient.GetStringAsync($"{ClassConnectorSettingEnumeration.WalletTokenType}|{ClassRpcWalletCommand.TokenCheckWalletAddressExist}|{_xirorigConfiguration.WalletAddress}", _globalCancellationTokenSource!.Token).ConfigureAwait(false);
+                    var jsonString = await httpClient.GetStringAsync($"{ClassConnectorSettingEnumeration.WalletTokenType}|{ClassRpcWalletCommand.TokenCheckWalletAddressExist}|{walletAddress}", linkedCancellationToken).ConfigureAwait(false);
                     var json = JObject.Parse(jsonString);
 
                     if (json.TryGetValue("result", StringComparison.OrdinalIgnoreCase, out var resultToken))
                     {
-                        var result = resultToken.Value<string>();
-
-                        if (result.StartsWith(ClassRpcWalletCommand.SendTokenCheckWalletAddressInvalid))
+                        if (resultToken.Value<string>().StartsWith(ClassRpcWalletCommand.SendTokenCheckWalletAddressInvalid))
                         {
-                            LoginResult?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}", false);
+                            LoginResult?.Invoke($"{seedNodeIpAddress}:{ClassConnectorSetting.SeedNodePort}", false);
                             await DisconnectFromSeedNetworkAsync().ConfigureAwait(false);
                             return;
                         }
@@ -271,11 +336,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                     _isWalletAddressValid = true;
                 }
 
-                _connectionStatus = ConnectionStatus.Connected;
+                ConnectionStatus = ConnectionStatus.Connected;
                 StartReadingPacketFromNetwork();
 
                 await SendPacketToNetworkAsync(_connectionCertificate, false).ConfigureAwait(false);
-                await SendPacketToNetworkAsync($"{ClassConnectorSettingEnumeration.MinerLoginType}|{_xirorigConfiguration.WalletAddress}", true).ConfigureAwait(false);
+                await SendPacketToNetworkAsync($"{ClassConnectorSettingEnumeration.MinerLoginType}|{walletAddress}", true).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -302,45 +367,19 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             Disconnected?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{_xirorigConfiguration.SeedNodePort}");
         }
 
-        private void StartCheckingNetworkConnection()
-        {
-            if (_checkConnectionNetworkTask != null) return;
-
-            _checkConnectionNetworkTask = Task.Factory.StartNew(async state =>
-            {
-                if (state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState))
-                {
-                    while (xirorigToSeedNetwork._isActive)
-                    {
-                        switch (xirorigToSeedNetwork._connectionStatus)
-                        {
-                            case ConnectionStatus.Connected when DateTimeOffset.Now - xirorigToSeedNetwork._lastValidPacketDateTimeOffset > TimeSpan.FromSeconds(5000):
-                                await xirorigToSeedNetwork.DisconnectFromSeedNetworkAsync().ConfigureAwait(false);
-                                break;
-
-                            case ConnectionStatus.Disconnected:
-                                await xirorigToSeedNetwork.StartConnectingToSeedNetworkAsync().ConfigureAwait(false);
-                                break;
-                        }
-
-                        await Task.Delay(1000, cancellationTokenState).ConfigureAwait(false);
-                    }
-                }
-            }, (this, _globalCancellationTokenSource!.Token), _globalCancellationTokenSource!.Token, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
-        }
-
         private void StartReadingPacketFromNetwork()
         {
-            _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
+            LastValidPacketDateTimeOffset = DateTimeOffset.Now;
+            var cancellationToken = _linkedCancellationTokenSource!.Token;
 
             _readPacketFromNetworkTask = Task.Factory.StartNew(async state =>
             {
-                if (state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationToken))
+                if (state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState))
                 {
-                    var buffer = ArrayPool<char>.Shared.Rent(ClassConnectorSetting.MaxNetworkPacketSize);
+                    var buffer = new char[ClassConnectorSetting.MaxNetworkPacketSize];
                     var tcpClientReader = xirorigToSeedNetwork._tcpClientReader;
 
-                    while (xirorigToSeedNetwork._connectionStatus == ConnectionStatus.Connected)
+                    while (xirorigToSeedNetwork.IsActive && !cancellationTokenState.IsCancellationRequested && xirorigToSeedNetwork.ConnectionStatus == ConnectionStatus.Connected)
                     {
                         try
                         {
@@ -349,7 +388,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                             if (networkStream.DataAvailable)
                             {
                                 var bufferSize = await tcpClientReader!.ReadAsync(buffer, 0, ClassConnectorSetting.MaxNetworkPacketSize).ConfigureAwait(false);
-                                var decryptedPackets = GetDecryptedPackets(buffer.AsSpan(), bufferSize);
+                                var decryptedPackets = GetDecryptedPackets(buffer, bufferSize);
 
                                 _ = Task.Factory.StartNew(async innerState =>
                                 {
@@ -357,41 +396,54 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                                     {
                                         await HandlePacketFromNetworkAsync(decryptedPacketsState).ConfigureAwait(false);
                                     }
-                                }, decryptedPackets, cancellationToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+                                }, decryptedPackets, cancellationTokenState, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
                             }
 
-                            await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+                            await Task.Delay(1, cancellationTokenState).ConfigureAwait(false);
                         }
                         catch (Exception)
                         {
-                            if (cancellationToken.IsCancellationRequested) return;
+                            if (cancellationTokenState.IsCancellationRequested) return;
                             await xirorigToSeedNetwork.DisconnectFromSeedNetworkAsync().ConfigureAwait(false);
                         }
                     }
-
-                    ArrayPool<char>.Shared.Return(buffer);
                 }
-            }, (this, _globalCancellationTokenSource!.Token), _globalCancellationTokenSource!.Token, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
+            }, (this, cancellationToken), cancellationToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
         }
 
-        private string[] GetDecryptedPackets(Span<char> buffer, int bufferSize)
+        private string[] GetDecryptedPackets(char[] buffer, int bufferSize)
         {
             var result = new List<string>();
-            var currentBuffer = buffer.Slice(0, bufferSize);
+            var aesDecryptor = _aesDecryptor;
+            var index = 0;
 
             do
             {
-                var indexToSlice = currentBuffer.IndexOf('*');
-                var packet = currentBuffer.Slice(0, indexToSlice);
-                var packetBytes = Convert.FromBase64CharArray(packet.ToArray(), 0, packet.Length);
+                var isEnd = true;
 
-                var decryptedPaddedBytes = _aesDecryptor.TransformFinalBlock(packetBytes, 0, packetBytes.Length).AsSpan();
-                var decryptedBytes = decryptedPaddedBytes.Slice(0, decryptedPaddedBytes.Length - decryptedPaddedBytes[^1]);
+                for (var i = index; i < bufferSize; i++)
+                {
+                    if (buffer[i] != '*') continue;
 
-                result.Add(Encoding.UTF8.GetString(decryptedBytes));
+                    var packetBytes = Convert.FromBase64CharArray(buffer, index, i - index);
+                    var decryptedPaddedBytes = aesDecryptor.TransformFinalBlock(packetBytes, 0, packetBytes.Length);
+                    
+                    result.Add(Encoding.UTF8.GetString(decryptedPaddedBytes, 0, decryptedPaddedBytes.Length - decryptedPaddedBytes[^1]));
 
-                currentBuffer = currentBuffer.Slice(indexToSlice + 1);
-            } while (currentBuffer.Length > 0);
+                    index = i + 1;
+                    isEnd = false;
+                    break;
+                }
+
+                if (!isEnd) continue;
+                {
+                    var packetBytes = Convert.FromBase64CharArray(buffer, index, bufferSize - index);
+                    var decryptedPaddedBytes = aesDecryptor.TransformFinalBlock(packetBytes, 0, packetBytes.Length);
+
+                    result.Add(Encoding.UTF8.GetString(decryptedPaddedBytes, 0, decryptedPaddedBytes.Length - decryptedPaddedBytes[^1]));
+                    break;
+                }
+            } while (index < bufferSize);
 
             return result.ToArray();
         }
@@ -487,7 +539,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         public void Dispose()
         {
             _cancellationTokenSource?.Dispose();
-            _globalCancellationTokenSource?.Dispose();
+            _linkedCancellationTokenSource?.Dispose();
             _tcpClient?.Dispose();
             _tcpClientReader?.Dispose();
             _tcpClientWriter?.Dispose();

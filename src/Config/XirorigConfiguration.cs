@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
+using Xiropht_Connector_All.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Config
 {
@@ -8,48 +9,61 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
     {
         public int PrintTime { get; }
 
-        public string WalletAddress { get; }
+        public string? WalletAddress { get; }
 
         public string[] SeedNodeIpAddresses { get; }
-
-        public int SeedNodePort { get; }
-
-        public int SeedNodeTokenPort { get; }
 
         public MinerThreadConfiguration[] MinerThreadConfigurations { get; }
 
         public XirorigConfiguration(IConfiguration configuration)
         {
-            PrintTime = configuration.GetValue<int>("Xirorig:PrintTime");
-            WalletAddress = configuration.GetValue<string>("Xirorig:WalletAddress");
+            PrintTime = configuration.GetValue("Xirorig:PrintTime", 10);
+            WalletAddress = configuration.GetValue<string?>("Xirorig:WalletAddress");
 
-            var seedNodeIpAddressesConfig = configuration.GetSection("Xirorig:SeedNodeIpAddresses").GetChildren();
+            var seedNodeIpAddressesSection = configuration.GetSection("Xirorig:SeedNodeIpAddresses").GetChildren();
             var seedNodeIpAddresses = new List<string>();
 
-            foreach (var configurationSection in seedNodeIpAddressesConfig)
+            foreach (var seedNoteIdAddressSection in seedNodeIpAddressesSection)
             {
-                seedNodeIpAddresses.Add(configurationSection.Value);
+                seedNodeIpAddresses.Add(seedNoteIdAddressSection.Value);
+            }
+
+            if (seedNodeIpAddresses.Count == 0)
+            {
+                var defaultSeedNodeIpAddresses = ClassConnectorSetting.SeedNodeIp.Keys;
+
+                foreach (var defaultSeedNodeIpAddress in defaultSeedNodeIpAddresses)
+                {
+                    seedNodeIpAddresses.Add(defaultSeedNodeIpAddress);
+                }
             }
 
             SeedNodeIpAddresses = seedNodeIpAddresses.ToArray();
 
-            SeedNodePort = configuration.GetValue<int>("Xirorig:SeedNodePort");
-            SeedNodeTokenPort = configuration.GetValue<int>("Xirorig:SeedNodeTokenPort");
+            var defaultNumberOfThreads = configuration.GetValue("Xirorig:NumberOfThreads", 1);
+            var defaultThreadPriority = configuration.GetValue("Xirorig:ThreadPriority", ThreadPriority.Normal);
+            var defaultMinMiningRangePercentage = configuration.GetValue("Xirorig:MinMiningRangePercentage", 0);
+            var defaultMaxMiningRangePercentage = configuration.GetValue("Xirorig:MaxMiningRangePercentage", 100);
+            var defaultEasyBlockOnly = configuration.GetValue("Xirorig:EasyBlockOnly", false);
+            var defaultMinerThreadConfiguration = new MinerThreadConfiguration(defaultThreadPriority, defaultMinMiningRangePercentage, defaultMaxMiningRangePercentage, defaultEasyBlockOnly);
 
-            var threadsConfig = configuration.GetSection("Xirorig:Threads").GetChildren();
-            var miningThreads = new List<MinerThreadConfiguration>();
+            var minerThreadConfigurationsSection = configuration.GetSection("Xirorig:Threads").GetChildren();
+            var minerThreadConfigurations = new List<MinerThreadConfiguration>();
 
-            foreach (var configurationSection in threadsConfig)
+            foreach (var minerThreadConfigurationSection in minerThreadConfigurationsSection)
             {
-                miningThreads.Add(new MinerThreadConfiguration(
-                    configurationSection.GetValue<ThreadPriority>("ThreadPriority"),
-                    configurationSection.GetValue<bool>("ShareRange"),
-                    configurationSection.GetValue<int>("MinMiningRangePercentage"),
-                    configurationSection.GetValue<int>("MaxMiningRangePercentage"))
-                );
+                minerThreadConfigurations.Add(new MinerThreadConfiguration(minerThreadConfigurationSection, defaultMinerThreadConfiguration));
             }
 
-            MinerThreadConfigurations = miningThreads.ToArray();
+            if (minerThreadConfigurations.Count == 0)
+            {
+                for (var i = defaultNumberOfThreads - 1; i >= 0; i--)
+                {
+                    minerThreadConfigurations.Add(defaultMinerThreadConfiguration);
+                }
+            }
+
+            MinerThreadConfigurations = minerThreadConfigurations.ToArray();
         }
     }
 }

@@ -1,23 +1,32 @@
 ﻿using System.Threading;
+using Microsoft.Extensions.Configuration;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Config
 {
-    public class MinerThreadConfiguration
+    public readonly struct MinerThreadConfiguration
     {
         public ThreadPriority ThreadPriority { get; }
-
-        public bool ShareRange { get; }
 
         public int MinMiningRangePercentage { get; }
 
         public int MaxMiningRangePercentage { get; }
 
-        public MinerThreadConfiguration(ThreadPriority threadPriority, bool shareRange, int minMiningRangePercentage, int maxMiningRangePercentage)
+        public bool EasyBlockOnly { get; }
+
+        public MinerThreadConfiguration(ThreadPriority threadPriority, int minMiningRangePercentage, int maxMiningRangePercentage, bool easyBlockOnly)
         {
             ThreadPriority = threadPriority;
-            ShareRange = shareRange;
             MinMiningRangePercentage = minMiningRangePercentage;
             MaxMiningRangePercentage = maxMiningRangePercentage;
+            EasyBlockOnly = easyBlockOnly;
+        }
+
+        public MinerThreadConfiguration(IConfiguration minerThreadConfigurationSection, in MinerThreadConfiguration defaultMinerThreadConfiguration)
+        {
+            ThreadPriority = minerThreadConfigurationSection.GetValue("ThreadPriority", defaultMinerThreadConfiguration.ThreadPriority);
+            MinMiningRangePercentage = minerThreadConfigurationSection.GetValue("MinMiningRangePercentage", defaultMinerThreadConfiguration.MinMiningRangePercentage);
+            MaxMiningRangePercentage = minerThreadConfigurationSection.GetValue("MaxMiningRangePercentage", defaultMinerThreadConfiguration.MaxMiningRangePercentage);
+            EasyBlockOnly = minerThreadConfigurationSection.GetValue("EasyBlockOnly", defaultMinerThreadConfiguration.EasyBlockOnly);
         }
     }
 }

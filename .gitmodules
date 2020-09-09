@@ -1,6 +1,3 @@
-[submodule "Xiropht-Connector-All"]
-	path = Xiropht-Connector-All
-	url = https://github.com/XIROPHT/Xiropht-Connector-All.git
 [submodule "TheDialgaTeam.Core.Logger"]
 	path = TheDialgaTeam.Core.Logger
 	url = https://github.com/TheDialgaTeam/TheDialgaTeam.Core.Logger.git

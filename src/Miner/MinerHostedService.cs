@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
@@ -35,7 +36,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         private long _totalBadSemiRandomBlocksSubmitted;
         private long _totalBadRandomBlocksSubmitted;
 
-        private readonly Dictionary<string, string> _blocksFound = new Dictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _blocksFound = new ConcurrentDictionary<string, string>();
 
         private readonly long[] _averageHashCalculatedIn10Seconds;
         private readonly long[] _averageHashCalculatedIn60Seconds;

@@ -229,6 +229,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                             }
 
                             if (cancellationToken.IsCancellationRequested) break;
+                            if (minerThreadConfiguration.EasyBlockOnly) continue;
                             cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeRandom, blockDifficulty!, jobMinRangeIntValue, jobMaxRangeIntValue);
 
                             var blockIndication = cpuSoloMiner._blockIndication;
@@ -342,6 +343,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                             }
 
                             if (cancellationToken.IsCancellationRequested) break;
+                            if (minerThreadConfiguration.EasyBlockOnly) continue;
                             cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeRandom, blockDifficulty!, jobMinRangeLongValue, jobMaxRangeLongValue);
 
                             var blockIndication = cpuSoloMiner._blockIndication;
