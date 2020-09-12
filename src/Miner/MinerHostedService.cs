@@ -255,8 +255,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
         private void CpuSoloMinerOnBlockFound(string arg1, string arg2, string arg3)
         {
-            _blocksFound.TryAdd(arg1, arg2);
-            _xirorigToSeedNetwork.EnqueuePacketToSent(new PacketToSend(arg3, true), PacketType.SubmitBlock);
+            if (_blocksFound.TryAdd(arg1, arg2))
+            {
+                _xirorigToSeedNetwork.EnqueuePacketToSent(arg3, true, PacketType.SubmitBlock);
+            }
         }
 
         private void AverageHashCalculatedIn10SecondsTimerOnElapsed(object sender, ElapsedEventArgs e)

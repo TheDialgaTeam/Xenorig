@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -67,9 +66,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         private Task? _readPacketFromNetworkTask;
         private Task? _writePacketToNetworkTask;
 
-        private readonly ConcurrentQueue<PacketToSend> _loginConcurrentQueue = new ConcurrentQueue<PacketToSend>();
-        private readonly ConcurrentQueue<PacketToSend> _submitBlockConcurrentQueue = new ConcurrentQueue<PacketToSend>();
-        private readonly ConcurrentQueue<PacketToSend> _receiveBlockConcurrentQueue = new ConcurrentQueue<PacketToSend>();
+        private readonly ConcurrentNetworkPacketQueue _concurrentNetworkPacketQueue = new ConcurrentNetworkPacketQueue();
 
         public XirorigToSeedNetwork(XirorigConfiguration xirorigConfiguration, ILogger<XirorigToSeedNetwork> logger)
         {
@@ -105,10 +102,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                 if (_isActive) return;
                 _isActive = true;
             }
-
-            _loginConcurrentQueue.Clear();
-            _submitBlockConcurrentQueue.Clear();
-            _receiveBlockConcurrentQueue.Clear();
 
             var cancellationTokenSource = new CancellationTokenSource();
             _cancellationTokenSource = cancellationTokenSource;
@@ -214,7 +207,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             }
         }
 
-        public void EnqueuePacketToSent(in PacketToSend packet, PacketType packetType)
+        public void EnqueuePacketToSent(string packet, bool isEncrypted, PacketType packetType)
         {
             lock (_connectionStatusLock)
             {
@@ -222,23 +215,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                 if (connectionStatus == ConnectionStatus.Disconnecting || connectionStatus == ConnectionStatus.Disconnected) return;
             }
 
-            switch (packetType)
-            {
-                case PacketType.Login:
-                    _loginConcurrentQueue.Enqueue(packet);
-                    break;
-
-                case PacketType.SubmitBlock:
-                    _submitBlockConcurrentQueue.Enqueue(packet);
-                    break;
-
-                case PacketType.ReceiveBlockTemplate:
-                    _receiveBlockConcurrentQueue.Enqueue(packet);
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            _concurrentNetworkPacketQueue.Enqueue(packet, isEncrypted, packetType);
         }
 
         private async Task ConnectToSeedNetworkAsync()
@@ -312,8 +289,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                 StartReadingPacketFromNetwork();
                 StartSendingPacketToNetwork();
 
-                EnqueuePacketToSent(new PacketToSend(_connectionCertificate, false), PacketType.Login);
-                EnqueuePacketToSent(new PacketToSend($"{ClassConnectorSettingEnumeration.MinerLoginType}|{walletAddress}", true), PacketType.Login);
+                EnqueuePacketToSent(_connectionCertificate, false, PacketType.Login);
+                EnqueuePacketToSent($"{ClassConnectorSettingEnumeration.MinerLoginType}|{walletAddress}", true, PacketType.Login);
             }
             catch (Exception)
             {
@@ -384,15 +361,15 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                         if (networkStream.DataAvailable)
                         {
                             var bufferSize = await tcpClientReader!.ReadAsync(buffer, 0, ClassConnectorSetting.MaxNetworkPacketSize).ConfigureAwait(false);
-                            var decryptedPackets = GetDecryptedPackets(buffer, bufferSize);
+                            var decryptedPackets = xirorigToSeedNetwork.GetDecryptedPackets(buffer, bufferSize);
 
                             _ = Task.Factory.StartNew(innerState =>
                             {
-                                if (innerState is string[] decryptedPacketsState)
+                                if (innerState is (XirorigToSeedNetwork xirorigToSeedNetworkState, string[] decryptedPacketsState))
                                 {
-                                    HandlePacketFromNetwork(decryptedPacketsState);
+                                    xirorigToSeedNetworkState.HandlePacketFromNetwork(decryptedPacketsState);
                                 }
-                            }, decryptedPackets, cancellationTokenState, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+                            }, (xirorigToSeedNetwork, decryptedPackets), cancellationTokenState, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
                         }
 
                         try
@@ -458,12 +435,12 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                     {
                         _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
                     }
-                    
+
                     _seedNodeIpAddressRetryCount = 0;
 
                     LoginResult?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{ClassConnectorSetting.SeedNodePort}", true);
 
-                    EnqueuePacketToSent(new PacketToSend(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true), PacketType.ReceiveBlockTemplate);
+                    EnqueuePacketToSent(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true, PacketType.ReceiveBlockTemplate);
                 }
                 else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendCurrentBlockMining))
                 {
@@ -483,9 +460,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                         currentBlockTemplate.Add(splitData[0], splitData[1]);
                     }
 
-                    if (currentBlockTemplate.ContainsKey("METHOD"))
+                    if (_currentWorkingBlockTemplate == null || _currentWorkingBlockTemplate["INDICATION"]!.Value<string>() != currentBlockTemplate["INDICATION"]!.Value<string>())
                     {
-                        EnqueuePacketToSent(new PacketToSend($"{ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskContentBlockMethod}|{currentBlockTemplate["METHOD"]}", true), PacketType.ReceiveBlockTemplate);
+                        EnqueuePacketToSent($"{ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskContentBlockMethod}|{currentBlockTemplate["METHOD"]}", true, PacketType.ReceiveBlockTemplate);
+                    }
+                    else
+                    {
+                        EnqueuePacketToSent(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true, PacketType.ReceiveBlockTemplate);
                     }
                 }
                 else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendContentBlockMethod))
@@ -503,16 +484,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                     currentBlockTemplate.Add("AESKEY", currentBlockData[2]);
                     currentBlockTemplate.Add("XORKEY", currentBlockData[3]);
 
-                    if (!string.IsNullOrWhiteSpace(currentBlockTemplate["INDICATION"]!.Value<string>()))
-                    {
-                        if (_currentWorkingBlockTemplate == null || _currentWorkingBlockTemplate["INDICATION"]!.Value<string>() != currentBlockTemplate["INDICATION"]!.Value<string>())
-                        {
-                            _currentWorkingBlockTemplate = currentBlockTemplate;
-                            NewJob?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{ClassConnectorSetting.SeedNodePort}", currentBlockTemplate);
-                        }
-                    }
+                    _currentWorkingBlockTemplate = currentBlockTemplate;
+                    NewJob?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{ClassConnectorSetting.SeedNodePort}", currentBlockTemplate);
 
-                    EnqueuePacketToSent(new PacketToSend(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true), PacketType.ReceiveBlockTemplate);
+                    EnqueuePacketToSent(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true, PacketType.ReceiveBlockTemplate);
                 }
                 else if (packet.StartsWith(ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration.SendJobStatus))
                 {
@@ -565,38 +540,11 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             {
                 if (!(state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState))) return;
 
-                var loginConcurrentQueue = xirorigToSeedNetwork._loginConcurrentQueue;
-                var submitBlockConcurrentQueue = xirorigToSeedNetwork._submitBlockConcurrentQueue;
-                var receiveBlockConcurrentQueue = xirorigToSeedNetwork._receiveBlockConcurrentQueue;
+                var concurrentNetworkPacketQueue = xirorigToSeedNetwork._concurrentNetworkPacketQueue;
 
                 while (xirorigToSeedNetwork._connectionStatus == ConnectionStatus.Connected)
                 {
-                    if (loginConcurrentQueue.TryDequeue(out var packetToSend))
-                    {
-                        await SendPacketToNetworkAsync(packetToSend).ConfigureAwait(false);
-                        continue;
-                    }
-
-                    if (submitBlockConcurrentQueue.TryDequeue(out packetToSend))
-                    {
-                        await SendPacketToNetworkAsync(packetToSend).ConfigureAwait(false);
-                        continue;
-                    }
-
-                    if (receiveBlockConcurrentQueue.TryDequeue(out packetToSend))
-                    {
-                        await SendPacketToNetworkAsync(packetToSend).ConfigureAwait(false);
-                        continue;
-                    }
-
-                    try
-                    {
-                        await Task.Delay(1, cancellationTokenState).ConfigureAwait(false);
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        break;
-                    }
+                    await xirorigToSeedNetwork.SendPacketToNetworkAsync(concurrentNetworkPacketQueue.Dequeue(cancellationTokenState)).ConfigureAwait(false);
                 }
             }, (this, cancellationToken), cancellationToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
         }
@@ -622,7 +570,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
                         for (var i = 0; i < paddingSizeRequired; i++)
                         {
-                            paddedBytes[packetLength + i] = (byte)paddingSizeRequired;
+                            paddedBytes[packetLength + i] = (byte) paddingSizeRequired;
                         }
 
                         var encryptedPacketBytes = _aesEncryptor.TransformFinalBlock(paddedBytes, 0, packetLength + paddingSizeRequired);
@@ -660,6 +608,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             _checkConnectionNetworkTask?.Dispose();
             _readPacketFromNetworkTask?.Dispose();
             _writePacketToNetworkTask?.Dispose();
+            _concurrentNetworkPacketQueue.Dispose();
         }
     }
 }
