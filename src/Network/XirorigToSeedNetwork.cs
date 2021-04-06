@@ -227,7 +227,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                 _connectionStatus = ConnectionStatus.Connecting;
             }
 
-            if (++_seedNodeIpAddressRetryCount > 5 && ++_seedNodeIpAddressIndex > _seedNodeIpAddresses.Length)
+            if (++_seedNodeIpAddressRetryCount > 5 && ++_seedNodeIpAddressIndex >= _seedNodeIpAddresses.Length)
             {
                 _seedNodeIpAddressIndex = 0;
             }
@@ -287,7 +287,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                 }
 
                 await StartReadingPacketFromNetworkAsync().ConfigureAwait(false);
-                await StartSendingPacketToNetworkAsync().ConfigureAwait(false);
+                StartSendingPacketToNetwork();
 
                 EnqueuePacketToSent(_connectionCertificate, false, PacketType.Login);
                 EnqueuePacketToSent($"{ClassConnectorSettingEnumeration.MinerLoginType}|{walletAddress}", true, PacketType.Login);
@@ -529,15 +529,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             }
         }
 
-        private async Task StartSendingPacketToNetworkAsync()
+        private void StartSendingPacketToNetwork()
         {
             var cancellationToken = _linkedCancellationTokenSource!.Token;
-
-            if (_writePacketToNetworkTask != null)
-            {
-                await _writePacketToNetworkTask.ConfigureAwait(false); ;
-                _writePacketToNetworkTask.Dispose();
-            }
+            if (_writePacketToNetworkTask != null) return;
 
             _writePacketToNetworkTask = Task.Factory.StartNew(async state =>
             {
@@ -545,7 +540,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
                 var concurrentNetworkPacketQueue = xirorigToSeedNetwork._concurrentNetworkPacketQueue;
 
-                while (xirorigToSeedNetwork._connectionStatus == ConnectionStatus.Connected)
+                while (xirorigToSeedNetwork._isActive)
                 {
                     await xirorigToSeedNetwork.SendPacketToNetworkAsync(concurrentNetworkPacketQueue.Dequeue(cancellationTokenState)).ConfigureAwait(false);
                 }
