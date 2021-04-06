@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Xiropht.Xirorig.Config;
 using TheDialgaTeam.Xiropht.Xirorig.Network;
+using Xiropht_Connector_All.SoloMining;
 using Timer = System.Timers.Timer;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Miner
@@ -258,6 +258,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             if (_blocksFound.TryAdd(arg1, arg2))
             {
                 _xirorigToSeedNetwork.EnqueuePacketToSent(arg3, true, PacketType.SubmitBlock);
+                _xirorigToSeedNetwork.EnqueuePacketToSent(ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration.ReceiveAskCurrentBlockMining, true, PacketType.SubmitBlock);
             }
         }
 

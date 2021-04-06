@@ -286,8 +286,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                     _connectionStatus = ConnectionStatus.Connected;
                 }
 
-                StartReadingPacketFromNetwork();
-                StartSendingPacketToNetwork();
+                await StartReadingPacketFromNetworkAsync().ConfigureAwait(false);
+                await StartSendingPacketToNetworkAsync().ConfigureAwait(false);
 
                 EnqueuePacketToSent(_connectionCertificate, false, PacketType.Login);
                 EnqueuePacketToSent($"{ClassConnectorSettingEnumeration.MinerLoginType}|{walletAddress}", true, PacketType.Login);
@@ -308,13 +308,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             }
 
             _tcpClientReader?.Dispose();
+            _tcpClientReader = null;
 
             if (_tcpClientWriter != null)
             {
                 await _tcpClientWriter.DisposeAsync().ConfigureAwait(false);
+                _tcpClientWriter = null;
             }
 
             _tcpClient?.Dispose();
+            _tcpClient = null;
 
             lock (_connectionStatusLock)
             {
@@ -324,7 +327,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             Disconnected?.Invoke($"{_seedNodeIpAddresses![_seedNodeIpAddressIndex]}:{ClassConnectorSetting.SeedNodePort}");
         }
 
-        private void StartReadingPacketFromNetwork()
+        private async Task StartReadingPacketFromNetworkAsync()
         {
             lock (_lastValidPacketDateTimeOffsetLock)
             {
@@ -335,7 +338,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
             if (_readPacketFromNetworkTask != null)
             {
-                _readPacketFromNetworkTask.Wait(cancellationToken);
+                await _readPacketFromNetworkTask.ConfigureAwait(false);
                 _readPacketFromNetworkTask.Dispose();
             }
 
@@ -526,13 +529,13 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             }
         }
 
-        private void StartSendingPacketToNetwork()
+        private async Task StartSendingPacketToNetworkAsync()
         {
             var cancellationToken = _linkedCancellationTokenSource!.Token;
 
             if (_writePacketToNetworkTask != null)
             {
-                _writePacketToNetworkTask.Wait(cancellationToken);
+                await _writePacketToNetworkTask.ConfigureAwait(false); ;
                 _writePacketToNetworkTask.Dispose();
             }
 

@@ -280,7 +280,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             } while (true);
         }
 
-        private static unsafe int GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, int minimumValue, int maximumValue)
+        public static unsafe int GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, int minimumValue, int maximumValue)
         {
             rngCryptoServiceProvider.GetBytes(randomNumberBytes);
 
@@ -290,14 +290,14 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                 if (factor <= MaxFloatPrecision)
                 {
-                    return minimumValue + (int) MathF.Max(0, *randomNumberPtr / 255f - 0.0000001f) * factor;
+                    return minimumValue + (int) (MathF.Max(0, *randomNumberPtr / 255f - 0.0000001f) * factor);
                 }
 
-                return minimumValue + (int) Math.Max(0, *randomNumberPtr / 255d - 0.00000000001) * factor;
+                return minimumValue + (int) (Math.Max(0, *randomNumberPtr / 255d - 0.00000000001) * factor);
             }
         }
 
-        private static unsafe long GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, long minimumValue, long maximumValue)
+        public static unsafe long GetRandomBetween(RNGCryptoServiceProvider rngCryptoServiceProvider, byte[] randomNumberBytes, long minimumValue, long maximumValue)
         {
             rngCryptoServiceProvider.GetBytes(randomNumberBytes);
 
@@ -307,10 +307,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
                 if (factor <= MaxFloatPrecision)
                 {
-                    return minimumValue + (long) MathF.Max(0, *randomNumberPtr / 255f - 0.0000001f) * factor;
+                    return minimumValue + (long) (MathF.Max(0, *randomNumberPtr / 255f - 0.0000001f) * factor);
                 }
 
-                return minimumValue + (long) Math.Max(0, *randomNumberPtr / 255d - 0.00000000001) * factor;
+                return minimumValue + (long) (Math.Max(0, *randomNumberPtr / 255d - 0.00000000001) * factor);
             }
         }
     }

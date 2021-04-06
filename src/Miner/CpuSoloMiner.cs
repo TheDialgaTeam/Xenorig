@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -21,6 +22,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
         private const int MaxFloatPrecision = 16777216;
         private const long MaxDoublePrecision = 9007199254740992;
+
+        private static readonly Dictionary<int, int[]> EasyBlockValues = new();
 
         private readonly RNGCryptoServiceProvider _rngCryptoServiceProvider;
         private readonly MinerThreadConfiguration _minerThreadConfiguration;
@@ -106,6 +109,21 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             }
         }
 
+        static CpuSoloMiner()
+        {
+            for (var i = 77000; i < 90000; i++)
+            {
+                var test = new int[256];
+
+                for (var j = 0; j < 256; j++)
+                {
+                    test[j] = 2 + (int) (MathF.Max(0, j / 255f - 0.0000001f) * (i - 1));
+                }
+
+                EasyBlockValues.Add(i, test);
+            }
+        }
+
         public CpuSoloMiner(RNGCryptoServiceProvider rngCryptoServiceProvider, MinerThreadConfiguration minerThreadConfiguration, int threadId)
         {
             _rngCryptoServiceProvider = rngCryptoServiceProvider;
@@ -167,101 +185,207 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                         {
                             // Initialize startRange, endRange, easyBlockNumbers
                             int startRange, endRange;
+                            var blockDifficulty = cpuSoloMiner._blockDifficulty;
 
-                            if (jobMaxRangeIntValue <= MaxFloatPrecision)
+                            if (EasyBlockValues.TryGetValue(jobMaxRangeIntValue, out var easyBlockNumbers2))
                             {
-                                startRange = Math.Max(jobMinRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MinMiningRangePercentage * 0.01f));
-                                endRange = Math.Min(jobMaxRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MaxMiningRangePercentage * 0.01f));
-
-                                fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
+                                if (jobMaxRangeIntValue <= MaxFloatPrecision)
                                 {
-                                    var easyBlockNumbersIntPtr = easyBlockNumbersPtr + 255;
+                                    startRange = Math.Max(jobMinRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MinMiningRangePercentage * 0.01f));
+                                    endRange = Math.Min(jobMaxRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MaxMiningRangePercentage * 0.01f));
+                                }
+                                else
+                                {
+                                    startRange = Math.Max(jobMinRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MinMiningRangePercentage * 0.01));
+                                    endRange = Math.Min(jobMaxRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MaxMiningRangePercentage * 0.01));
+                                }
 
-                                    for (var i = 255; i >= 0; i--)
+                                if (threadId == 0)
+                                {
+                                    if (cancellationToken.IsCancellationRequested) break;
+                                    cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeEasy, blockDifficulty!, jobMinRangeIntValue, jobMaxRangeIntValue);
+
+                                    fixed (int* easyBlockNumbersPtr = easyBlockNumbers2)
                                     {
-                                        *easyBlockNumbersIntPtr = jobMinRangeIntValue + (int) (MathF.Max(0, i / 255f - 0.0000001f) * (jobMaxRangeIntValue - jobMinRangeIntValue + 1));
-                                        easyBlockNumbersIntPtr--;
+                                        var easyBlockNumbersIntPtrI = easyBlockNumbersPtr + 255;
+
+                                        for (var i = 255; i >= 0; i--)
+                                        {
+                                            if (cancellationToken.IsCancellationRequested) break;
+                                            var easyBlockNumbersIntPtrJ = easyBlockNumbersPtr + 255;
+
+                                            for (var j = 255; j >= 0; j--)
+                                            {
+                                                // Addition Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI + *easyBlockNumbersIntPtrJ, "+", JobTypeEasy, blockId);
+
+                                                // Subtraction Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI - *easyBlockNumbersIntPtrJ, "-", JobTypeEasy, blockId);
+
+                                                // Multiplication Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI * *easyBlockNumbersIntPtrJ, "*", JobTypeEasy, blockId);
+
+                                                // Division Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI / *easyBlockNumbersIntPtrJ, "/", JobTypeEasy, blockId);
+
+                                                // Modulo Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI % *easyBlockNumbersIntPtrJ, "%", JobTypeEasy, blockId);
+
+                                                easyBlockNumbersIntPtrJ--;
+                                            }
+
+                                            easyBlockNumbersIntPtrI--;
+                                        }
+                                    }
+                                }
+
+                                if (cancellationToken.IsCancellationRequested) break;
+                                if (minerThreadConfiguration.EasyBlockOnly) continue;
+                                cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeRandom, blockDifficulty!, jobMinRangeIntValue, jobMaxRangeIntValue);
+
+                                var blockIndication = cpuSoloMiner._blockIndication;
+
+                                var startRangeSize = jobMinRange.Length;
+                                var endRangeSize = jobMaxRange.Length;
+
+                                while (blockIndication!.Equals(cpuSoloMiner._blockIndication) && !cpuSoloMiner._isBlockFound)
+                                {
+                                    if (cancellationToken.IsCancellationRequested) break;
+
+                                    var firstNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
+                                    var secondNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
+
+                                    DoMathCalculation(cpuSoloMiner, firstNumber, secondNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeRandom, blockId!);
+                                    DoMathCalculation(cpuSoloMiner, secondNumber, firstNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeRandom, blockId!);
+
+                                    fixed (int* easyBlockNumbersPtr = easyBlockNumbers2)
+                                    {
+                                        var easyBlockNumbersIntPtr = easyBlockNumbersPtr + 255;
+
+                                        for (var i = 255; i >= 0; i--)
+                                        {
+                                            var easyBlockNumber = *easyBlockNumbersIntPtr;
+
+                                            DoMathCalculation(cpuSoloMiner, firstNumber, easyBlockNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+                                            DoMathCalculation(cpuSoloMiner, easyBlockNumber, firstNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+
+                                            DoMathCalculation(cpuSoloMiner, secondNumber, easyBlockNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+                                            DoMathCalculation(cpuSoloMiner, easyBlockNumber, secondNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+
+                                            easyBlockNumbersIntPtr--;
+                                        }
                                     }
                                 }
                             }
                             else
                             {
-                                startRange = Math.Max(jobMinRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MinMiningRangePercentage * 0.01));
-                                endRange = Math.Min(jobMaxRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MaxMiningRangePercentage * 0.01));
-
-                                fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
+                                if (jobMaxRangeIntValue <= MaxFloatPrecision)
                                 {
-                                    var easyBlockNumbersIntPtr = easyBlockNumbersPtr + 255;
+                                    startRange = Math.Max(jobMinRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MinMiningRangePercentage * 0.01f));
+                                    endRange = Math.Min(jobMaxRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MaxMiningRangePercentage * 0.01f));
 
-                                    for (var i = 255; i >= 0; i--)
+                                    fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
                                     {
-                                        *easyBlockNumbersIntPtr = jobMinRangeIntValue + (int) (Math.Max(0, i / 255d - 0.00000000001) * (jobMaxRangeIntValue - jobMinRangeIntValue + 1));
-                                        easyBlockNumbersIntPtr--;
-                                    }
-                                }
-                            }
+                                        var easyBlockNumbersIntPtr = easyBlockNumbersPtr + 255;
 
-                            var blockDifficulty = cpuSoloMiner._blockDifficulty;
-
-                            if (threadId == 0)
-                            {
-                                if (cancellationToken.IsCancellationRequested) break;
-                                cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeEasy, blockDifficulty!, jobMinRangeIntValue, jobMaxRangeIntValue);
-
-                                fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
-                                {
-                                    var easyBlockNumbersIntPtrI = easyBlockNumbersPtr + 255;
-
-                                    for (var i = 255; i >= 0; i--)
-                                    {
-                                        if (cancellationToken.IsCancellationRequested) break;
-                                        var easyBlockNumbersIntPtrJ = easyBlockNumbersPtr + 255;
-
-                                        for (var j = 255; j >= 0; j--)
+                                        for (var i = 255; i >= 0; i--)
                                         {
-                                            DoMathCalculation(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeEasy, blockId!);
-                                            easyBlockNumbersIntPtrJ--;
+                                            *easyBlockNumbersIntPtr = jobMinRangeIntValue + (int) (MathF.Max(0, i / 255f - 0.0000001f) * (jobMaxRangeIntValue - jobMinRangeIntValue + 1));
+                                            easyBlockNumbersIntPtr--;
                                         }
-
-                                        easyBlockNumbersIntPtrI--;
                                     }
                                 }
-                            }
-
-                            if (cancellationToken.IsCancellationRequested) break;
-                            if (minerThreadConfiguration.EasyBlockOnly) continue;
-                            cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeRandom, blockDifficulty!, jobMinRangeIntValue, jobMaxRangeIntValue);
-
-                            var blockIndication = cpuSoloMiner._blockIndication;
-
-                            var startRangeSize = jobMinRange.Length;
-                            var endRangeSize = jobMaxRange.Length;
-
-                            while (blockIndication!.Equals(cpuSoloMiner._blockIndication) && !cpuSoloMiner._isBlockFound)
-                            {
-                                if (cancellationToken.IsCancellationRequested) break;
-
-                                var firstNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
-                                var secondNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
-
-                                DoMathCalculation(cpuSoloMiner, firstNumber, secondNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeRandom, blockId!);
-                                DoMathCalculation(cpuSoloMiner, secondNumber, firstNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeRandom, blockId!);
-
-                                fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
+                                else
                                 {
-                                    var easyBlockNumbersIntPtr = easyBlockNumbersPtr + 255;
+                                    startRange = Math.Max(jobMinRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MinMiningRangePercentage * 0.01));
+                                    endRange = Math.Min(jobMaxRangeIntValue, (int) (jobMaxRangeIntValue * minerThreadConfiguration.MaxMiningRangePercentage * 0.01));
 
-                                    for (var i = 255; i >= 0; i--)
+                                    fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
                                     {
-                                        var easyBlockNumber = *easyBlockNumbersIntPtr;
+                                        var easyBlockNumbersIntPtr = easyBlockNumbersPtr + 255;
 
-                                        DoMathCalculation(cpuSoloMiner, firstNumber, easyBlockNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
-                                        DoMathCalculation(cpuSoloMiner, easyBlockNumber, firstNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+                                        for (var i = 255; i >= 0; i--)
+                                        {
+                                            *easyBlockNumbersIntPtr = jobMinRangeIntValue + (int) (Math.Max(0, i / 255d - 0.00000000001) * (jobMaxRangeIntValue - jobMinRangeIntValue + 1));
+                                            easyBlockNumbersIntPtr--;
+                                        }
+                                    }
+                                }
 
-                                        DoMathCalculation(cpuSoloMiner, secondNumber, easyBlockNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
-                                        DoMathCalculation(cpuSoloMiner, easyBlockNumber, secondNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+                                if (threadId == 0)
+                                {
+                                    if (cancellationToken.IsCancellationRequested) break;
+                                    cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeEasy, blockDifficulty!, jobMinRangeIntValue, jobMaxRangeIntValue);
 
-                                        easyBlockNumbersIntPtr--;
+                                    fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
+                                    {
+                                        var easyBlockNumbersIntPtrI = easyBlockNumbersPtr + 255;
+
+                                        for (var i = 255; i >= 0; i--)
+                                        {
+                                            if (cancellationToken.IsCancellationRequested) break;
+                                            var easyBlockNumbersIntPtrJ = easyBlockNumbersPtr + 255;
+
+                                            for (var j = 255; j >= 0; j--)
+                                            {
+                                                // Addition Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI + *easyBlockNumbersIntPtrJ, "+", JobTypeEasy, blockId);
+
+                                                // Subtraction Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI - *easyBlockNumbersIntPtrJ, "-", JobTypeEasy, blockId);
+
+                                                // Multiplication Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI * *easyBlockNumbersIntPtrJ, "*", JobTypeEasy, blockId);
+
+                                                // Division Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI / *easyBlockNumbersIntPtrJ, "/", JobTypeEasy, blockId);
+
+                                                // Modulo Rule:
+                                                ValidateAndSubmitShare(cpuSoloMiner, *easyBlockNumbersIntPtrI, *easyBlockNumbersIntPtrJ, *easyBlockNumbersIntPtrI % *easyBlockNumbersIntPtrJ, "%", JobTypeEasy, blockId);
+
+                                                easyBlockNumbersIntPtrJ--;
+                                            }
+
+                                            easyBlockNumbersIntPtrI--;
+                                        }
+                                    }
+                                }
+
+                                if (cancellationToken.IsCancellationRequested) break;
+                                if (minerThreadConfiguration.EasyBlockOnly) continue;
+                                cpuSoloMiner.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[34;1mThread: {threadIndex} | Job Type: {jobType:l} | Job Difficulty: {JobDifficulty:l} | Job Range: {startRange}-{endRange}\u001b[0m", DateTimeOffset.Now, threadId, JobTypeRandom, blockDifficulty!, jobMinRangeIntValue, jobMaxRangeIntValue);
+
+                                var blockIndication = cpuSoloMiner._blockIndication;
+
+                                var startRangeSize = jobMinRange.Length;
+                                var endRangeSize = jobMaxRange.Length;
+
+                                while (blockIndication!.Equals(cpuSoloMiner._blockIndication) && !cpuSoloMiner._isBlockFound)
+                                {
+                                    if (cancellationToken.IsCancellationRequested) break;
+
+                                    var firstNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
+                                    var secondNumber = MiningUtility.GenerateNumberMathCalculation(rngCryptoServiceProvider, randomNumberBuffer, startRange, endRange, startRangeSize, endRangeSize);
+
+                                    DoMathCalculation(cpuSoloMiner, firstNumber, secondNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeRandom, blockId!);
+                                    DoMathCalculation(cpuSoloMiner, secondNumber, firstNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeRandom, blockId!);
+
+                                    fixed (int* easyBlockNumbersPtr = easyBlockNumbers)
+                                    {
+                                        var easyBlockNumbersIntPtr = easyBlockNumbersPtr + 255;
+
+                                        for (var i = 255; i >= 0; i--)
+                                        {
+                                            var easyBlockNumber = *easyBlockNumbersIntPtr;
+
+                                            DoMathCalculation(cpuSoloMiner, firstNumber, easyBlockNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+                                            DoMathCalculation(cpuSoloMiner, easyBlockNumber, firstNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+
+                                            DoMathCalculation(cpuSoloMiner, secondNumber, easyBlockNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+                                            DoMathCalculation(cpuSoloMiner, easyBlockNumber, secondNumber, jobMinRangeIntValue, jobMaxRangeIntValue, JobTypeSemiRandom, blockId!);
+
+                                            easyBlockNumbersIntPtr--;
+                                        }
                                     }
                                 }
                             }
