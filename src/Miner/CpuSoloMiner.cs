@@ -111,7 +111,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
         static CpuSoloMiner()
         {
-            for (var i = 77000; i < 90000; i++)
+            for (var i = 77000; i < 1000000 * 100 / (sizeof(int) * 256) + 77000; i++)
             {
                 var test = new int[256];
 
