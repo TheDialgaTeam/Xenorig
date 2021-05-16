@@ -1,0 +1,3 @@
+[submodule "TheDialgaTeam.Core.Logger"]
+	path = TheDialgaTeam.Core.Logger
+	url = https://github.com/TheDialgaTeam/TheDialgaTeam.Core.Logger.git
