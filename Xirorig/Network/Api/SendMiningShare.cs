@@ -4,7 +4,7 @@
     {
         internal class Request
         {
-            public int PacketType { get; set; } = 8;
+            public int PacketType { get; set; } = 10;
 
             public string PacketContentObjectSerialized { get; set; } = string.Empty;
         }

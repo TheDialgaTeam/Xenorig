@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -89,6 +90,7 @@ namespace Xirorig
                 _logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} SOLO #{{Index,-6}} {AnsiEscapeCodeConstants.CyanForegroundColor}{{Url:l}}{AnsiEscapeCodeConstants.Reset} algo {{Algorithm:l}}", false, i + 1, peerNodes[i].Url, peerNodes[i].Algorithm.ToString());
             }
 
+            _logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {{Color:l}}{{VectorIsSupported}}{AnsiEscapeCodeConstants.Reset}", false, "SIMD", Vector.IsHardwareAccelerated ? AnsiEscapeCodeConstants.GreenForegroundColor : AnsiEscapeCodeConstants.RedForegroundColor, Vector.IsHardwareAccelerated);
             _logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {AnsiEscapeCodeConstants.MagentaForegroundColor}h{AnsiEscapeCodeConstants.Reset}ashrate, {AnsiEscapeCodeConstants.MagentaForegroundColor}s{AnsiEscapeCodeConstants.Reset}tats, {AnsiEscapeCodeConstants.MagentaForegroundColor}j{AnsiEscapeCodeConstants.Reset}ob", false, "COMMANDS");
             _logger.LogInformation($"{AnsiEscapeCodeConstants.GreenForegroundColor}READY (CPU){AnsiEscapeCodeConstants.Reset} threads {AnsiEscapeCodeConstants.CyanForegroundColor}{{ThreadCount}}{AnsiEscapeCodeConstants.Reset}", true, _xirorigOptions.NumberOfThreads);
 
@@ -231,11 +233,11 @@ namespace Xirorig
 
         private async void CpuSoloMinerOnBlockFound(long heightFound, string shareJson)
         {
-            //lock (_cpuSoloMinerSyncRoot)
-            //{
-            //    if (_lastHeightFound == heightFound) return;
-            //    _lastHeightFound = heightFound;
-            //}
+            lock (_cpuSoloMinerSyncRoot)
+            {
+                if (_lastHeightFound == heightFound) return;
+                _lastHeightFound = heightFound;
+            }
 
             await _xirorigNetwork.SendMiningShareAsync(shareJson);
         }

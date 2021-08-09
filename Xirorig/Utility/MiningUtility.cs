@@ -19,7 +19,13 @@ namespace Xirorig.Utility
         private const string MathOperatorMultiplication = "*";
         private const string MathOperatorModulo = "%";
 
+        private static readonly Func<byte[], byte[]> DoNonceIvXorMiningInstructions;
         private static readonly BigInteger ShaPowCalculation = BigInteger.Pow(2, 512);
+
+        static MiningUtility()
+        {
+            DoNonceIvXorMiningInstructions = Vector.IsHardwareAccelerated ? NonceIvXorMiningInstructionsVectorized : NonceIvXorMiningInstructions;
+        }
 
         public static void GeneratePocRandomData(byte[] pocRandomData, byte[] randomNumberBytes, RandomNumberGenerator randomNumberGenerator, BlockTemplate blockTemplate, byte[] walletAddress, long nonce, long timestamp)
         {
@@ -118,26 +124,24 @@ namespace Xirorig.Utility
             var blockHeight = blockTemplate.CurrentBlockHeight;
 
             // block height
-            pocRandomData[offset] = (byte) (blockHeight & 0xFF);
-            pocRandomData[offset + 1] = (byte) ((blockHeight & 0xFF_00) >> 8);
-            pocRandomData[offset + 2] = (byte) ((blockHeight & 0xFF_00_00) >> 16);
-            pocRandomData[offset + 3] = (byte) ((blockHeight & 0xFF_00_00_00) >> 24);
-            pocRandomData[offset + 4] = (byte) ((blockHeight & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[offset + 5] = (byte) ((blockHeight & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[offset + 6] = (byte) ((blockHeight & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[offset + 7] = (byte) ((blockHeight & 0x7F_00_00_00_00_00_00_00) >> 56);
-
-            offset += 8;
+            pocRandomData[offset++] = (byte) (blockHeight & 0xFF);
+            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00) >> 8);
+            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00) >> 16);
+            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00) >> 24);
+            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00_00) >> 32);
+            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00_00_00) >> 40);
+            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00_00_00_00) >> 48);
+            pocRandomData[offset++] = (byte) ((blockHeight & 0x7F_00_00_00_00_00_00_00) >> 56);
 
             // nonce
             pocRandomData[offset] = (byte) (nonce & 0xFF);
-            pocRandomData[offset + 1] = (byte) ((nonce & 0xFF_00) >> 8);
-            pocRandomData[offset + 2] = (byte) ((nonce & 0xFF_00_00) >> 16);
-            pocRandomData[offset + 3] = (byte) ((nonce & 0xFF_00_00_00) >> 24);
-            pocRandomData[offset + 4] = (byte) ((nonce & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[offset + 5] = (byte) ((nonce & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[offset + 6] = (byte) ((nonce & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[offset + 7] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00) >> 8);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00) >> 16);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00) >> 24);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00) >> 32);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00) >> 40);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00_00) >> 48);
+            pocRandomData[offset] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
         }
 
         public static void UpdatePocRandomData(byte[] pocRandomData, BlockTemplate blockTemplate, long nonce, long timestamp)
@@ -157,14 +161,14 @@ namespace Xirorig.Utility
             var offset = 16 + minerSettings.RandomDataShareChecksum + minerSettings.WalletAddressDataSize + 8;
 
             // nonce
-            pocRandomData[offset] = (byte) (nonce & 0xFF);
-            pocRandomData[offset + 1] = (byte) ((nonce & 0xFF_00) >> 8);
-            pocRandomData[offset + 2] = (byte) ((nonce & 0xFF_00_00) >> 16);
-            pocRandomData[offset + 3] = (byte) ((nonce & 0xFF_00_00_00) >> 24);
-            pocRandomData[offset + 4] = (byte) ((nonce & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[offset + 5] = (byte) ((nonce & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[offset + 6] = (byte) ((nonce & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[offset + 7] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocRandomData[offset++] = (byte) (nonce & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00) >> 8);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00) >> 16);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00) >> 24);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00) >> 32);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00) >> 40);
+            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00_00) >> 48);
+            pocRandomData[offset] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
         }
 
         public static bool DoPowShare(MiningPowShare miningPowShare, BlockTemplate blockTemplate, Sha3Digest sha3Digest, RijndaelManaged rijndaelManaged, IAlgorithm algorithm, string walletAddress, long nonce, long timestamp, byte[] pocRandomData, byte[] previousFinalBlockTransactionHashKey)
@@ -173,6 +177,7 @@ namespace Xirorig.Utility
 
             var minerSettings = blockTemplate.MiningSettings;
             var miningInstructions = minerSettings.MiningInstructions;
+            var doNonceIvXorMiningInstructions = DoNonceIvXorMiningInstructions;
 
             foreach (var miningInstruction in miningInstructions)
             {
@@ -196,20 +201,13 @@ namespace Xirorig.Utility
                                 Sha3Utility.DoSha3512Hash(sha3Digest, pocShareIv, pocShareIv);
                             }
                         }
-                        
+
                         break;
                     }
 
                     case MiningInstruction.DoNonceIvXor:
                     {
-                        var pocShareIvMath = new byte[pocShareIv.Length];
-
-                        for (var i = 0; i < pocShareIv.Length; i++)
-                        {
-                            pocShareIvMath[i] = (byte) (pocShareIv[i] ^ pocShareIv[^(i + 1)]);
-                        }
-
-                        pocShareIv = pocShareIvMath;
+                        pocShareIv = doNonceIvXorMiningInstructions(pocShareIv);
                         break;
                     }
 
@@ -353,7 +351,7 @@ namespace Xirorig.Utility
                                 {
                                     paddedBytes[packetLength + j] = (byte) paddingSizeRequired;
                                 }
-
+                                
                                 pocRandomData = cryptoTransform.TransformFinalBlock(paddedBytes, 0, paddedLength);
                             }
                             finally
@@ -382,7 +380,7 @@ namespace Xirorig.Utility
             return true;
         }
 
-        public static unsafe int GetRandomBetween(RandomNumberGenerator randomNumberGenerator, byte[] randomNumberBytes, int minimumValue, int maximumValue)
+        private static unsafe int GetRandomBetween(RandomNumberGenerator randomNumberGenerator, byte[] randomNumberBytes, int minimumValue, int maximumValue)
         {
             randomNumberGenerator.GetBytes(randomNumberBytes);
 
@@ -397,6 +395,52 @@ namespace Xirorig.Utility
 
                 return minimumValue + (int) (Math.Max(0, *randomNumberPtr / 255d - 0.00000000001) * factor);
             }
+        }
+
+        private static byte[] NonceIvXorMiningInstructions(byte[] pocShareIv)
+        {
+            var pocShareIvLength = pocShareIv.Length;
+            var pocShareIvMath = new byte[pocShareIvLength];
+
+            for (var i = 0; i < pocShareIvLength; i++)
+            {
+                pocShareIvMath[i] = (byte) (pocShareIv[i] ^ pocShareIv[^(1 + i)]);
+            }
+
+            return pocShareIvMath;
+        }
+
+        private static unsafe byte[] NonceIvXorMiningInstructionsVectorized(byte[] pocShareIv)
+        {
+            var pocShareIvLength = pocShareIv.Length;
+            var pocShareIvMath = new byte[pocShareIvLength];
+
+            var vectorSize = Vector<byte>.Count;
+            var i = 0;
+
+            var pocShareIvSpan = pocShareIv.AsSpan();
+            Span<byte> pocShareIvReverseSpan = stackalloc byte[pocShareIvLength];
+            pocShareIvSpan.CopyTo(pocShareIvReverseSpan);
+            pocShareIvReverseSpan.Reverse();
+
+            if (pocShareIvLength >= vectorSize)
+            {
+                var iterationSize = pocShareIvLength / vectorSize * vectorSize;
+
+                for (; i < iterationSize; i += vectorSize)
+                {
+                    var test = new Vector<byte>(pocShareIvSpan.Slice(i, vectorSize));
+                    var test2 = new Vector<byte>(pocShareIvReverseSpan.Slice(i, vectorSize));
+                    Vector.Xor(test, test2).CopyTo(pocShareIvMath, i);
+                }
+            }
+
+            for (; i < pocShareIvLength; i++)
+            {
+                pocShareIvMath[i] = (byte) (pocShareIvSpan[i] ^ pocShareIvReverseSpan[i]);
+            }
+
+            return pocShareIvMath;
         }
     }
 }

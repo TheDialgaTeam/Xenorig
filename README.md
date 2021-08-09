@@ -1,5 +1,5 @@
 # Xirorig
-***The name is inspired by [XMRig](https://github.com/xmrig/xmrig) and thus the similarity in design. The codes are 100% original.***
+***This miner is inspired by [XMRig](https://github.com/xmrig/xmrig) and thus the similarity in UI design. The codes are 100% original.***
 
 [![Build status](https://ci.appveyor.com/api/projects/status/bub2nmai1dhy9aah?svg=true)](https://ci.appveyor.com/project/jianmingyong/xirorig)
 
