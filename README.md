@@ -3,7 +3,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/bub2nmai1dhy9aah?svg=true)](https://ci.appveyor.com/project/jianmingyong/xirorig)
 
-Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support for Windows, Linux and MacOS. Originally based on [Xiropht-Solo-Miner](https://github.com/XIROPHT/Xiropht-Solo-Miner) with heavy optimizations/rewrites.
+Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support for Windows, Linux and MacOS. Originally based on [SeguraChain-Solo-Miner](https://github.com/SamSegura/segurachain) with heavy optimizations/rewrites.
 
 - This is the **CPU mining** version. There is no GPU version at the moment.
 
@@ -19,7 +19,7 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 ## Features
 - High performance.
 - Official Windows support, Linux and MacOS. (Includes Raspberry PI as well)
-- x86/x64/arm support.
+- x86/x64/arm/arm64 support.
 - Support for backup (failover) mining server.
 - It's open source software.
 
@@ -27,19 +27,19 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 - Binary releases: https://github.com/TheDialgaTeam/Xirorig/releases
 
 ## Other information
-- Pool support has dropped.
+- Donation fee is not included.
 
 ### CPU mining performance
-- Intel i7-4790K @ 4.00GHz - 136 KH/s (1 thread)
-- Intel i7-8750H @ 2.22GHz - 250 KH/s (1 thread)
+- Intel i7-4790K @ 4.00GHz - NA KH/s (1 thread)
+- Intel i7-8750H @ 2.22GHz - 6.3 KH/s (1 thread)
 
 Please note performance is highly dependent on system load. The numbers above are obtained on an idle system. Tasks heavily using a processor, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the number of cores you have on your cpu.
 
 ### Maximum performance checklist
 - Idle operating system.
 - Do not exceed optimal thread count.
-- Use modern CPUs with AES-NI instruction set.
 - Try setup optimal cpu affinity.
+- Use modern hardware that supports SIMD instructions.
 
 ## Donations
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`
