@@ -27,7 +27,7 @@ assignees: jianmingyong
 
 **Application Version:**
 <!-- Please delete where applicable -->
-- 0.2.0.0
+- 0.2.2.0
 
 **Operating System:**
 <!-- Please delete where applicable -->
