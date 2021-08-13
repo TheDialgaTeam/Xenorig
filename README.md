@@ -7,7 +7,7 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 
 - This is the **CPU mining** version. There is no GPU version at the moment.
 
-![Console_Image](https://raw.githubusercontent.com/TheDialgaTeam/Xirorig/new_master/Screenshot.png)
+![Console_Image](https://raw.githubusercontent.com/TheDialgaTeam/Xirorig/xirorig_decentralized_solo/Screenshot.png)
 
 #### Table of contents
 - [Features](#Features)
