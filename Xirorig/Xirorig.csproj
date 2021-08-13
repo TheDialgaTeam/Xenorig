@@ -14,6 +14,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Platforms>AnyCPU;x64;x86</Platforms>
 		<Nullable>enable</Nullable>
+		<Configurations>Debug;Release;Release_Linux</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -25,6 +26,11 @@
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<Optimize>true</Optimize>
 		<DebugType>none</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release_Linux'">
+	  <Optimize>true</Optimize>
+	  <DebugType>none</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -49,6 +55,15 @@
 	  <None Update="appsettings.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-win-$(Platform)\bin\xirorig_native.dll" Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Release'">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-linux-x64\lib\libxirorig_native.so.1.0.0" Condition="'$(Configuration)'=='Release_Linux' AND '$(Platform)'=='x64'">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>

@@ -127,14 +127,12 @@ namespace Xirorig.Miner
             // Static Miner working variable.
             var cancellationToken = _cancellationTokenSource.Token;
 
-            var sha3Digest = new Sha3Digest(512);
             var rijndaelManaged = new RijndaelManaged();
 
             var randomNumberGenerator = RandomNumberGenerator.Create();
             var randomNumberGeneratorBytes = new byte[1];
 
             var pocRandomData = Array.Empty<byte>();
-            var previousFinalBlockTransactionHashKey = Array.Empty<byte>();
 
             var walletAddress = _walletAddress;
             var walletAddressBytes = Base58Utility.DecodeWithoutChecksum(walletAddress);
@@ -168,14 +166,8 @@ namespace Xirorig.Miner
                     pocRandomData = new byte[currentMinerSettings.RandomDataShareSize];
                 }
 
-                if (previousFinalBlockTransactionHashKey.Length != 32)
-                {
-                    previousFinalBlockTransactionHashKey = new byte[32];
-                }
-
                 var previousBlockFinalTransactionHashBytes = Encoding.ASCII.GetBytes(currentBlockTemplate.PreviousBlockFinalTransactionHash);
-                sha3Digest.BlockUpdate(previousBlockFinalTransactionHashBytes, 0, previousBlockFinalTransactionHashBytes.Length);
-                sha3Digest.DoFinal(previousBlockFinalTransactionHashBytes, 0);
+                previousBlockFinalTransactionHashBytes = Sha3Utility.ComputeSha3512Hash(previousBlockFinalTransactionHashBytes);
                 Array.Resize(ref previousBlockFinalTransactionHashBytes, 32);
 
                 var minNonce = currentMinerSettings.PocShareNonceMin;
@@ -200,7 +192,7 @@ namespace Xirorig.Miner
                         MiningUtility.UpdatePocRandomData(pocRandomData, currentBlockTemplate, currentNonce, timestamp);
                     }
 
-                    if (MiningUtility.DoPowShare(miningPowShare, currentBlockTemplate, sha3Digest, rijndaelManaged, algorithm, walletAddress, currentNonce, timestamp, pocRandomData, previousBlockFinalTransactionHashBytes))
+                    if (MiningUtility.DoPowShare(miningPowShare, currentBlockTemplate, rijndaelManaged, algorithm, walletAddress, currentNonce, timestamp, pocRandomData, previousBlockFinalTransactionHashBytes))
                     {
                         Interlocked.Increment(ref _totalHashCalculatedIn10Seconds);
                         Interlocked.Increment(ref _totalHashCalculatedIn60Seconds);
@@ -220,13 +212,11 @@ namespace Xirorig.Miner
                         }
                     }
 
-                    if (currentNonce + 1 > maxNonce)
+                    currentNonce++;
+
+                    if (currentNonce > maxNonce)
                     {
                         currentNonce = minNonce;
-                    }
-                    else
-                    {
-                        currentNonce++;
                     }
                 }
             }

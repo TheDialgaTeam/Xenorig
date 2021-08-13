@@ -16,6 +16,7 @@ using Xirorig.Network;
 using Xirorig.Network.Api.Models;
 using Xirorig.Options;
 using Xirorig.Options.Xirorig;
+using Xirorig.Utility;
 
 namespace Xirorig
 {
@@ -91,6 +92,7 @@ namespace Xirorig
             }
 
             _logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {{Color:l}}{{VectorIsSupported}}{AnsiEscapeCodeConstants.Reset}", false, "SIMD", Vector.IsHardwareAccelerated ? AnsiEscapeCodeConstants.GreenForegroundColor : AnsiEscapeCodeConstants.RedForegroundColor, Vector.IsHardwareAccelerated);
+            _logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {{Color:l}}{{VectorIsSupported}}{AnsiEscapeCodeConstants.Reset}", false, "NATIVE SHA-3", Sha3Utility.IsNativeImplementationAvailable ? AnsiEscapeCodeConstants.GreenForegroundColor : AnsiEscapeCodeConstants.RedForegroundColor, Sha3Utility.IsNativeImplementationAvailable);
             _logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {AnsiEscapeCodeConstants.MagentaForegroundColor}h{AnsiEscapeCodeConstants.Reset}ashrate, {AnsiEscapeCodeConstants.MagentaForegroundColor}s{AnsiEscapeCodeConstants.Reset}tats, {AnsiEscapeCodeConstants.MagentaForegroundColor}j{AnsiEscapeCodeConstants.Reset}ob", false, "COMMANDS");
             _logger.LogInformation($"{AnsiEscapeCodeConstants.GreenForegroundColor}READY (CPU){AnsiEscapeCodeConstants.Reset} threads {AnsiEscapeCodeConstants.CyanForegroundColor}{{ThreadCount}}{AnsiEscapeCodeConstants.Reset}", true, _xirorigOptions.NumberOfThreads);
 

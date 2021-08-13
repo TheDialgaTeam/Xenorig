@@ -178,13 +178,16 @@ namespace Xirorig.Network
 
         private async void DownloadBlockTemplateCallback(object? state)
         {
+            var peerNodes = _peerNodes;
+            var currentPeerIndex = _currentPeerIndex;
+
             try
             {
                 if (_connectionStatus == ConnectionStatus.Disconnected)
                 {
-                    _httpClient = new HttpClient { BaseAddress = new Uri(new UriBuilder(_peerNodes[_currentPeerIndex].Url).ToString()), Timeout = TimeSpan.FromMilliseconds(_maxPing) };
+                    _httpClient = new HttpClient { BaseAddress = new Uri(new UriBuilder(peerNodes[currentPeerIndex].Url).ToString()), Timeout = TimeSpan.FromMilliseconds(_maxPing) };
 
-                    if (!WalletUtility.IsValidWalletAddress(_peerNodes[_currentPeerIndex].WalletAddress, _algorithms.First(algorithm => _peerNodes[_currentPeerIndex].Algorithm == algorithm.AlgorithmType)))
+                    if (!WalletUtility.IsValidWalletAddress(peerNodes[currentPeerIndex].WalletAddress, _algorithms.First(algorithm => _peerNodes[_currentPeerIndex].Algorithm == algorithm.AlgorithmType)))
                     {
                         _logger.LogInformation($"{AnsiEscapeCodeConstants.RedForegroundColor}Error: Invalid wallet address for the specified pool.{AnsiEscapeCodeConstants.Reset}", true);
                         throw new ArgumentException();
@@ -202,14 +205,14 @@ namespace Xirorig.Network
                 if (_connectionStatus == ConnectionStatus.Disconnected)
                 {
                     _connectionStatus = ConnectionStatus.Connected;
-                    Connected?.Invoke(_peerNodes[_currentPeerIndex]);
+                    Connected?.Invoke(peerNodes[currentPeerIndex]);
                     _currentPeerRetryCount = 0;
                 }
 
                 if (_currentBlockHash != blockTemplate.CurrentBlockHash)
                 {
                     _currentBlockHash = blockTemplate.CurrentBlockHash;
-                    NewJob?.Invoke(_peerNodes[_currentPeerIndex], blockTemplate);
+                    NewJob?.Invoke(peerNodes[currentPeerIndex], blockTemplate);
                 }
             }
             catch (Exception)
@@ -223,7 +226,7 @@ namespace Xirorig.Network
 
                     _currentBlockHash = string.Empty;
 
-                    Disconnected?.Invoke(_peerNodes[_currentPeerIndex]);
+                    Disconnected?.Invoke(peerNodes[currentPeerIndex]);
 
                     _currentPeerIndex++;
                     if (_currentPeerIndex >= _peerNodes.Length) _currentPeerIndex = 0;

@@ -25,7 +25,7 @@ namespace Xirorig.Algorithm
             {
                 if (_blockchainMarkKey.Length == 0)
                 {
-                    _blockchainMarkKey = Encoding.ASCII.GetBytes(Convert.ToHexString(Sha3Utility.DoSha3512Hash(new Sha3Digest(512), _networkBytes)));
+                    _blockchainMarkKey = Encoding.ASCII.GetBytes(Convert.ToHexString(Sha3Utility.ComputeSha3512Hash(_networkBytes)));
                 }
 
                 return _blockchainMarkKey;

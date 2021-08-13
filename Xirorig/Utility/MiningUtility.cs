@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Numerics;
 using System.Security.Cryptography;
 using LZ4;
-using Org.BouncyCastle.Crypto.Digests;
 using Xirorig.Algorithm;
 using Xirorig.Network.Api.Models;
 
@@ -19,13 +18,7 @@ namespace Xirorig.Utility
         private const string MathOperatorMultiplication = "*";
         private const string MathOperatorModulo = "%";
 
-        private static readonly Func<byte[], byte[]> DoNonceIvXorMiningInstructions;
         private static readonly BigInteger ShaPowCalculation = BigInteger.Pow(2, 512);
-
-        static MiningUtility()
-        {
-            DoNonceIvXorMiningInstructions = Vector.IsHardwareAccelerated ? NonceIvXorMiningInstructionsVectorized : NonceIvXorMiningInstructions;
-        }
 
         public static void GeneratePocRandomData(byte[] pocRandomData, byte[] randomNumberBytes, RandomNumberGenerator randomNumberGenerator, BlockTemplate blockTemplate, byte[] walletAddress, long nonce, long timestamp)
         {
@@ -171,13 +164,12 @@ namespace Xirorig.Utility
             pocRandomData[offset] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
         }
 
-        public static bool DoPowShare(MiningPowShare miningPowShare, BlockTemplate blockTemplate, Sha3Digest sha3Digest, RijndaelManaged rijndaelManaged, IAlgorithm algorithm, string walletAddress, long nonce, long timestamp, byte[] pocRandomData, byte[] previousFinalBlockTransactionHashKey)
+        public static bool DoPowShare(MiningPowShare miningPowShare, BlockTemplate blockTemplate, RijndaelManaged rijndaelManaged, IAlgorithm algorithm, string walletAddress, long nonce, long timestamp, byte[] pocRandomData, byte[] previousFinalBlockTransactionHashKey)
         {
             var pocShareIv = BitConverter.GetBytes(nonce);
 
             var minerSettings = blockTemplate.MiningSettings;
             var miningInstructions = minerSettings.MiningInstructions;
-            var doNonceIvXorMiningInstructions = DoNonceIvXorMiningInstructions;
 
             foreach (var miningInstruction in miningInstructions)
             {
@@ -185,29 +177,13 @@ namespace Xirorig.Utility
                 {
                     case MiningInstruction.DoNonceIv:
                     {
-                        if (pocShareIv.Length == Sha3Utility.Sha3512OutputSize)
-                        {
-                            for (var i = 0; i < minerSettings.PocRoundShaNonce; i++)
-                            {
-                                Sha3Utility.DoSha3512Hash(sha3Digest, pocShareIv, pocShareIv);
-                            }
-                        }
-                        else
-                        {
-                            pocShareIv = Sha3Utility.DoSha3512Hash(sha3Digest, pocShareIv);
-
-                            for (var i = 0; i < minerSettings.PocRoundShaNonce - 1; i++)
-                            {
-                                Sha3Utility.DoSha3512Hash(sha3Digest, pocShareIv, pocShareIv);
-                            }
-                        }
-
+                        DoNonceIvMiningInstruction(ref pocShareIv, minerSettings);
                         break;
                     }
 
                     case MiningInstruction.DoNonceIvXor:
                     {
-                        pocShareIv = doNonceIvXorMiningInstructions(pocShareIv);
+                        pocShareIv = DoNonceIvXorMiningInstruction(pocShareIv);
                         break;
                     }
 
@@ -222,7 +198,8 @@ namespace Xirorig.Utility
 
                         while (totalRetry < minerSettings.PocShareNonceMaxSquareRetry)
                         {
-                            var pocShareWorkToDoBytes = arrayPool.Rent(pocShareIv.Length + previousFinalBlockTransactionHashKey.Length + 8 + blockDifficultyBytes.Length);
+                            var minimumLength = pocShareIv.Length + previousFinalBlockTransactionHashKey.Length + 8 + blockDifficultyBytes.Length;
+                            var pocShareWorkToDoBytes = arrayPool.Rent(minimumLength);
 
                             try
                             {
@@ -243,7 +220,7 @@ namespace Xirorig.Utility
 
                                 Buffer.BlockCopy(previousFinalBlockTransactionHashKey, 0, pocShareWorkToDoBytes, offset + 8, previousFinalBlockTransactionHashKey.Length);
 
-                                Sha3Utility.DoSha3512Hash(sha3Digest, pocShareWorkToDoBytes, pocShareWorkToDoBytes);
+                                Sha3Utility.ComputeSha3512Hash(pocShareWorkToDoBytes, 0, minimumLength, pocShareWorkToDoBytes);
 
                                 for (var i = 0; i < 64; i += 8)
                                 {
@@ -271,7 +248,7 @@ namespace Xirorig.Utility
 
                                 if (newNonceGenerated) break;
 
-                                pocShareIv = Sha3Utility.DoSha3512Hash(sha3Digest, pocShareIv);
+                                pocShareIv = Sha3Utility.ComputeSha3512Hash(pocShareIv);
 
                                 totalRetry++;
                             }
@@ -285,7 +262,7 @@ namespace Xirorig.Utility
                         {
                             for (var i = 0; i < minerSettings.PocShareNonceNoSquareFoundShaRounds; i++)
                             {
-                                pocShareIv = Sha3Utility.DoSha3512Hash(sha3Digest, pocShareIv);
+                                pocShareIv = Sha3Utility.ComputeSha3512Hash(pocShareIv);
                             }
 
                             newNonce = pocShareIv[0] + (pocShareIv[1] << 8) + (pocShareIv[2] << 16) + ((uint) pocShareIv[3] << 24);
@@ -351,7 +328,7 @@ namespace Xirorig.Utility
                                 {
                                     paddedBytes[packetLength + j] = (byte) paddingSizeRequired;
                                 }
-                                
+
                                 pocRandomData = cryptoTransform.TransformFinalBlock(paddedBytes, 0, paddedLength);
                             }
                             finally
@@ -366,7 +343,7 @@ namespace Xirorig.Utility
             }
 
             var pocShare = Convert.ToHexString(pocRandomData);
-            var shareDifficulty = BigInteger.Divide(BigInteger.Divide(ShaPowCalculation, blockTemplate.CurrentBlockDifficulty), BigInteger.Divide(new BigInteger(Sha3Utility.DoSha3512Hash(sha3Digest, pocRandomData)), blockTemplate.CurrentBlockDifficulty));
+            var shareDifficulty = BigInteger.Divide(BigInteger.Divide(ShaPowCalculation, blockTemplate.CurrentBlockDifficulty), BigInteger.Divide(new BigInteger(Sha3Utility.ComputeSha3512Hash(pocRandomData)), blockTemplate.CurrentBlockDifficulty));
 
             miningPowShare.WalletAddress = walletAddress;
             miningPowShare.BlockHeight = blockTemplate.CurrentBlockHeight;
@@ -397,47 +374,60 @@ namespace Xirorig.Utility
             }
         }
 
-        private static byte[] NonceIvXorMiningInstructions(byte[] pocShareIv)
+        private static void DoNonceIvMiningInstruction(ref byte[] pocShareIv, MiningSettings minerSettings)
         {
-            var pocShareIvLength = pocShareIv.Length;
-            var pocShareIvMath = new byte[pocShareIvLength];
-
-            for (var i = 0; i < pocShareIvLength; i++)
+            if (pocShareIv.Length == Sha3Utility.Sha3512OutputSize)
             {
-                pocShareIvMath[i] = (byte) (pocShareIv[i] ^ pocShareIv[^(1 + i)]);
+                for (var i = 0; i < minerSettings.PocRoundShaNonce; i++)
+                {
+                    Sha3Utility.ComputeSha3512Hash(pocShareIv, pocShareIv);
+                }
             }
-
-            return pocShareIvMath;
+            else
+            {
+                pocShareIv = Sha3Utility.ComputeSha3512Hash(pocShareIv);
+                
+                for (var i = 1; i < minerSettings.PocRoundShaNonce; i++)
+                {
+                    Sha3Utility.ComputeSha3512Hash(pocShareIv, pocShareIv);
+                }
+            }
         }
 
-        private static unsafe byte[] NonceIvXorMiningInstructionsVectorized(byte[] pocShareIv)
+        private static byte[] DoNonceIvXorMiningInstruction(byte[] pocShareIv)
         {
             var pocShareIvLength = pocShareIv.Length;
             var pocShareIvMath = new byte[pocShareIvLength];
 
-            var vectorSize = Vector<byte>.Count;
-            var i = 0;
-
-            var pocShareIvSpan = pocShareIv.AsSpan();
-            Span<byte> pocShareIvReverseSpan = stackalloc byte[pocShareIvLength];
-            pocShareIvSpan.CopyTo(pocShareIvReverseSpan);
-            pocShareIvReverseSpan.Reverse();
-
-            if (pocShareIvLength >= vectorSize)
+            if (!Vector.IsHardwareAccelerated)
             {
-                var iterationSize = pocShareIvLength / vectorSize * vectorSize;
+                var vectorSize = Vector<byte>.Count;
+                var iterationLength = pocShareIvLength - vectorSize;
+                var i = 0;
 
-                for (; i < iterationSize; i += vectorSize)
+                var pocShareIvSpan = pocShareIv.AsSpan();
+                Span<byte> pocShareIvReverseSpan = stackalloc byte[pocShareIvLength];
+                pocShareIvSpan.CopyTo(pocShareIvReverseSpan);
+                pocShareIvReverseSpan.Reverse();
+
+                for (; i <= iterationLength; i += vectorSize)
                 {
                     var test = new Vector<byte>(pocShareIvSpan.Slice(i, vectorSize));
                     var test2 = new Vector<byte>(pocShareIvReverseSpan.Slice(i, vectorSize));
                     Vector.Xor(test, test2).CopyTo(pocShareIvMath, i);
                 }
-            }
 
-            for (; i < pocShareIvLength; i++)
+                for (; i < pocShareIvLength; i++)
+                {
+                    pocShareIvMath[i] = (byte) (pocShareIvSpan[i] ^ pocShareIvReverseSpan[i]);
+                }
+            }
+            else
             {
-                pocShareIvMath[i] = (byte) (pocShareIvSpan[i] ^ pocShareIvReverseSpan[i]);
+                for (var i = 0; i < pocShareIvLength; i++)
+                {
+                    pocShareIvMath[i] = (byte) (pocShareIv[i] ^ pocShareIv[^(1 + i)]);
+                }
             }
 
             return pocShareIvMath;

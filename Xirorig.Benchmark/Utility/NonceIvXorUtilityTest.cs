@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
 
 namespace Xirorig.Benchmark.Utility
@@ -37,28 +40,28 @@ namespace Xirorig.Benchmark.Utility
         [Benchmark]
         public unsafe byte[] Vectorized()
         {
-            var testData = _testData.AsSpan();
-            var testDataLength = testData.Length;
-            Span<byte> testDataReverse = stackalloc byte[testDataLength];
-            testData.CopyTo(testDataReverse);
-            testDataReverse.Reverse();
+            var pocShareIvLength = _testData.Length;
+            var pocShareIvMath = new byte[pocShareIvLength];
 
-            var pocShareIvMath = new byte[testDataLength];
-
+            var vectorSize = Vector<byte>.Count;
+            var iterationLength = pocShareIvLength - vectorSize;
             var i = 0;
-            var vectorCount = Vector<byte>.Count;
-            var iterationSize = testDataLength / vectorCount * vectorCount;
 
-            for (; i < iterationSize; i += vectorCount)
+            var pocShareIvSpan = _testData.AsSpan();
+            Span<byte> pocShareIvReverseSpan = stackalloc byte[pocShareIvLength];
+            pocShareIvSpan.CopyTo(pocShareIvReverseSpan);
+            pocShareIvReverseSpan.Reverse();
+
+            for (; i <= iterationLength; i += vectorSize)
             {
-                var test = new Vector<byte>(testData.Slice(i, vectorCount));
-                var test2 = new Vector<byte>(testDataReverse.Slice(i, vectorCount));
+                var test = new Vector<byte>(pocShareIvSpan.Slice(i, vectorSize));
+                var test2 = new Vector<byte>(pocShareIvReverseSpan.Slice(i, vectorSize));
                 Vector.Xor(test, test2).CopyTo(pocShareIvMath, i);
             }
 
-            for (; i < testDataLength; i++)
+            for (; i < pocShareIvLength; i++)
             {
-                pocShareIvMath[i] = (byte) (testData[i] ^ testDataReverse[i]);
+                pocShareIvMath[i] = (byte) (pocShareIvSpan[i] ^ pocShareIvReverseSpan[i]);
             }
 
             return pocShareIvMath;
