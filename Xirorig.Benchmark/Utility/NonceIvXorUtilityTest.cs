@@ -1,31 +1,24 @@
 ﻿using System;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
+using System.Security.Cryptography;
 using BenchmarkDotNet.Attributes;
 
 namespace Xirorig.Benchmark.Utility
 {
     public class NonceIvXorUtilityTest
     {
-        private byte[] _testData;
+        private byte[] _data;
 
         [GlobalSetup]
         public void SetUp()
         {
-            _testData = new byte[64];
-
-            for (var i = 0; i < 64; i++)
-            {
-                _testData[i] = (byte) (i % 256);
-            }
+            _data = RandomNumberGenerator.GetBytes(64);
         }
 
         [Benchmark]
         public byte[] Original()
         {
-            var testData = _testData;
+            var testData = _data;
             var testDataLength = testData.Length;
             var pocShareIvMath = new byte[testDataLength];
 
@@ -40,14 +33,14 @@ namespace Xirorig.Benchmark.Utility
         [Benchmark]
         public unsafe byte[] Vectorized()
         {
-            var pocShareIvLength = _testData.Length;
+            var pocShareIvLength = _data.Length;
             var pocShareIvMath = new byte[pocShareIvLength];
 
             var vectorSize = Vector<byte>.Count;
             var iterationLength = pocShareIvLength - vectorSize;
             var i = 0;
 
-            var pocShareIvSpan = _testData.AsSpan();
+            var pocShareIvSpan = _data.AsSpan();
             Span<byte> pocShareIvReverseSpan = stackalloc byte[pocShareIvLength];
             pocShareIvSpan.CopyTo(pocShareIvReverseSpan);
             pocShareIvReverseSpan.Reverse();

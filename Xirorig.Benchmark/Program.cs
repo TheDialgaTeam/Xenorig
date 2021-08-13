@@ -8,6 +8,7 @@ namespace Xirorig.Benchmark
         public static void Main(string[] args)
         {
             BenchmarkRunner.Run<Sha3UtilityTest>();
+            BenchmarkRunner.Run<NonceIvXorUtilityTest>();
         }
     }
 }

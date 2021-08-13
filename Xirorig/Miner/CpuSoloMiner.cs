@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Digests;
+using Org.BouncyCastle.Crypto.Engines;
 using TheDialgaTeam.Serilog.Formatting.Ansi;
 using Xirorig.Algorithm;
 using Xirorig.Network.Api.Models;
@@ -127,7 +128,7 @@ namespace Xirorig.Miner
             // Static Miner working variable.
             var cancellationToken = _cancellationTokenSource.Token;
 
-            var rijndaelManaged = new RijndaelManaged();
+            var rijndael = Rijndael.Create();
 
             var randomNumberGenerator = RandomNumberGenerator.Create();
             var randomNumberGeneratorBytes = new byte[1];
@@ -192,7 +193,7 @@ namespace Xirorig.Miner
                         MiningUtility.UpdatePocRandomData(pocRandomData, currentBlockTemplate, currentNonce, timestamp);
                     }
 
-                    if (MiningUtility.DoPowShare(miningPowShare, currentBlockTemplate, rijndaelManaged, algorithm, walletAddress, currentNonce, timestamp, pocRandomData, previousBlockFinalTransactionHashBytes))
+                    if (MiningUtility.DoPowShare(miningPowShare, currentBlockTemplate, rijndael, algorithm, walletAddress, currentNonce, timestamp, pocRandomData, previousBlockFinalTransactionHashBytes))
                     {
                         Interlocked.Increment(ref _totalHashCalculatedIn10Seconds);
                         Interlocked.Increment(ref _totalHashCalculatedIn60Seconds);
@@ -222,7 +223,7 @@ namespace Xirorig.Miner
             }
 
             randomNumberGenerator.Dispose();
-            rijndaelManaged.Dispose();
+            rijndael.Dispose();
         }
 
         private void LogInformation(string message, params object[] args)

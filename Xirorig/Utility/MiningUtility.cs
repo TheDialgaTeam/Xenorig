@@ -164,7 +164,7 @@ namespace Xirorig.Utility
             pocRandomData[offset] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
         }
 
-        public static bool DoPowShare(MiningPowShare miningPowShare, BlockTemplate blockTemplate, RijndaelManaged rijndaelManaged, IAlgorithm algorithm, string walletAddress, long nonce, long timestamp, byte[] pocRandomData, byte[] previousFinalBlockTransactionHashKey)
+        public static bool DoPowShare(MiningPowShare miningPowShare, BlockTemplate blockTemplate, Rijndael rijndael, IAlgorithm algorithm, string walletAddress, long nonce, long timestamp, byte[] pocRandomData, byte[] previousFinalBlockTransactionHashKey)
         {
             var pocShareIv = BitConverter.GetBytes(nonce);
 
@@ -304,14 +304,12 @@ namespace Xirorig.Utility
 
                     case MiningInstruction.DoEncryptedPocShare:
                     {
-                        rijndaelManaged.KeySize = 256;
-                        rijndaelManaged.BlockSize = 128;
-                        rijndaelManaged.Key = previousFinalBlockTransactionHashKey;
-                        rijndaelManaged.IV = pocShareIv;
-                        rijndaelManaged.Mode = CipherMode.CFB;
-                        rijndaelManaged.Padding = PaddingMode.None;
+                        rijndael.KeySize = 256;
+                        rijndael.BlockSize = 128;
+                        rijndael.Mode = CipherMode.CFB;
+                        rijndael.Padding = PaddingMode.None;
 
-                        using var cryptoTransform = rijndaelManaged.CreateEncryptor(previousFinalBlockTransactionHashKey, pocShareIv);
+                        using var cryptoTransform = rijndael.CreateEncryptor(previousFinalBlockTransactionHashKey, pocShareIv);
 
                         for (var i = 0; i < minerSettings.PowRoundAesShare; i++)
                         {
