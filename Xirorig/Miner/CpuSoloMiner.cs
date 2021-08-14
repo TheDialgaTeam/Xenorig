@@ -207,9 +207,9 @@ namespace Xirorig.Miner
                                 PacketTimestamp = miningPowShare.Timestamp
                             });
 
-                            BlockFound?.Invoke(currentBlockTemplate.CurrentBlockHeight, shareJson);
-                            LogInformation($"{AnsiEscapeCodeConstants.GreenForegroundColor}Thread: {{ThreadId}} | Block Found | Nonce: {{Nonce}} | Diff: {{ShareDifficulty:l}}{AnsiEscapeCodeConstants.Reset}", _threadId, currentNonce, miningPowShare.PoWaCShareDifficulty.ToString());
-                            break;
+                            //BlockFound?.Invoke(currentBlockTemplate.CurrentBlockHeight, shareJson);
+                            //LogInformation($"{AnsiEscapeCodeConstants.GreenForegroundColor}Thread: {{ThreadId}} | Block Found | Nonce: {{Nonce}} | Diff: {{ShareDifficulty:l}}{AnsiEscapeCodeConstants.Reset}", _threadId, currentNonce, miningPowShare.PoWaCShareDifficulty.ToString());
+                            //break;
                         }
                     }
 

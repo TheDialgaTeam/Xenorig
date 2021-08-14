@@ -12,16 +12,16 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 if (WIN32)
 	if ("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
-		set(OPENSSL_ROOT_DIR "external/openssl/x64")
+		set(OPENSSL_ROOT_DIR "external/openssl/Windows/x64")
 	else()
-		set(OPENSSL_ROOT_DIR "external/openssl/x86")
+		set(OPENSSL_ROOT_DIR "external/openssl/Windows/x86")
 	endif()
 endif()
 
-find_package (OpenSSL REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 target_include_directories(${PROJECT_NAME} PRIVATE .)
-target_link_libraries (${PROJECT_NAME} OpenSSL::Crypto)
+target_link_libraries(${PROJECT_NAME} OpenSSL::Crypto)
 
 install (TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

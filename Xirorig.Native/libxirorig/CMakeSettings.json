@@ -3,7 +3,7 @@
     {
       "name": "Release-win-x64",
       "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
+      "configurationType": "Release",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
@@ -14,7 +14,7 @@
     {
       "name": "Release-win-x86",
       "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
+      "configurationType": "Release",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
@@ -25,7 +25,7 @@
     {
       "name": "Release-linux-x64",
       "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
+      "configurationType": "Release",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeExecutable": "cmake",
@@ -34,6 +34,37 @@
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
       "wslPath": "${defaultWSLPath}"
+    },
+    {
+      "name": "Release-linux-arm",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeExecutable": "cmake",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "linux_arm" ],
+      "wslPath": "${defaultWSLPath}",
+      "cmakeToolchain": "D:/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/.CMake/toolchain_rasppi.cmake",
+      "variables": [
+        {
+          "name": "OPENSSL_CRYPTO_LIBRARY",
+          "value": "/mnt/d/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/external/openssl/Linux/arm/lib/arm-linux-gnueabihf/libcrypto.a",
+          "type": "FILEPATH"
+        },
+        {
+          "name": "OPENSSL_SSL_LIBRARY",
+          "value": "/mnt/d/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/external/openssl/Linux/arm/lib/arm-linux-gnueabihf/libssl.a",
+          "type": "FILEPATH"
+        },
+        {
+          "name": "OPENSSL_INCLUDE_DIR",
+          "value": "/mnt/d/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/external/openssl/Linux/arm/include",
+          "type": "PATH"
+        }
+      ]
     }
   ]
 }

@@ -12,9 +12,9 @@
 		<PackageProjectUrl>https://github.com/TheDialgaTeam/Xirorig</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/TheDialgaTeam/Xirorig</RepositoryUrl>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<Platforms>AnyCPU;x64;x86</Platforms>
+		<Platforms>AnyCPU;x64;x86;ARM32</Platforms>
 		<Nullable>enable</Nullable>
-		<Configurations>Debug;Release;Release_Linux</Configurations>
+		<Configurations>Debug;Release_Windows;Release_Linux</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -23,7 +23,7 @@
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+	<PropertyGroup Condition="'$(Configuration)'=='Release_Windows'">
 		<Optimize>true</Optimize>
 		<DebugType>none</DebugType>
 	</PropertyGroup>
@@ -58,10 +58,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-win-$(Platform)\bin\xirorig_native.dll" Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Release'">
+		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-win-$(Platform)\bin\xirorig_native.dll" Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Release_Windows'">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-linux-x64\lib\libxirorig_native.so.1.0.0" Condition="'$(Configuration)'=='Release_Linux' AND '$(Platform)'=='x64'">
+		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-linux-$(Platform)\lib\libxirorig_native.so.1.0.0" Condition="'$(Configuration)'=='Release_Linux'">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
