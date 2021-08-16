@@ -42,29 +42,11 @@
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeExecutable": "cmake",
-      "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_arm" ],
       "wslPath": "${defaultWSLPath}",
-      "cmakeToolchain": "D:/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/.CMake/toolchain_rasppi.cmake",
-      "variables": [
-        {
-          "name": "OPENSSL_CRYPTO_LIBRARY",
-          "value": "/mnt/d/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/external/openssl/Linux/arm/lib/arm-linux-gnueabihf/libcrypto.a",
-          "type": "FILEPATH"
-        },
-        {
-          "name": "OPENSSL_SSL_LIBRARY",
-          "value": "/mnt/d/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/external/openssl/Linux/arm/lib/arm-linux-gnueabihf/libssl.a",
-          "type": "FILEPATH"
-        },
-        {
-          "name": "OPENSSL_INCLUDE_DIR",
-          "value": "/mnt/d/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/external/openssl/Linux/arm/include",
-          "type": "PATH"
-        }
-      ]
+      "cmakeToolchain": "D:/Git/C#/TheDialgaTeam.Xiropht.Xirorig/Xirorig.Native/libxirorig/.CMake/toolchain_rasppi.cmake"
     }
   ]
 }

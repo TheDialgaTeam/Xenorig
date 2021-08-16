@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <string.h>
 #include <openssl/evp.h>
 
 #if (_MSC_VER >= 1900)

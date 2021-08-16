@@ -1,8 +1,10 @@
-﻿#include "include/libxirorig.h"
+﻿#include <string.h>
+#include "include/libxirorig.h"
 
 int32_t computeSha3512Hash(const uint8_t *input, const size_t inputSize, uint8_t *output)
 {
     EVP_MD_CTX *context = EVP_MD_CTX_new();
+
     if (context == NULL)
         return 0;
 
@@ -51,15 +53,15 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
     const size_t blockDifficultyLength
 )
 {
-    int32_t totalRetry = 0;
+    size_t totalRetry = 0;
     int32_t newNonceGenerated = 0;
     int64_t newNonce = 0;
 
+    const size_t minimumLength = pocShareIvLength + previousFinalBlockTransactionHashKeyLength + 8 + blockDifficultyLength;
+    uint8_t* pocShareWorkToDoBytes = malloc(minimumLength);
+
     while (totalRetry < pocShareNonceMaxSquareRetry)
     {
-        const size_t minimumLength = pocShareIvLength + previousFinalBlockTransactionHashKeyLength + 8 + blockDifficultyLength;
-        uint8_t *pocShareWorkToDoBytes = malloc(minimumLength);
-
         memcpy(pocShareWorkToDoBytes, pocShareIv, pocShareIvLength);
         memcpy(pocShareWorkToDoBytes + pocShareIvLength, blockDifficulty, blockDifficultyLength);
 
@@ -73,7 +75,7 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
         *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF00000000) >> 32);
         *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF0000000000) >> 40);
         *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF000000000000) >> 48);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF00000000000000) >> 56);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t)(currentBlockHeight >> 56);
 
         memcpy(pocShareWorkToDoBytes + offset, previousFinalBlockTransactionHashKey, previousFinalBlockTransactionHashKeyLength);
 
@@ -97,7 +99,7 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
                 abs(y2 - y1) == abs(x4 - x1) && abs(x2 - x1) == abs(y4 - y3) && abs(y2 - y3) == abs(x4 - x3) && abs(x2 - x3) == abs(y4 - y3) ||
                 abs(y3 - y1) == abs(x4 - x1) && abs(x3 - x1) == abs(y4 - y1) && abs(y3 - y2) == abs(x4 - x2) && abs(x3 - x2) == abs(y4 - y2))
             {
-                newNonce = (uint8_t)(*(pocShareWorkToDoBytes + i) + *(pocShareWorkToDoBytes + i)) + ((uint8_t)(*(pocShareWorkToDoBytes + i + 2) + *(pocShareWorkToDoBytes + i + 2)) << 8) + ((uint8_t)(*(pocShareWorkToDoBytes + i + 4) + *(pocShareWorkToDoBytes + i + 4)) << 16) + (uint32_t)((uint8_t)(*(pocShareWorkToDoBytes + i + 6) + *(pocShareWorkToDoBytes + i + 6)) << 24);
+                newNonce = (int64_t)(*(pocShareWorkToDoBytes + i) + *(pocShareWorkToDoBytes + i) & 0xFF) + ((int64_t)(*(pocShareWorkToDoBytes + i + 2) + *(pocShareWorkToDoBytes + i + 2) & 0xFF) << 8) + ((int64_t)(*(pocShareWorkToDoBytes + i + 4) + *(pocShareWorkToDoBytes + i + 4) & 0xFF) << 16) + ((int64_t)(*(pocShareWorkToDoBytes + i + 6) + *(pocShareWorkToDoBytes + i + 6) & 0xFF) << 24);
                 newNonceGenerated = 1;
                 break;
             }
@@ -121,7 +123,7 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
             computeSha3512Hash(pocShareIv, pocShareIvLength, pocShareIv);
         }
 
-        newNonce = *pocShareIv + (*(pocShareIv + 1) << 8) + (*(pocShareIv + 2) << 16) + (uint32_t)(*(pocShareIv + 3) << 24);
+        newNonce = (int64_t)*pocShareIv + ((int64_t) *(pocShareIv + 1) << 8) + ((int64_t) *(pocShareIv + 2) << 16) + ((int64_t) *(pocShareIv + 3) << 24);
     }
 
     if (newNonce >= pocShareNonceMin && newNonce <= pocShareNonceMax)
@@ -135,7 +137,7 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
         *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF00000000) >> 32);
         *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF0000000000) >> 40);
         *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF000000000000) >> 48);
-        *(pocShareIv + offset) = (uint8_t)((newNonce & 0xFF00000000000000) >> 56);
+        *(pocShareIv + offset) = (uint8_t)(newNonce >> 56);
 
         return 1;
     }

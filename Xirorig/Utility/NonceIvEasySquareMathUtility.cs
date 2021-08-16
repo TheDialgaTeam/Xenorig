@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Xirorig.Network.Api.Models;
@@ -86,12 +85,12 @@ namespace Xirorig.Utility
             var newNonceGenerated = false;
             var newNonce = 0L;
 
-            while (totalRetry < minerSettings.PocShareNonceMaxSquareRetry)
-            {
-                var minimumLength = pocShareIv.Length + previousFinalBlockTransactionHashKey.Length + 8 + blockDifficultyBytes.Length;
-                var pocShareWorkToDoBytes = arrayPool.Rent(minimumLength);
+            var minimumLength = pocShareIv.Length + previousFinalBlockTransactionHashKey.Length + 8 + blockDifficultyBytes.Length;
+            var pocShareWorkToDoBytes = arrayPool.Rent(minimumLength);
 
-                try
+            try
+            {
+                while (totalRetry < minerSettings.PocShareNonceMaxSquareRetry)
                 {
                     Buffer.BlockCopy(pocShareIv, 0, pocShareWorkToDoBytes, 0, pocShareIv.Length);
                     Buffer.BlockCopy(blockDifficultyBytes, 0, pocShareWorkToDoBytes, pocShareIv.Length, blockDifficultyBytes.Length);
@@ -99,14 +98,14 @@ namespace Xirorig.Utility
                     var offset = pocShareIv.Length + blockDifficultyBytes.Length;
 
                     // Block Height
-                    pocShareWorkToDoBytes[offset] = (byte) (blockTemplate.CurrentBlockHeight & 0xFF);
-                    pocShareWorkToDoBytes[offset + 1] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00) >> 8);
-                    pocShareWorkToDoBytes[offset + 2] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00) >> 16);
-                    pocShareWorkToDoBytes[offset + 3] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00) >> 24);
-                    pocShareWorkToDoBytes[offset + 4] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00) >> 32);
-                    pocShareWorkToDoBytes[offset + 5] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00) >> 40);
-                    pocShareWorkToDoBytes[offset + 6] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00_00) >> 48);
-                    pocShareWorkToDoBytes[offset + 7] = (byte) ((blockTemplate.CurrentBlockHeight & 0x7F_00_00_00_00_00_00_00) >> 56);
+                    pocShareWorkToDoBytes[offset] = (byte)(blockTemplate.CurrentBlockHeight & 0xFF);
+                    pocShareWorkToDoBytes[offset + 1] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00) >> 8);
+                    pocShareWorkToDoBytes[offset + 2] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00) >> 16);
+                    pocShareWorkToDoBytes[offset + 3] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00) >> 24);
+                    pocShareWorkToDoBytes[offset + 4] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00) >> 32);
+                    pocShareWorkToDoBytes[offset + 5] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00) >> 40);
+                    pocShareWorkToDoBytes[offset + 6] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00_00) >> 48);
+                    pocShareWorkToDoBytes[offset + 7] = (byte)(blockTemplate.CurrentBlockHeight >> 56);
 
                     Buffer.BlockCopy(previousFinalBlockTransactionHashKey, 0, pocShareWorkToDoBytes, offset + 8, previousFinalBlockTransactionHashKey.Length);
 
@@ -130,7 +129,7 @@ namespace Xirorig.Utility
                             Math.Abs(y2 - y1) == Math.Abs(x4 - x1) && Math.Abs(x2 - x1) == Math.Abs(y4 - y3) && Math.Abs(y2 - y3) == Math.Abs(x4 - x3) && Math.Abs(x2 - x3) == Math.Abs(y4 - y3) ||
                             Math.Abs(y3 - y1) == Math.Abs(x4 - x1) && Math.Abs(x3 - x1) == Math.Abs(y4 - y1) && Math.Abs(y3 - y2) == Math.Abs(x4 - x2) && Math.Abs(x3 - x2) == Math.Abs(y4 - y2))
                         {
-                            newNonce = (byte) (pocShareWorkToDoBytes[i] + pocShareWorkToDoBytes[i]) + ((byte) (pocShareWorkToDoBytes[i + 2] + pocShareWorkToDoBytes[i + 2]) << 8) + ((byte) (pocShareWorkToDoBytes[i + 4] + pocShareWorkToDoBytes[i + 4]) << 16) + ((uint) (byte) (pocShareWorkToDoBytes[i + 6] + pocShareWorkToDoBytes[i + 6]) << 24);
+                            newNonce = (byte)(pocShareWorkToDoBytes[i] + pocShareWorkToDoBytes[i]) + ((byte)(pocShareWorkToDoBytes[i + 2] + pocShareWorkToDoBytes[i + 2]) << 8) + ((byte)(pocShareWorkToDoBytes[i + 4] + pocShareWorkToDoBytes[i + 4]) << 16) + ((long)(byte)(pocShareWorkToDoBytes[i + 6] + pocShareWorkToDoBytes[i + 6]) << 24);
                             newNonceGenerated = true;
                             break;
                         }
@@ -139,13 +138,12 @@ namespace Xirorig.Utility
                     if (newNonceGenerated) break;
 
                     pocShareIv = Sha3Utility.ComputeSha3512Hash(pocShareIv);
-
                     totalRetry++;
                 }
-                finally
-                {
-                    arrayPool.Return(pocShareWorkToDoBytes);
-                }
+            }
+            finally
+            {
+                arrayPool.Return(pocShareWorkToDoBytes);
             }
 
             if (!newNonceGenerated)
@@ -155,7 +153,7 @@ namespace Xirorig.Utility
                     pocShareIv = Sha3Utility.ComputeSha3512Hash(pocShareIv);
                 }
 
-                newNonce = pocShareIv[0] + (pocShareIv[1] << 8) + (pocShareIv[2] << 16) + ((uint) pocShareIv[3] << 24);
+                newNonce = pocShareIv[0] + (pocShareIv[1] << 8) + (pocShareIv[2] << 16) + ((long) pocShareIv[3] << 24);
             }
 
             if (newNonce < minerSettings.PocShareNonceMin || newNonce > minerSettings.PocShareNonceMax) return false;
@@ -169,7 +167,7 @@ namespace Xirorig.Utility
             pocShareIv[4] = (byte) ((newNonce & 0xFF_00_00_00_00) >> 32);
             pocShareIv[5] = (byte) ((newNonce & 0xFF_00_00_00_00_00) >> 40);
             pocShareIv[6] = (byte) ((newNonce & 0xFF_00_00_00_00_00_00) >> 48);
-            pocShareIv[7] = (byte) ((newNonce & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocShareIv[7] = (byte) (newNonce >> 56);
 
             return true;
         }

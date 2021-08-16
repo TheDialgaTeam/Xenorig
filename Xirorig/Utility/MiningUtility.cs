@@ -177,16 +177,12 @@ namespace Xirorig.Utility
                 switch (miningInstruction)
                 {
                     case MiningInstruction.DoNonceIv:
-                    {
                         DoNonceIvMiningInstruction(ref pocShareIv, minerSettings);
                         break;
-                    }
 
                     case MiningInstruction.DoNonceIvXor:
-                    {
                         pocShareIv = DoNonceIvXorMiningInstruction(pocShareIv);
                         break;
-                    }
 
                     case MiningInstruction.DoNonceIvEasySquareMath:
                     {
