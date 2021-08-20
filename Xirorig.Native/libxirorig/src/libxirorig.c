@@ -58,7 +58,7 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
     int64_t newNonce = 0;
 
     const size_t minimumLength = pocShareIvLength + previousFinalBlockTransactionHashKeyLength + 8 + blockDifficultyLength;
-    uint8_t* pocShareWorkToDoBytes = malloc(minimumLength);
+    uint8_t *pocShareWorkToDoBytes = malloc(minimumLength);
 
     while (totalRetry < pocShareNonceMaxSquareRetry)
     {
@@ -68,14 +68,14 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
         size_t offset = pocShareIvLength + blockDifficultyLength;
 
         // Block Height
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)(currentBlockHeight & 0xFF);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF00) >> 8);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF0000) >> 16);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF000000) >> 24);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF00000000) >> 32);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF0000000000) >> 40);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)((currentBlockHeight & 0xFF000000000000) >> 48);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t)(currentBlockHeight >> 56);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) (currentBlockHeight & 0xFF);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF00) >> 8);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF0000) >> 16);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF000000) >> 24);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF00000000) >> 32);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF0000000000) >> 40);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF000000000000) >> 48);
+        *(pocShareWorkToDoBytes + offset++) = (uint8_t) (currentBlockHeight >> 56);
 
         memcpy(pocShareWorkToDoBytes + offset, previousFinalBlockTransactionHashKey, previousFinalBlockTransactionHashKeyLength);
 
@@ -99,7 +99,7 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
                 abs(y2 - y1) == abs(x4 - x1) && abs(x2 - x1) == abs(y4 - y3) && abs(y2 - y3) == abs(x4 - x3) && abs(x2 - x3) == abs(y4 - y3) ||
                 abs(y3 - y1) == abs(x4 - x1) && abs(x3 - x1) == abs(y4 - y1) && abs(y3 - y2) == abs(x4 - x2) && abs(x3 - x2) == abs(y4 - y2))
             {
-                newNonce = (int64_t)(*(pocShareWorkToDoBytes + i) + *(pocShareWorkToDoBytes + i) & 0xFF) + ((int64_t)(*(pocShareWorkToDoBytes + i + 2) + *(pocShareWorkToDoBytes + i + 2) & 0xFF) << 8) + ((int64_t)(*(pocShareWorkToDoBytes + i + 4) + *(pocShareWorkToDoBytes + i + 4) & 0xFF) << 16) + ((int64_t)(*(pocShareWorkToDoBytes + i + 6) + *(pocShareWorkToDoBytes + i + 6) & 0xFF) << 24);
+                newNonce = (int64_t) (*(pocShareWorkToDoBytes + i) + *(pocShareWorkToDoBytes + i) & 0xFF) + ((int64_t) (*(pocShareWorkToDoBytes + i + 2) + *(pocShareWorkToDoBytes + i + 2) & 0xFF) << 8) + ((int64_t) (*(pocShareWorkToDoBytes + i + 4) + *(pocShareWorkToDoBytes + i + 4) & 0xFF) << 16) + ((int64_t) (*(pocShareWorkToDoBytes + i + 6) + *(pocShareWorkToDoBytes + i + 6) & 0xFF) << 24);
                 newNonceGenerated = 1;
                 break;
             }
@@ -123,22 +123,22 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
             computeSha3512Hash(pocShareIv, pocShareIvLength, pocShareIv);
         }
 
-        newNonce = (int64_t)*pocShareIv + ((int64_t) *(pocShareIv + 1) << 8) + ((int64_t) *(pocShareIv + 2) << 16) + ((int64_t) *(pocShareIv + 3) << 24);
+        newNonce = (int64_t) *pocShareIv + ((int64_t) *(pocShareIv + 1) << 8) + ((int64_t) *(pocShareIv + 2) << 16) + ((int64_t) *(pocShareIv + 3) << 24);
     }
 
     if (newNonce >= pocShareNonceMin && newNonce <= pocShareNonceMax)
     {
         size_t offset = 0;
 
-        *(pocShareIv + offset++) = (uint8_t)(newNonce & 0xFF);
-        *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF00) >> 8);
-        *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF0000) >> 16);
-        *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF000000) >> 24);
-        *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF00000000) >> 32);
-        *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF0000000000) >> 40);
-        *(pocShareIv + offset++) = (uint8_t)((newNonce & 0xFF000000000000) >> 48);
-        *(pocShareIv + offset) = (uint8_t)(newNonce >> 56);
-
+        *(pocShareIv + offset++) = (uint8_t) (newNonce & 0xFF);
+        *(pocShareIv + offset++) = (uint8_t) ((newNonce & 0xFF00) >> 8);
+        *(pocShareIv + offset++) = (uint8_t) ((newNonce & 0xFF0000) >> 16);
+        *(pocShareIv + offset++) = (uint8_t) ((newNonce & 0xFF000000) >> 24);
+        *(pocShareIv + offset++) = (uint8_t) ((newNonce & 0xFF00000000) >> 32);
+        *(pocShareIv + offset++) = (uint8_t) ((newNonce & 0xFF0000000000) >> 40);
+        *(pocShareIv + offset++) = (uint8_t) ((newNonce & 0xFF000000000000) >> 48);
+        *(pocShareIv + offset) = (uint8_t) (newNonce >> 56);
+        
         return 1;
     }
 
