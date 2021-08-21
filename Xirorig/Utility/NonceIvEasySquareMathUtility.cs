@@ -35,7 +35,7 @@ namespace Xirorig.Utility
 
         public static unsafe bool DoNonceIvEasySquareMathMiningInstruction(BlockTemplate blockTemplate, ref byte[] pocShareIv, byte[] previousFinalBlockTransactionHashKey)
         {
-            if (!IsNativeImplementationAvailable || true) return SoftwareDoNonceIvEasySquareMathMiningInstruction(blockTemplate, ref pocShareIv, previousFinalBlockTransactionHashKey);
+            if (!IsNativeImplementationAvailable) return SoftwareDoNonceIvEasySquareMathMiningInstruction(blockTemplate, ref pocShareIv, previousFinalBlockTransactionHashKey);
 
             try
             {
@@ -60,9 +60,7 @@ namespace Xirorig.Utility
 
                     if (result == 0) return false;
 
-                    var output = new byte[8];
-                    Buffer.BlockCopy(pocShareIv, 0, output, 0, 8);
-                    pocShareIv = output;
+                    Array.Resize(ref pocShareIv, 8);
 
                     return true;
                 }

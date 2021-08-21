@@ -38,6 +38,8 @@ EXPORT int32_t doNonceIvEasySquareMathMiningInstruction(
     const size_t blockDifficultyLength
 );
 
-EXPORT size_t getMaxCompressSize(const size_t inputSize);
+EXPORT int32_t getMaxCompressSize(const int32_t inputSize);
 
-EXPORT int32_t doLz4CompressNonceIvMiningInstruction(const uint8_t* input, const size_t inputSize, uint8_t* output);
+EXPORT int32_t doLz4CompressNonceIvMiningInstruction(const uint8_t* input, const int32_t inputSize, uint8_t* output);
+
+EXPORT int32_t doNonceIvIterationsMiningInstruction(const uint8_t *password, const int32_t passwordLength, const uint8_t *salt, const int32_t saltLength, const int32_t iterations, const int32_t keyLength, uint8_t *output);

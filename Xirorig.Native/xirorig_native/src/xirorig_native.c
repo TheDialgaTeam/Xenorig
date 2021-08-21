@@ -67,14 +67,14 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
         size_t offset = pocShareIvLength + blockDifficultyLength;
 
         // Block Height
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) (currentBlockHeight & 0xFF);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF00) >> 8);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF0000) >> 16);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF000000) >> 24);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF00000000) >> 32);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF0000000000) >> 40);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) ((currentBlockHeight & 0xFF000000000000) >> 48);
-        *(pocShareWorkToDoBytes + offset++) = (uint8_t) (currentBlockHeight >> 56);
+        *(pocShareWorkToDoBytes + offset++) = currentBlockHeight & 0xFF;
+        *(pocShareWorkToDoBytes + offset++) = (currentBlockHeight >> 8) & 0xFF;
+        *(pocShareWorkToDoBytes + offset++) = (currentBlockHeight >> 16) & 0xFF;
+        *(pocShareWorkToDoBytes + offset++) = (currentBlockHeight >> 24) & 0xFF;
+        *(pocShareWorkToDoBytes + offset++) = (currentBlockHeight >> 32) & 0xFF;
+        *(pocShareWorkToDoBytes + offset++) = (currentBlockHeight >> 40) & 0xFF;
+        *(pocShareWorkToDoBytes + offset++) = (currentBlockHeight >> 48) & 0xFF;
+        *(pocShareWorkToDoBytes + offset++) = currentBlockHeight >> 56;
 
         memcpy(pocShareWorkToDoBytes + offset, previousFinalBlockTransactionHashKey, previousFinalBlockTransactionHashKeyLength);
 
@@ -104,16 +104,14 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
             }
         }
 
-        if (newNonceGenerated)
-        {
-            free(pocShareWorkToDoBytes);
-            break;
-        }
+        if (newNonceGenerated) break;
 
         computeSha3512Hash(pocShareIv, pocShareIvLength, pocShareIv);
-
+        
         totalRetry++;
     }
+    
+    free(pocShareWorkToDoBytes);
 
     if (newNonceGenerated == 0)
     {
@@ -127,14 +125,14 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
 
     if (newNonce >= pocShareNonceMin && newNonce <= pocShareNonceMax)
     {
-        *pocShareIv++ = (uint8_t) (newNonce & 0xFF);
-        *pocShareIv++ = (uint8_t) ((newNonce & 0xFF00) >> 8);
-        *pocShareIv++ = (uint8_t) ((newNonce & 0xFF0000) >> 16);
-        *pocShareIv++ = (uint8_t) ((newNonce & 0xFF000000) >> 24);
-        *pocShareIv++ = (uint8_t) ((newNonce & 0xFF00000000) >> 32);
-        *pocShareIv++ = (uint8_t) ((newNonce & 0xFF0000000000) >> 40);
-        *pocShareIv++ = (uint8_t) ((newNonce & 0xFF000000000000) >> 48);
-        *pocShareIv = (uint8_t) (newNonce >> 56);
+        *pocShareIv++ = newNonce & 0xFF;
+        *pocShareIv++ = (newNonce >> 8) & 0xFF;
+        *pocShareIv++ = (newNonce >> 16) & 0xFF;
+        *pocShareIv++ = (newNonce >> 24) & 0xFF;
+        *pocShareIv++ = (newNonce >> 32) & 0xFF;
+        *pocShareIv++ = (newNonce >> 40) & 0xFF;
+        *pocShareIv++ = (newNonce >> 48) & 0xFF;
+        *pocShareIv = newNonce >> 56;
         
         return 1;
     }
@@ -142,15 +140,15 @@ int32_t doNonceIvEasySquareMathMiningInstruction(
     return 0;
 }
 
-size_t getMaxCompressSize(const size_t inputSize)
+int32_t getMaxCompressSize(const int32_t inputSize)
 {
     return LZ4_COMPRESSBOUND(inputSize);
 }
 
-int32_t doLz4CompressNonceIvMiningInstruction(const uint8_t *input, const size_t inputSize, uint8_t *output)
+int32_t doLz4CompressNonceIvMiningInstruction(const uint8_t *input, const int32_t inputSize, uint8_t *output)
 {
-    const size_t compressMaxSize = LZ4_COMPRESSBOUND(inputSize);
-    const size_t actualCompressSize = LZ4_compress_default(input, output, inputSize, compressMaxSize);
+    const int32_t compressMaxSize = LZ4_COMPRESSBOUND(inputSize);
+    const int32_t actualCompressSize = LZ4_compress_default(input, output, inputSize, compressMaxSize);
     
     if (actualCompressSize >= inputSize || actualCompressSize <= 0)
     {
@@ -184,4 +182,14 @@ int32_t doLz4CompressNonceIvMiningInstruction(const uint8_t *input, const size_t
         
         return actualCompressSize + 8;
     }
+}
+
+int32_t doNonceIvIterationsMiningInstruction(const uint8_t *password, const int32_t passwordLength, const uint8_t *salt, const int32_t saltLength, const int32_t iterations, const int32_t keyLength, uint8_t *output)
+{
+    return PKCS5_PBKDF2_HMAC_SHA1(password, passwordLength, salt, saltLength, iterations, keyLength, output);
+}
+
+int32_t doPowShare(int64_t nonce, const uint8_t *pocRandomData, const int32_t pocRandomDataLength, const uint8_t previousFinalBlockTransactionHashKey, const int32_t previousFinalBlockTransactionHashKeyLength)
+{
+    
 }
