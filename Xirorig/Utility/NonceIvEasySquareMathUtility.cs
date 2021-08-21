@@ -35,7 +35,7 @@ namespace Xirorig.Utility
 
         public static unsafe bool DoNonceIvEasySquareMathMiningInstruction(BlockTemplate blockTemplate, ref byte[] pocShareIv, byte[] previousFinalBlockTransactionHashKey)
         {
-            if (!IsNativeImplementationAvailable) return NativeDoNonceIvEasySquareMathMiningInstruction(blockTemplate, ref pocShareIv, previousFinalBlockTransactionHashKey);
+            if (!IsNativeImplementationAvailable || true) return SoftwareDoNonceIvEasySquareMathMiningInstruction(blockTemplate, ref pocShareIv, previousFinalBlockTransactionHashKey);
 
             try
             {
@@ -60,21 +60,23 @@ namespace Xirorig.Utility
 
                     if (result == 0) return false;
 
-                    Array.Resize(ref pocShareIv, 8);
+                    var output = new byte[8];
+                    Buffer.BlockCopy(pocShareIv, 0, output, 0, 8);
+                    pocShareIv = output;
 
                     return true;
                 }
             }
             catch (Exception)
             {
-                return NativeDoNonceIvEasySquareMathMiningInstruction(blockTemplate, ref pocShareIv, previousFinalBlockTransactionHashKey);
+                return SoftwareDoNonceIvEasySquareMathMiningInstruction(blockTemplate, ref pocShareIv, previousFinalBlockTransactionHashKey);
             }
         }
 
         [DllImport("xirorig_native")]
         private static extern unsafe int doNonceIvEasySquareMathMiningInstruction(int pocShareNonceMaxSquareRetry, int pocShareNonceNoSquareFoundShaRounds, long pocShareNonceMin, long pocShareNonceMax, long currentBlockHeight, byte* pocShareIv, int pocShareIvLength, byte* previousFinalBlockTransactionHashKey, int previousFinalBlockTransactionHashKeyLength, byte* blockDifficulty, int blockDifficultyLength);
 
-        private static bool NativeDoNonceIvEasySquareMathMiningInstruction(BlockTemplate blockTemplate, ref byte[] pocShareIv, byte[] previousFinalBlockTransactionHashKey)
+        private static bool SoftwareDoNonceIvEasySquareMathMiningInstruction(BlockTemplate blockTemplate, ref byte[] pocShareIv, byte[] previousFinalBlockTransactionHashKey)
         {
             var totalRetry = 0;
             var arrayPool = ArrayPool<byte>.Shared;
@@ -98,14 +100,14 @@ namespace Xirorig.Utility
                     var offset = pocShareIv.Length + blockDifficultyBytes.Length;
 
                     // Block Height
-                    pocShareWorkToDoBytes[offset] = (byte)(blockTemplate.CurrentBlockHeight & 0xFF);
-                    pocShareWorkToDoBytes[offset + 1] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00) >> 8);
-                    pocShareWorkToDoBytes[offset + 2] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00) >> 16);
-                    pocShareWorkToDoBytes[offset + 3] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00) >> 24);
-                    pocShareWorkToDoBytes[offset + 4] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00) >> 32);
-                    pocShareWorkToDoBytes[offset + 5] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00) >> 40);
-                    pocShareWorkToDoBytes[offset + 6] = (byte)((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00_00) >> 48);
-                    pocShareWorkToDoBytes[offset + 7] = (byte)(blockTemplate.CurrentBlockHeight >> 56);
+                    pocShareWorkToDoBytes[offset] = (byte) (blockTemplate.CurrentBlockHeight & 0xFF);
+                    pocShareWorkToDoBytes[offset + 1] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00) >> 8);
+                    pocShareWorkToDoBytes[offset + 2] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00) >> 16);
+                    pocShareWorkToDoBytes[offset + 3] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00) >> 24);
+                    pocShareWorkToDoBytes[offset + 4] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00) >> 32);
+                    pocShareWorkToDoBytes[offset + 5] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00) >> 40);
+                    pocShareWorkToDoBytes[offset + 6] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00_00) >> 48);
+                    pocShareWorkToDoBytes[offset + 7] = (byte) (blockTemplate.CurrentBlockHeight >> 56);
 
                     Buffer.BlockCopy(previousFinalBlockTransactionHashKey, 0, pocShareWorkToDoBytes, offset + 8, previousFinalBlockTransactionHashKey.Length);
 
@@ -129,7 +131,7 @@ namespace Xirorig.Utility
                             Math.Abs(y2 - y1) == Math.Abs(x4 - x1) && Math.Abs(x2 - x1) == Math.Abs(y4 - y3) && Math.Abs(y2 - y3) == Math.Abs(x4 - x3) && Math.Abs(x2 - x3) == Math.Abs(y4 - y3) ||
                             Math.Abs(y3 - y1) == Math.Abs(x4 - x1) && Math.Abs(x3 - x1) == Math.Abs(y4 - y1) && Math.Abs(y3 - y2) == Math.Abs(x4 - x2) && Math.Abs(x3 - x2) == Math.Abs(y4 - y2))
                         {
-                            newNonce = (byte)(pocShareWorkToDoBytes[i] + pocShareWorkToDoBytes[i]) + ((byte)(pocShareWorkToDoBytes[i + 2] + pocShareWorkToDoBytes[i + 2]) << 8) + ((byte)(pocShareWorkToDoBytes[i + 4] + pocShareWorkToDoBytes[i + 4]) << 16) + ((long)(byte)(pocShareWorkToDoBytes[i + 6] + pocShareWorkToDoBytes[i + 6]) << 24);
+                            newNonce = (byte) (pocShareWorkToDoBytes[i] + pocShareWorkToDoBytes[i]) + ((byte) (pocShareWorkToDoBytes[i + 2] + pocShareWorkToDoBytes[i + 2]) << 8) + ((byte) (pocShareWorkToDoBytes[i + 4] + pocShareWorkToDoBytes[i + 4]) << 16) + ((long) (byte) (pocShareWorkToDoBytes[i + 6] + pocShareWorkToDoBytes[i + 6]) << 24);
                             newNonceGenerated = true;
                             break;
                         }

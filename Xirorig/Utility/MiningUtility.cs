@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using LZ4;
 using Xirorig.Algorithm;
 using Xirorig.Network.Api.Models;
 
@@ -193,7 +191,7 @@ namespace Xirorig.Utility
 
                     case MiningInstruction.DoLz4CompressNonceIv:
                     {
-                        pocShareIv = LZ4Codec.Wrap(pocShareIv, 0, pocShareIv.Length);
+                        pocShareIv = Lz4CompressNonceIvUtility.DoLz4CompressNonceIvMiningInstruction(pocShareIv);
                         break;
                     }
 

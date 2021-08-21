@@ -1,0 +1,8 @@
+{
+  "name": "xirorig-native",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "openssl",
+    "lz4"
+  ]
+}

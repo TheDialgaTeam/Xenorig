@@ -14,6 +14,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Platforms>AnyCPU;x64;x86;ARM32</Platforms>
 		<Nullable>enable</Nullable>
+		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 		<Configurations>Debug;Release_Windows;Release_Linux</Configurations>
 	</PropertyGroup>
 
@@ -58,10 +59,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-win-$(Platform)\bin\xirorig_native.dll" Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Release_Windows'">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\Release-win-$(Platform)\bin\xirorig_native.dll" Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Release_Windows'">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Include="..\Xirorig.Native\libxirorig\out\install\Release-linux-$(Platform)\lib\libxirorig_native.so.1.0.0" Condition="'$(Configuration)'=='Release_Linux'">
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\Release-linux-$(Platform)\lib\libxirorig_native.so.1.0.0" Condition="'$(Configuration)'=='Release_Linux'">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

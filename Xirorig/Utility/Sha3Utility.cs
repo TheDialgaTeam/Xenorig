@@ -36,60 +36,44 @@ namespace Xirorig.Utility
 
         public static unsafe byte[] ComputeSha3512Hash(byte[] input)
         {
-            var result = new byte[Sha3512OutputSize];
-
-            if (!IsNativeImplementationAvailable)
-            {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, 0, input.Length);
-                sha3Digest.DoFinal(result, 0);
-                return result;
-            }
+            if (!IsNativeImplementationAvailable) return SoftwareComputeSha3512Hash(input);
 
             try
             {
+                var result = new byte[Sha3512OutputSize];
+
                 fixed (byte* inputPtr = input, outputPtr = result)
                 {
                     if (computeSha3512Hash(inputPtr, input.Length, outputPtr) == 0) throw new Exception();
                 }
+
+                return result;
             }
             catch (Exception)
             {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, 0, input.Length);
-                sha3Digest.DoFinal(result, 0);
+                return SoftwareComputeSha3512Hash(input);
             }
-
-            return result;
         }
 
         public static unsafe byte[] ComputeSha3512Hash(byte[] input, int inputOffset, int inputSize)
         {
-            var result = new byte[Sha3512OutputSize];
-
-            if (!IsNativeImplementationAvailable)
-            {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, inputOffset, inputSize);
-                sha3Digest.DoFinal(result, 0);
-                return result;
-            }
+            if (!IsNativeImplementationAvailable) SoftwareComputeSha3512Hash(input, inputOffset, inputSize);
 
             try
             {
+                var result = new byte[Sha3512OutputSize];
+
                 fixed (byte* inputPtr = input, outputPtr = result)
                 {
                     if (computeSha3512Hash(inputPtr + inputOffset, inputSize, outputPtr) == 0) throw new Exception();
                 }
+
+                return result;
             }
             catch (Exception)
             {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, inputOffset, inputSize);
-                sha3Digest.DoFinal(result, 0);
+                return SoftwareComputeSha3512Hash(input, inputOffset, inputSize);
             }
-
-            return result;
         }
 
         public static unsafe void ComputeSha3512Hash(byte[] input, byte[] output)
@@ -98,9 +82,7 @@ namespace Xirorig.Utility
 
             if (!IsNativeImplementationAvailable)
             {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, 0, input.Length);
-                sha3Digest.DoFinal(output, 0);
+                SoftwareComputeSha3512Hash(input, output);
                 return;
             }
 
@@ -113,9 +95,7 @@ namespace Xirorig.Utility
             }
             catch (Exception)
             {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, 0, input.Length);
-                sha3Digest.DoFinal(output, 0);
+                SoftwareComputeSha3512Hash(input, output);
             }
         }
 
@@ -125,9 +105,7 @@ namespace Xirorig.Utility
 
             if (!IsNativeImplementationAvailable)
             {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, 0, input.Length);
-                sha3Digest.DoFinal(output, 0);
+                SoftwareComputeSha3512Hash(input, inputOffset, inputSize, output);
                 return;
             }
 
@@ -140,13 +118,47 @@ namespace Xirorig.Utility
             }
             catch (Exception)
             {
-                var sha3Digest = new Sha3Digest(512);
-                sha3Digest.BlockUpdate(input, inputOffset, inputSize);
-                sha3Digest.DoFinal(output, 0);
+                SoftwareComputeSha3512Hash(input, inputOffset, inputSize, output);
             }
         }
 
         [DllImport("xirorig_native")]
         private static extern unsafe int computeSha3512Hash(byte* input, int inputSize, byte* output);
+
+        private static byte[] SoftwareComputeSha3512Hash(byte[] input)
+        {
+            var result = new byte[Sha3512OutputSize];
+
+            var sha3Digest = new Sha3Digest(512);
+            sha3Digest.BlockUpdate(input, 0, input.Length);
+            sha3Digest.DoFinal(result, 0);
+
+            return result;
+        }
+
+        private static byte[] SoftwareComputeSha3512Hash(byte[] input, int inputOffset, int inputSize)
+        {
+            var result = new byte[Sha3512OutputSize];
+
+            var sha3Digest = new Sha3Digest(512);
+            sha3Digest.BlockUpdate(input, inputOffset, inputSize);
+            sha3Digest.DoFinal(result, 0);
+
+            return result;
+        }
+
+        private static void SoftwareComputeSha3512Hash(byte[] input, byte[] output)
+        {
+            var sha3Digest = new Sha3Digest(512);
+            sha3Digest.BlockUpdate(input, 0, input.Length);
+            sha3Digest.DoFinal(output, 0);
+        }
+
+        private static void SoftwareComputeSha3512Hash(byte[] input, int inputOffset, int inputSize, byte[] output)
+        {
+            var sha3Digest = new Sha3Digest(512);
+            sha3Digest.BlockUpdate(input, inputOffset, inputSize);
+            sha3Digest.DoFinal(output, 0);
+        }
     }
 }
