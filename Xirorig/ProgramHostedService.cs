@@ -8,8 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using TheDialgaTeam.Extensions.Logging.LoggingTemplate;
-using TheDialgaTeam.Serilog.Formatting.Ansi;
+using TheDialgaTeam.Core.Logger.Extensions.Logging;
+using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
 using Xirorig.Algorithm;
 using Xirorig.Miner;
 using Xirorig.Network;
@@ -33,10 +33,10 @@ namespace Xirorig
         private readonly Thread _consoleThread;
         private readonly CancellationToken _cancellationToken;
 
-        private readonly decimal[] _averageHashCalculatedIn10Seconds;
-        private readonly decimal[] _averageHashCalculatedIn60Seconds;
-        private readonly decimal[] _averageHashCalculatedIn15Minutes;
-        private decimal _maxHash;
+        private readonly long[] _averageHashCalculatedIn10Seconds;
+        private readonly long[] _averageHashCalculatedIn60Seconds;
+        private readonly long[] _averageHashCalculatedIn15Minutes;
+        private long _maxHash;
 
         private readonly Timer _averageHashCalculatedIn10SecondsTimer;
         private readonly Timer _averageHashCalculatedIn60SecondsTimer;
@@ -62,9 +62,9 @@ namespace Xirorig
             _consoleThread = new Thread(StartConsoleThread) { Name = "Console Thread", IsBackground = true };
             _cancellationToken = hostApplicationLifetime.ApplicationStopping;
 
-            _averageHashCalculatedIn10Seconds = new decimal[options.Value.NumberOfThreads];
-            _averageHashCalculatedIn60Seconds = new decimal[options.Value.NumberOfThreads];
-            _averageHashCalculatedIn15Minutes = new decimal[options.Value.NumberOfThreads];
+            _averageHashCalculatedIn10Seconds = new long[options.Value.NumberOfThreads];
+            _averageHashCalculatedIn60Seconds = new long[options.Value.NumberOfThreads];
+            _averageHashCalculatedIn15Minutes = new long[options.Value.NumberOfThreads];
 
             _averageHashCalculatedIn10SecondsTimer = new Timer(AverageHashCalculatedIn10SecondsCallback, null, Timeout.Infinite, Timeout.Infinite);
             _averageHashCalculatedIn60SecondsTimer = new Timer(AverageHashCalculatedIn60SecondsCallback, null, Timeout.Infinite, Timeout.Infinite);
@@ -253,7 +253,7 @@ namespace Xirorig
             {
                 var cpuSoloMiner = _cpuSoloMiners[i];
 
-                averageHashCalculatedIn10Seconds[i] = cpuSoloMiner.TotalHashCalculatedIn10Seconds / 10m;
+                averageHashCalculatedIn10Seconds[i] = cpuSoloMiner.TotalHashCalculatedIn10Seconds / 10;
                 cpuSoloMiner.TotalHashCalculatedIn10Seconds = 0;
             }
         }
@@ -267,7 +267,7 @@ namespace Xirorig
             {
                 var cpuSoloMiner = _cpuSoloMiners[i];
 
-                averageHashCalculatedIn60Seconds[i] = cpuSoloMiner.TotalHashCalculatedIn60Seconds / 60m;
+                averageHashCalculatedIn60Seconds[i] = cpuSoloMiner.TotalHashCalculatedIn60Seconds / 60;
                 cpuSoloMiner.TotalHashCalculatedIn60Seconds = 0;
             }
         }
@@ -281,14 +281,14 @@ namespace Xirorig
             {
                 var cpuSoloMiner = _cpuSoloMiners[i];
 
-                averageHashCalculatedIn15Minutes[i] = cpuSoloMiner.TotalHashCalculatedIn15Minutes / 900m;
+                averageHashCalculatedIn15Minutes[i] = cpuSoloMiner.TotalHashCalculatedIn15Minutes / 900;
                 cpuSoloMiner.TotalHashCalculatedIn15Minutes = 0;
             }
         }
 
         private void TotalAverageHashCalculatedCallback(object? state)
         {
-            decimal average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
+            long average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
             var threadCount = _cpuSoloMiners.Length;
 
             for (var i = 0; i < threadCount; i++)

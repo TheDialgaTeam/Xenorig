@@ -98,16 +98,16 @@ namespace Xirorig.Utility
                     var offset = pocShareIv.Length + blockDifficultyBytes.Length;
 
                     // Block Height
-                    pocShareWorkToDoBytes[offset] = (byte) (blockTemplate.CurrentBlockHeight & 0xFF);
-                    pocShareWorkToDoBytes[offset + 1] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00) >> 8);
-                    pocShareWorkToDoBytes[offset + 2] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00) >> 16);
-                    pocShareWorkToDoBytes[offset + 3] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00) >> 24);
-                    pocShareWorkToDoBytes[offset + 4] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00) >> 32);
-                    pocShareWorkToDoBytes[offset + 5] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00) >> 40);
-                    pocShareWorkToDoBytes[offset + 6] = (byte) ((blockTemplate.CurrentBlockHeight & 0xFF_00_00_00_00_00_00) >> 48);
-                    pocShareWorkToDoBytes[offset + 7] = (byte) (blockTemplate.CurrentBlockHeight >> 56);
+                    pocShareWorkToDoBytes[offset++] = (byte) (blockTemplate.CurrentBlockHeight & 0xFF);
+                    pocShareWorkToDoBytes[offset++] = (byte) ((blockTemplate.CurrentBlockHeight >> 8) & 0xFF);
+                    pocShareWorkToDoBytes[offset++] = (byte) ((blockTemplate.CurrentBlockHeight >> 16) & 0xFF);
+                    pocShareWorkToDoBytes[offset++] = (byte) ((blockTemplate.CurrentBlockHeight >> 24) & 0xFF);
+                    pocShareWorkToDoBytes[offset++] = (byte) ((blockTemplate.CurrentBlockHeight >> 32) & 0xFF);
+                    pocShareWorkToDoBytes[offset++] = (byte) ((blockTemplate.CurrentBlockHeight >> 40) & 0xFF);
+                    pocShareWorkToDoBytes[offset++] = (byte) ((blockTemplate.CurrentBlockHeight >> 48) & 0xFF);
+                    pocShareWorkToDoBytes[offset++] = (byte) (blockTemplate.CurrentBlockHeight >> 56);
 
-                    Buffer.BlockCopy(previousFinalBlockTransactionHashKey, 0, pocShareWorkToDoBytes, offset + 8, previousFinalBlockTransactionHashKey.Length);
+                    Buffer.BlockCopy(previousFinalBlockTransactionHashKey, 0, pocShareWorkToDoBytes, offset, previousFinalBlockTransactionHashKey.Length);
 
                     Sha3Utility.ComputeSha3512Hash(pocShareWorkToDoBytes, 0, minimumLength, pocShareWorkToDoBytes);
 
@@ -161,12 +161,12 @@ namespace Xirorig.Utility
             Array.Resize(ref pocShareIv, 8);
 
             pocShareIv[0] = (byte) (newNonce & 0xFF);
-            pocShareIv[1] = (byte) ((newNonce & 0xFF_00) >> 8);
-            pocShareIv[2] = (byte) ((newNonce & 0xFF_00_00) >> 16);
-            pocShareIv[3] = (byte) ((newNonce & 0xFF_00_00_00) >> 24);
-            pocShareIv[4] = (byte) ((newNonce & 0xFF_00_00_00_00) >> 32);
-            pocShareIv[5] = (byte) ((newNonce & 0xFF_00_00_00_00_00) >> 40);
-            pocShareIv[6] = (byte) ((newNonce & 0xFF_00_00_00_00_00_00) >> 48);
+            pocShareIv[1] = (byte) ((newNonce >> 8) & 0xFF);
+            pocShareIv[2] = (byte) ((newNonce >> 16) & 0xFF);
+            pocShareIv[3] = (byte) ((newNonce >> 24) & 0xFF);
+            pocShareIv[4] = (byte) ((newNonce >> 32) & 0xFF);
+            pocShareIv[5] = (byte) ((newNonce >> 40) & 0xFF);
+            pocShareIv[6] = (byte) ((newNonce >> 48) & 0xFF);
             pocShareIv[7] = (byte) (newNonce >> 56);
 
             return true;

@@ -88,25 +88,25 @@ namespace Xirorig.Utility
 
             // randomNumber
             pocRandomData[0] = (byte) (randomNumber & 0xFF);
-            pocRandomData[1] = (byte) ((randomNumber & 0xFF_00) >> 8);
-            pocRandomData[2] = (byte) ((randomNumber & 0xFF_00_00) >> 16);
-            pocRandomData[3] = (byte) ((randomNumber & 0x7F_00_00_00) >> 24);
+            pocRandomData[1] = (byte) ((randomNumber >> 8) & 0xFF);
+            pocRandomData[2] = (byte) ((randomNumber >> 16) & 0xFF);
+            pocRandomData[3] = (byte) (randomNumber >> 24);
 
             // randomNumber2
             pocRandomData[4] = (byte) (randomNumber2 & 0xFF);
-            pocRandomData[5] = (byte) ((randomNumber2 & 0xFF_00) >> 8);
-            pocRandomData[6] = (byte) ((randomNumber2 & 0xFF_00_00) >> 16);
-            pocRandomData[7] = (byte) ((randomNumber2 & 0x7F_00_00_00) >> 24);
+            pocRandomData[5] = (byte) ((randomNumber2 >> 8) & 0xFF);
+            pocRandomData[6] = (byte) ((randomNumber2 >> 16) & 0xFF);
+            pocRandomData[7] = (byte) (randomNumber2 >> 24);
 
             // timestamp
             pocRandomData[8] = (byte) (timestamp & 0xFF);
-            pocRandomData[9] = (byte) ((timestamp & 0xFF_00) >> 8);
-            pocRandomData[10] = (byte) ((timestamp & 0xFF_00_00) >> 16);
-            pocRandomData[11] = (byte) ((timestamp & 0xFF_00_00_00) >> 24);
-            pocRandomData[12] = (byte) ((timestamp & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[13] = (byte) ((timestamp & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[14] = (byte) ((timestamp & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[15] = (byte) ((timestamp & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocRandomData[9] = (byte) ((timestamp >> 8) & 0xFF);
+            pocRandomData[10] = (byte) ((timestamp >> 16) & 0xFF);
+            pocRandomData[11] = (byte) ((timestamp >> 24) & 0xFF);
+            pocRandomData[12] = (byte) ((timestamp >> 32) & 0xFF);
+            pocRandomData[13] = (byte) ((timestamp >> 40) & 0xFF);
+            pocRandomData[14] = (byte) ((timestamp >> 48) & 0xFF);
+            pocRandomData[15] = (byte) (timestamp >> 56);
 
             randomNumberGenerator.GetBytes(pocRandomData, 16, minerSettings.RandomDataShareChecksum);
 
@@ -117,23 +117,23 @@ namespace Xirorig.Utility
 
             // block height
             pocRandomData[offset++] = (byte) (blockHeight & 0xFF);
-            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00) >> 8);
-            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00) >> 16);
-            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00) >> 24);
-            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[offset++] = (byte) ((blockHeight & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[offset++] = (byte) ((blockHeight & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocRandomData[offset++] = (byte) ((blockHeight >> 8) & 0xFF);
+            pocRandomData[offset++] = (byte) ((blockHeight >> 16) & 0xFF);
+            pocRandomData[offset++] = (byte) ((blockHeight >> 24) & 0xFF);
+            pocRandomData[offset++] = (byte) ((blockHeight >> 32) & 0xFF);
+            pocRandomData[offset++] = (byte) ((blockHeight >> 40) & 0xFF);
+            pocRandomData[offset++] = (byte) ((blockHeight >> 48) & 0xFF);
+            pocRandomData[offset++] = (byte) (blockHeight >> 56);
 
             // nonce
-            pocRandomData[offset] = (byte) (nonce & 0xFF);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00) >> 8);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00) >> 16);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00) >> 24);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[offset] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocRandomData[offset++] = (byte) (nonce & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 8) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 16) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 24) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 32) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 40) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 48) & 0xFF);
+            pocRandomData[offset] = (byte) (nonce >> 56);
         }
 
         public static void UpdatePocRandomData(byte[] pocRandomData, BlockTemplate blockTemplate, long nonce, long timestamp)
@@ -142,25 +142,25 @@ namespace Xirorig.Utility
 
             // timestamp
             pocRandomData[8] = (byte) (timestamp & 0xFF);
-            pocRandomData[9] = (byte) ((timestamp & 0xFF_00) >> 8);
-            pocRandomData[10] = (byte) ((timestamp & 0xFF_00_00) >> 16);
-            pocRandomData[11] = (byte) ((timestamp & 0xFF_00_00_00) >> 24);
-            pocRandomData[12] = (byte) ((timestamp & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[13] = (byte) ((timestamp & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[14] = (byte) ((timestamp & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[15] = (byte) ((timestamp & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocRandomData[9] = (byte) ((timestamp >> 8) & 0xFF);
+            pocRandomData[10] = (byte) ((timestamp >> 16) & 0xFF);
+            pocRandomData[11] = (byte) ((timestamp >> 24) & 0xFF);
+            pocRandomData[12] = (byte) ((timestamp >> 32) & 0xFF);
+            pocRandomData[13] = (byte) ((timestamp >> 40) & 0xFF);
+            pocRandomData[14] = (byte) ((timestamp >> 48) & 0xFF);
+            pocRandomData[15] = (byte) (timestamp >> 56);
 
             var offset = 16 + minerSettings.RandomDataShareChecksum + minerSettings.WalletAddressDataSize + 8;
 
             // nonce
             pocRandomData[offset++] = (byte) (nonce & 0xFF);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00) >> 8);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00) >> 16);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00) >> 24);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00) >> 32);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00) >> 40);
-            pocRandomData[offset++] = (byte) ((nonce & 0xFF_00_00_00_00_00_00) >> 48);
-            pocRandomData[offset] = (byte) ((nonce & 0x7F_00_00_00_00_00_00_00) >> 56);
+            pocRandomData[offset++] = (byte) ((nonce >> 8) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 16) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 24) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 32) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 40) & 0xFF);
+            pocRandomData[offset++] = (byte) ((nonce >> 48) & 0xFF);
+            pocRandomData[offset] = (byte) (nonce >> 56);
         }
 
         public static bool DoPowShare(MiningPowShare miningPowShare, BlockTemplate blockTemplate, Rijndael rijndael, IAlgorithm algorithm, string walletAddress, long nonce, long timestamp, byte[] pocRandomData, byte[] previousFinalBlockTransactionHashKey)
@@ -190,17 +190,12 @@ namespace Xirorig.Utility
                     }
 
                     case MiningInstruction.DoLz4CompressNonceIv:
-                    {
                         pocShareIv = Lz4CompressNonceIvUtility.DoLz4CompressNonceIvMiningInstruction(pocShareIv);
                         break;
-                    }
 
                     case MiningInstruction.DoNonceIvIterations:
-                    {
-                        using var passwordDeriveBytes = new Rfc2898DeriveBytes(pocShareIv, algorithm.BlockchainMarkKey, minerSettings.PocShareNonceIvIteration);
-                        pocShareIv = passwordDeriveBytes.GetBytes(16);
+                        pocShareIv = NonceIvIterationsUtility.DoNonceIvIterationsMiningInstruction(pocShareIv, algorithm.BlockchainMarkKey, minerSettings.PocShareNonceIvIteration);
                         break;
-                    }
 
                     case MiningInstruction.DoEncryptedPocShare:
                     {

@@ -7,8 +7,6 @@ namespace Xirorig.Options
     {
         public int PrintTime { get; set; }
 
-        public int MaxPing { get; set; }
-
         public PeerNode[] PeerNodes { get; set; }
 
         public int NumberOfThreads { get; set; }

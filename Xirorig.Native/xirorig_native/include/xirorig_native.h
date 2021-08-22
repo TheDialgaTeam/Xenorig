@@ -6,6 +6,8 @@
 #include "openssl/evp.h"
 #include "lz4.h"
 
+#include "mining_instruction.h"
+
 #if (_MSC_VER >= 1900)
 #define EXPORT __declspec(dllexport)  
 #else

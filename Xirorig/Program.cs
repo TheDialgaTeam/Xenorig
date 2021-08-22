@@ -2,9 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using TheDialgaTeam.Extensions.Logging.LoggingTemplate;
-using TheDialgaTeam.Serilog.Formatting.Ansi;
-using TheDialgaTeam.Serilog.Sinks.AnsiConsole;
+using TheDialgaTeam.Core.Logger.Extensions.Logging;
+using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
+using TheDialgaTeam.Core.Logger.Serilog.Sinks;
 using Xirorig.Algorithm;
 using Xirorig.Network;
 using Xirorig.Options;

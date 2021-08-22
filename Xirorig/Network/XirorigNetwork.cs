@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using TheDialgaTeam.Extensions.Logging.LoggingTemplate;
-using TheDialgaTeam.Serilog.Formatting.Ansi;
+using TheDialgaTeam.Core.Logger.Extensions.Logging;
+using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
 using Xirorig.Algorithm;
 using Xirorig.Network.Api;
 using Xirorig.Network.Api.Models;
@@ -34,7 +34,6 @@ namespace Xirorig.Network
 
         private ConnectionStatus _connectionStatus = ConnectionStatus.Disconnected;
         private HttpClient? _httpClient;
-        private readonly int _maxPing;
         private readonly CancellationToken _cancellationToken;
 
         private readonly Timer _downloadBlockTemplateTimer;
@@ -50,7 +49,6 @@ namespace Xirorig.Network
             _logger = logger;
             _algorithms = algorithms.ToArray();
             _peerNodes = options.Value.PeerNodes;
-            _maxPing = options.Value.MaxPing;
             _cancellationToken = hostApplicationLifetime.ApplicationStopping;
             _downloadBlockTemplateTimer = new Timer(DownloadBlockTemplateCallback, null, Timeout.Infinite, Timeout.Infinite);
         }
@@ -185,7 +183,7 @@ namespace Xirorig.Network
             {
                 if (_connectionStatus == ConnectionStatus.Disconnected)
                 {
-                    _httpClient = new HttpClient { BaseAddress = new Uri(new UriBuilder(peerNodes[currentPeerIndex].Url).ToString()), Timeout = TimeSpan.FromMilliseconds(_maxPing) };
+                    _httpClient = new HttpClient { BaseAddress = new Uri(new UriBuilder(peerNodes[currentPeerIndex].Url).ToString()) };
 
                     if (!WalletUtility.IsValidWalletAddress(peerNodes[currentPeerIndex].WalletAddress, _algorithms.First(algorithm => _peerNodes[_currentPeerIndex].Algorithm == algorithm.AlgorithmType)))
                     {

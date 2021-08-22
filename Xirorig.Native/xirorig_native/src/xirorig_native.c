@@ -188,8 +188,3 @@ int32_t doNonceIvIterationsMiningInstruction(const uint8_t *password, const int3
 {
     return PKCS5_PBKDF2_HMAC_SHA1(password, passwordLength, salt, saltLength, iterations, keyLength, output);
 }
-
-int32_t doPowShare(int64_t nonce, const uint8_t *pocRandomData, const int32_t pocRandomDataLength, const uint8_t previousFinalBlockTransactionHashKey, const int32_t previousFinalBlockTransactionHashKeyLength)
-{
-    
-}
