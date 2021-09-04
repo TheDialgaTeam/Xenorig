@@ -64,4 +64,9 @@
 	  <ProjectReference Include="..\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Algorithm\Xiropht\Centralized\Api\JobResult\" />
+	  <Folder Include="Algorithm\Xiropht\Centralized\Api\JobTemplate\" />
+	</ItemGroup>
+
 </Project>

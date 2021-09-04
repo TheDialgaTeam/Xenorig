@@ -121,6 +121,7 @@ namespace Xirorig.Miner.Backend
         public void StopMining()
         {
             _cancellationTokenSource.Cancel();
+            _jobTemplateQueue.CompleteAdding();
             _thread.Join();
         }
 
@@ -182,7 +183,7 @@ namespace Xirorig.Miner.Backend
 
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    var newJobTemplate = _jobTemplateQueue.Take();
+                    var newJobTemplate = _jobTemplateQueue.Take(_cancellationTokenSource.Token);
 
                     while (_jobTemplateQueue.TryTake(out var jobTemplate))
                     {
@@ -194,6 +195,10 @@ namespace Xirorig.Miner.Backend
 
                     ExecuteJob(newJobTemplate, _jobCancellationTokenSource.Token);
                 }
+            }
+            catch (Exception)
+            {
+                // ignored
             }
             finally
             {

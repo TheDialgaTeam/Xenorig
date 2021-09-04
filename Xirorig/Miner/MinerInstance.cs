@@ -13,7 +13,7 @@ using CpuMiner = Xirorig.Miner.Backend.CpuMiner;
 
 namespace Xirorig.Miner
 {
-    internal class MinerInstance
+    internal class MinerInstance : IDisposable
     {
         private readonly ApplicationContext _context;
         private readonly Options.MinerInstance _minerInstance;
@@ -26,17 +26,14 @@ namespace Xirorig.Miner
         private readonly Timer _calculateAverageHashCalculatedIn10Seconds;
         private readonly Timer _calculateAverageHashCalculatedIn60Seconds;
         private readonly Timer _calculateAverageHashCalculatedIn15Minutes;
-        private readonly Timer _calculateTotalAverageHash;
 
-        private INetwork _currentNetwork;
+        private INetwork? _currentNetwork;
         private int _currentNetworkIndex = 0;
         private int _retryCount;
 
         public long[] AverageHashCalculatedIn10Seconds { get; }
         public long[] AverageHashCalculatedIn60Seconds { get; }
         public long[] AverageHashCalculatedIn15Minutes { get; }
-
-        public long MaxHash { get; private set; }
 
         public long TotalGoodJobsSubmitted { get; private set; }
         public long TotalBadJobsSubmitted { get; private set; }
@@ -65,7 +62,6 @@ namespace Xirorig.Miner
             context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
 
             _devNetworks = NetworkUtility.CreateDevNetworks(context);
-            _currentNetwork = _networks[_currentNetworkIndex];
 
             var cpuMiner = minerInstance.GetCpuMiner();
             var numberOfThreads = cpuMiner.GetNumberOfThreads();
@@ -75,8 +71,7 @@ namespace Xirorig.Miner
             _calculateAverageHashCalculatedIn10Seconds = new Timer(CalculateAverageHashCalculatedIn10Seconds, null, Timeout.Infinite, Timeout.Infinite);
             _calculateAverageHashCalculatedIn60Seconds = new Timer(CalculateAverageHashCalculatedIn60Seconds, null, Timeout.Infinite, Timeout.Infinite);
             _calculateAverageHashCalculatedIn15Minutes = new Timer(CalculateAverageHashCalculatedIn15Minutes, null, Timeout.Infinite, Timeout.Infinite);
-            _calculateTotalAverageHash = new Timer(CalculateTotalAverageHash, null, Timeout.Infinite, Timeout.Infinite);
-
+ 
             AverageHashCalculatedIn10Seconds = new long[numberOfThreads];
             AverageHashCalculatedIn60Seconds = new long[numberOfThreads];
             AverageHashCalculatedIn15Minutes = new long[numberOfThreads];
@@ -84,54 +79,64 @@ namespace Xirorig.Miner
 
         public void StartInstance()
         {
+            SwapNetwork(_networks[_currentNetworkIndex]);
+
+            _calculateAverageHashCalculatedIn10Seconds.Change(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+            _calculateAverageHashCalculatedIn60Seconds.Change(TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
+            _calculateAverageHashCalculatedIn15Minutes.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
+        }
+
+        public void StopInstance()
+        {
+            foreach (var cpuMiner in _cpuMiners)
+            {
+                cpuMiner?.StopMining();
+            }
+
+            _currentNetwork?.StopNetwork();
+
+            _calculateAverageHashCalculatedIn10Seconds.Change(Timeout.Infinite, Timeout.Infinite);
+            _calculateAverageHashCalculatedIn60Seconds.Change(Timeout.Infinite, Timeout.Infinite);
+            _calculateAverageHashCalculatedIn15Minutes.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
+        private void SwapNetwork(INetwork network)
+        {
+            if (_currentNetwork != null)
+            {
+                _currentNetwork.StopNetwork();
+                UnregisterNetworkEvent(_currentNetwork);
+            }
+
             var cpuMinerConfig = _minerInstance.GetCpuMiner();
             var cpuMinerThreads = cpuMinerConfig.GetThreads();
             var pool = _minerInstance.GetPools();
 
             for (var i = 0; i < _cpuMiners.Length; i++)
             {
-                if (_cpuMiners[i] == null)
-                {
-                    var cpuMiner = CpuMiner.CreateCpuMiner(i + 1, cpuMinerThreads[i], _context.ApplicationShutdownCancellationToken, pool[_currentNetworkIndex]);
-                    cpuMiner.JobLog += CurrentCpuMinerOnJobLog;
-                    cpuMiner.JobResultFound += CurrentCpuMinerOnJobResultFound;
-                    cpuMiner.StartMining();
+                var cpuMiner = _cpuMiners[i];
 
-                    _cpuMiners[i] = cpuMiner;
+                if (cpuMiner == null)
+                {
+                    var newCpuMiner = CpuMiner.CreateCpuMiner(i + 1, cpuMinerThreads[i], _context.ApplicationShutdownCancellationToken, pool[_currentNetworkIndex]);
+                    RegisterCpuMinerEvent(newCpuMiner);
+                    newCpuMiner.StartMining();
+
+                    _cpuMiners[i] = newCpuMiner;
                 }
                 else
                 {
-                    _cpuMiners[i]!.StopMining();
-                    _cpuMiners[i]!.Dispose();
-                    _cpuMiners[i]!.JobLog -= CurrentCpuMinerOnJobLog;
-                    _cpuMiners[i]!.JobResultFound -= CurrentCpuMinerOnJobResultFound;
+                    cpuMiner.StopMining();
+                    cpuMiner.Dispose();
+                    UnregisterCpuMinerEvent(cpuMiner);
 
-                    var cpuMiner = CpuMiner.CreateCpuMiner(i + 1, cpuMinerThreads[i], _context.ApplicationShutdownCancellationToken, pool[_currentNetworkIndex]);
-                    cpuMiner.JobLog += CurrentCpuMinerOnJobLog;
-                    cpuMiner.JobResultFound += CurrentCpuMinerOnJobResultFound;
-                    cpuMiner.StartMining();
+                    var newCpuMiner = CpuMiner.CreateCpuMiner(i + 1, cpuMinerThreads[i], _context.ApplicationShutdownCancellationToken, pool[_currentNetworkIndex]);
+                    RegisterCpuMinerEvent(newCpuMiner);
+                    newCpuMiner.StartMining();
 
-                    _cpuMiners[i] = cpuMiner;
+                    _cpuMiners[i] = newCpuMiner;
                 }
             }
-
-            RegisterNetworkEvent(_currentNetwork);
-            _currentNetwork.StartNetwork();
-
-            _calculateAverageHashCalculatedIn10Seconds.Change(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
-            _calculateAverageHashCalculatedIn60Seconds.Change(TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
-            _calculateAverageHashCalculatedIn15Minutes.Change(TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(15));
-            _calculateTotalAverageHash.Change(TimeSpan.FromSeconds(_context.Options.GetPrintTime()), TimeSpan.FromSeconds(_context.Options.GetPrintTime()));
-        }
-
-        public void StopInstance()
-        {
-        }
-
-        private void SwapNetwork(INetwork network)
-        {
-            _currentNetwork.StopNetwork();
-            UnregisterNetworkEvent(_currentNetwork);
 
             _currentNetwork = network;
 
@@ -155,6 +160,18 @@ namespace Xirorig.Miner
             network.NewJob -= CurrentNetworkOnNewJob;
         }
 
+        private void RegisterCpuMinerEvent(CpuMiner cpuMiner)
+        {
+            cpuMiner.JobLog += CurrentCpuMinerOnJobLog;
+            cpuMiner.JobResultFound += CurrentCpuMinerOnJobResultFound;
+        }
+
+        private void UnregisterCpuMinerEvent(CpuMiner cpuMiner)
+        {
+            cpuMiner.JobLog -= CurrentCpuMinerOnJobLog;
+            cpuMiner.JobResultFound -= CurrentCpuMinerOnJobResultFound;
+        }
+
         private void CurrentNetworkOnConnected(Pool pool, Exception? exception)
         {
             _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}use pool{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
@@ -176,7 +193,14 @@ namespace Xirorig.Miner
             if (_retryCount >= _context.Options.GetMaxRetryCount())
             {
                 _retryCount = 0;
+                _currentNetworkIndex++;
 
+                if (_currentNetworkIndex >= _networks.Length)
+                {
+                    _currentNetworkIndex = 0;
+                }
+
+                SwapNetwork(_networks[_currentNetworkIndex]);
             }
         }
 
@@ -211,6 +235,7 @@ namespace Xirorig.Miner
 
         private async void CurrentCpuMinerOnJobResultFound(IJobTemplate jobTemplate, IJobResult jobResult)
         {
+            if (_currentNetwork == null) return;
             await _currentNetwork.SubmitJobAsync(jobTemplate, jobResult);
         }
 
@@ -250,20 +275,21 @@ namespace Xirorig.Miner
             }
         }
 
-        private void CalculateTotalAverageHash(object? state)
+        public void Dispose()
         {
-            long average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
-            var threadCount = _cpuMiners.Length;
+            _calculateAverageHashCalculatedIn10Seconds.Dispose();
+            _calculateAverageHashCalculatedIn60Seconds.Dispose();
+            _calculateAverageHashCalculatedIn15Minutes.Dispose();
 
-            for (var i = 0; i < threadCount; i++)
+            foreach (var network in _networks)
             {
-                average10SecondsSum += AverageHashCalculatedIn10Seconds[i];
-                average60SecondsSum += AverageHashCalculatedIn60Seconds[i];
-                average15MinutesSum += AverageHashCalculatedIn15Minutes[i];
+                network.Dispose();
             }
 
-            MaxHash = Math.Max(MaxHash, average10SecondsSum);
-            _context.Logger.LogInformation($"speed 10s/60s/15m {AnsiEscapeCodeConstants.CyanForegroundColor}{{Average10SecondsSum:F0}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.BlueForegroundColor}{{Average60SecondsSum:F0}} {{Average15MinutesSum:F0}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}H/s{AnsiEscapeCodeConstants.Reset} max {AnsiEscapeCodeConstants.CyanForegroundColor}{{MaxHash:F0}}{AnsiEscapeCodeConstants.Reset}", true, average10SecondsSum, average60SecondsSum, average15MinutesSum, MaxHash);
+            foreach (var cpuMiner in _cpuMiners)
+            {
+                cpuMiner?.Dispose();
+            }
         }
     }
 }
