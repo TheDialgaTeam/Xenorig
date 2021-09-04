@@ -16,8 +16,7 @@ namespace Xirorig.Utility
         public static JsonSerializerOptions DefaultJsonSerializerOptions { get; } = new()
         {
             Converters = { new BigIntegerJsonConverter(), new JsonStringEnumConverter() },
-            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
         };
 
         public static INetwork CreateNetwork(ApplicationContext context, Pool pool)

@@ -8,7 +8,7 @@ namespace Xirorig.Network
 {
     internal delegate void NetworkConnectionStatus(Pool pool, Exception? exception);
 
-    internal delegate void NetworkJob(Pool pool, IJobTemplate jobTemplate);
+    internal delegate void NetworkJob(Pool pool, IJobTemplate jobTemplate, string difficulty, long height);
 
     internal delegate void NetworkJobResult(Pool pool, bool isAccepted, string reason, string difficulty, double ping);
 

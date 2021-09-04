@@ -4,9 +4,10 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized.Api.JobResult
 {
     internal class SendMiningShare
     {
-        internal record Request(string PacketContentObjectSerialized)
+        internal record Request([property: JsonPropertyOrder(1)] string PacketContentObjectSerialized)
         {
             [JsonInclude]
+            [JsonPropertyOrder(0)]
             public int PacketType => 10;
         }
 

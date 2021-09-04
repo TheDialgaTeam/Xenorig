@@ -32,7 +32,11 @@ namespace Xirorig
                     serviceCollection.Configure<XirorigOptions>(hostBuilderContext.Configuration.GetSection("Xirorig"));
 
                     // Logger
-                    serviceCollection.AddLoggingTemplate();
+                    serviceCollection.AddLoggingTemplate(new LoggerTemplateConfiguration(configuration =>
+                    {
+                        configuration.Global.DefaultPrefixTemplate = $"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{DateTimeOffset:yyyy-MM-dd HH:mm:ss}}{AnsiEscapeCodeConstants.Reset} ";
+                        configuration.Global.DefaultPrefixTemplateArgs = () => new object[] { DateTimeOffset.Now };
+                    }));
 
                     // Application Context
                     serviceCollection.AddSingleton<ApplicationContext>();

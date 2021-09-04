@@ -59,8 +59,10 @@ namespace Xirorig.Miner
             for (var i = 0; i < poolLength; i++)
             {
                 _networks[i] = NetworkUtility.CreateNetwork(context, pools[i]);
-                context.Logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {AnsiEscapeCodeConstants.GreenForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GrayForegroundColor}algo{AnsiEscapeCodeConstants.Reset} {{Algo:l}}", false, $"POOL #{i + 1}", pools[i].GetUrl(), pools[i].GetAlgorithm());
+                context.Logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {AnsiEscapeCodeConstants.GreenForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}algo{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Algo:l}}{AnsiEscapeCodeConstants.Reset}", false, $"POOL #{i + 1}", pools[i].GetUrl(), pools[i].GetAlgorithm());
             }
+
+            context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
 
             _devNetworks = NetworkUtility.CreateDevNetworks(context);
             _currentNetwork = _networks[_currentNetworkIndex];
@@ -155,7 +157,7 @@ namespace Xirorig.Miner
 
         private void CurrentNetworkOnConnected(Pool pool, Exception? exception)
         {
-            _context.Logger.LogInformation($"use pool {AnsiEscapeCodeConstants.CyanForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
+            _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}use pool{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
         }
 
         private void CurrentNetworkOnDisconnected(Pool pool, Exception? exception)
@@ -183,15 +185,19 @@ namespace Xirorig.Miner
             if (isAccepted)
             {
                 TotalGoodJobsSubmitted++;
+                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.GreenForegroundColor}accepted{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}({{Good}}/{{Bad}}) diff{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Difficulty:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GrayForegroundColor}({{Ping:F0}} ms){AnsiEscapeCodeConstants.Reset}", true, TotalGoodJobsSubmitted, TotalBadJobsSubmitted, difficulty, ping);
             }
             else
             {
                 TotalBadJobsSubmitted++;
+                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.RedForegroundColor}rejected{AnsiEscapeCodeConstants.Reset} ({{Good}}/{{Bad}}) {{Reason:l}}", true, TotalGoodJobsSubmitted, TotalBadJobsSubmitted, reason);
             }
         }
 
-        private void CurrentNetworkOnNewJob(Pool pool, IJobTemplate jobTemplate)
+        private void CurrentNetworkOnNewJob(Pool pool, IJobTemplate jobTemplate, string difficulty, long height)
         {
+            _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.MagentaForegroundColor}new job{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}from{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}diff{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Difficulty:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}algo{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Algorithm:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}height{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Height}}{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl(), difficulty, pool.GetAlgorithm(), height);
+
             foreach (var cpuMiner in _cpuMiners)
             {
                 cpuMiner?.UpdateBlockTemplate(jobTemplate);

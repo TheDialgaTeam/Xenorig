@@ -91,7 +91,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
                 var requestTime = DateTime.Now;
 
                 var json = JsonSerializer.Serialize(new SendMiningShare.Request(JsonSerializer.Serialize(miningShare, NetworkUtility.DefaultJsonSerializerOptions)), NetworkUtility.DefaultJsonSerializerOptions);
-                var response = await _httpClient.PostAsync(string.Empty, new StringContent(json), _context.ApplicationShutdownCancellationToken);
+                var response = await _httpClient.PostAsync(string.Empty, new StringContent(json));
 
                 var jsonResponse = JsonSerializer.Deserialize<SendMiningShare.Response>(await response.Content.ReadAsStreamAsync(), NetworkUtility.DefaultJsonSerializerOptions);
                 if (jsonResponse == null) throw new JsonException();
@@ -205,7 +205,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
                 if (_currentBlockHash == blockTemplate.CurrentBlockHash) return;
                 _currentBlockHash = blockTemplate.CurrentBlockHash;
 
-                NewJob?.Invoke(_pool, blockTemplate);
+                NewJob?.Invoke(_pool, blockTemplate, blockTemplate.CurrentBlockDifficulty.ToString(), blockTemplate.CurrentBlockHeight);
             }
             catch (Exception exception)
             {
