@@ -19,7 +19,6 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 ## Features
 - High performance.
 - Official Windows support, Linux and MacOS. (Includes Raspberry PI as well)
-- x86/x64/arm/arm64 support.
 - Support for backup (failover) mining server.
 - It's open source software.
 
