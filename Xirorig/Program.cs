@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using TheDialgaTeam.Core.Logger.Extensions.Logging;
 using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
 using TheDialgaTeam.Core.Logger.Serilog.Sinks;
-using Xirorig.Algorithm;
-using Xirorig.Network;
 using Xirorig.Options;
 
 namespace Xirorig
@@ -15,7 +14,14 @@ namespace Xirorig
     {
         private static async Task Main(string[] args)
         {
-            await CreateHostBuilder(args).RunConsoleAsync();
+            try
+            {
+                await CreateHostBuilder(args).RunConsoleAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args)
@@ -28,12 +34,8 @@ namespace Xirorig
                     // Logger
                     serviceCollection.AddLoggingTemplate();
 
-                    // Algorithm
-                    serviceCollection.AddSingleton<IAlgorithm, XirophtAlgorithm>();
-                    serviceCollection.AddSingleton<IAlgorithm, XirobodAlgorithm>();
-
-                    // Network
-                    serviceCollection.AddSingleton<XirorigNetwork>();
+                    // Application Context
+                    serviceCollection.AddSingleton<ApplicationContext>();
 
                     // Program
                     serviceCollection.AddHostedService<ProgramHostedService>();

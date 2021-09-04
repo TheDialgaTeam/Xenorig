@@ -12,9 +12,9 @@
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": [
         {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "D:\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
-          "type": "FILEPATH"
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x64-windows-static",
+          "type": "STRING"
         }
       ]
     },
@@ -30,9 +30,9 @@
       "inheritEnvironments": [ "msvc_x86" ],
       "variables": [
         {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "D:\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
-          "type": "FILEPATH"
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "x86-windows-static",
+          "type": "STRING"
         }
       ]
     },
@@ -47,14 +47,7 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
-      "wslPath": "${defaultWSLPath}",
-      "variables": [
-        {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "D:\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
-          "type": "FILEPATH"
-        }
-      ]
+      "wslPath": "${defaultWSLPath}"
     },
     {
       "name": "Release-linux-arm",
@@ -70,13 +63,8 @@
       "wslPath": "${defaultWSLPath}",
       "variables": [
         {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "D:\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake",
-          "type": "FILEPATH"
-        },
-        {
           "name": "VCPKG_CHAINLOAD_TOOLCHAIN_FILE",
-          "value": "${projectDir}\\.CMake\\raspberrypi.cmake",
+          "value": "${projectDir}\\cMake\\raspberrypi.cmake",
           "type": "FILEPATH"
         },
         {

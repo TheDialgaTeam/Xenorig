@@ -3,6 +3,7 @@
   "version-string": "1.0.0",
   "dependencies": [
     "openssl",
-    "lz4"
+    "lz4",
+    "cpuinfo"
   ]
 }
