@@ -4,7 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net6.0</TargetFramework>
 
-		<Configurations>Debug_windows;Release_windows;Release_windows_aot;Release_linux;Release_osx</Configurations>
+		<Configurations>Debug_windows;Release_windows;Release_linux;Release_osx</Configurations>
 		<Platforms>x64;x86;ARM32;ARM64</Platforms>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -32,10 +32,6 @@
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(Configuration.EndsWith('_aot'))">
-		<DefineConstants>AOT</DefineConstants>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<ProjectReference Include="..\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger.csproj" />
 	</ItemGroup>
@@ -46,14 +42,6 @@
 		<PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="4.1.2" />
 		<PackageReference Include="Serilog.Settings.Configuration" Version="3.2.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition="$(Configuration.EndsWith('_aot'))">
-		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-		<DirectPInvoke Include="kernel32!GetCurrentThreadId" />
-		<DirectPInvoke Include="kernel32!OpenThread" />
-		<DirectPInvoke Include="kernel32!SetThreadAffinityMask" />
-		<RdXmlFile Include="rd.xml" />
 	</ItemGroup>
 
 	<ItemGroup>

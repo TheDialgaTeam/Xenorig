@@ -82,13 +82,9 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
         private static bool _isGeneratePocRandomDataAvailable = true;
         private static bool _isUpdatePocRandomDataAvailable = true;
-        private static readonly bool _isNonceIvAvailable = true;
-        private static readonly bool _isNonceIvXorAvailable = true;
-#if !AOT
+        private static bool _isNonceIvAvailable = true;
+        private static bool _isNonceIvXorAvailable = true;
         private static bool _isNonceIvEasySquareMathAvailable = true;
-#else
-        private static bool _isNonceIvEasySquareMathAvailable = false;
-#endif
         private static bool _isLz4CompressNonceIvAvailable = true;
         private static bool _isNonceIvIterationsAvailable = true;
         private static bool _isEncryptedPocShareAvailable = true;
@@ -293,6 +289,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             }
             catch (Exception)
             {
+                _isNonceIvAvailable = false;
                 SoftwareDoNonceIvMiningInstruction(pocShareIv, ref pocShareIvSize, pocRoundShaNonce);
             }
         }
@@ -321,6 +318,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             }
             catch (Exception)
             {
+                _isNonceIvXorAvailable = false;
                 SoftwareDoNonceIvXorMiningInstruction(pocShareIv, pocShareIvSize);
             }
         }
