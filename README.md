@@ -7,7 +7,7 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 
 - This is the **CPU mining** version. There is no GPU version at the moment.
 
-![Console_Image](https://raw.githubusercontent.com/TheDialgaTeam/Xirorig/xirorig_decentralized_solo/Screenshot.png)
+![Console_Image](https://raw.githubusercontent.com/TheDialgaTeam/Xirorig/xirorig_future/Screenshot.png)
 
 #### Table of contents
 - [Features](#Features)
@@ -19,7 +19,6 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 ## Features
 - High performance.
 - Official Windows support, Linux and MacOS. (Includes Raspberry PI as well)
-- x86/x64/arm/arm64 support.
 - Support for backup (failover) mining server.
 - It's open source software.
 
@@ -27,11 +26,11 @@ Xirorig is a high performance Xiropht (XIRO) CPU miner, with official support fo
 - Binary releases: https://github.com/TheDialgaTeam/Xirorig/releases
 
 ## Other information
-- Donation fee is not included.
+- Donation is optional.
 
 ### CPU mining performance
 - Intel i7-4790K @ 4.00GHz - NA KH/s (1 thread)
-- Intel i7-8750H @ 2.22GHz - 8.7 KH/s (1 thread)
+- Intel i7-8750H @ 2.22GHz - 9.5 KH/s (1 thread)
 
 Please note performance is highly dependent on system load. The numbers above are obtained on an idle system. Tasks heavily using a processor, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the number of cores you have on your cpu.
 
@@ -40,7 +39,7 @@ Please note performance is highly dependent on system load. The numbers above ar
 - Do not exceed optimal thread count.
 - Try setup optimal cpu affinity.
 - Use modern hardware that supports SIMD instructions.
-- Use [libxirorig_native](https://github.com/TheDialgaTeam/Xirorig/tree/xirorig_decentralized_solo/Xirorig.Native/libxirorig) library. Only Windows (x64, x86) and Linux (x64) is precompiled. You can set up your own custom toolchain to build the required library. (Require OpenSSL dependencies)
+- Use [libxirorig_native](https://github.com/TheDialgaTeam/Xirorig/tree/xirorig_future/Xirorig.Native/xirorig_native) library. Only Windows (x64, x86) and Linux (x64) is precompiled. You can set up your own custom toolchain to build the required library.
 
 ## Donations
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`
