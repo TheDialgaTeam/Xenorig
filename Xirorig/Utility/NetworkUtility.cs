@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Xirorig.Algorithm.Xiropht.Decentralized;
@@ -19,7 +18,7 @@ namespace Xirorig.Utility
             NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
         };
 
-        public static INetwork CreateNetwork(ApplicationContext context, Pool pool)
+        public static INetwork CreateNetwork(ProgramContext context, Pool pool)
         {
             var poolAlgorithm = pool.GetAlgorithm();
 
@@ -31,7 +30,7 @@ namespace Xirorig.Utility
             throw new NotImplementedException($"{pool.Algorithm} is not implemented.");
         }
 
-        public static INetwork[] CreateDevNetworks(ApplicationContext context)
+        public static INetwork[] CreateDevNetworks(ProgramContext context)
         {
             return new[]
             {

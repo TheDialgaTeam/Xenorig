@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
 using Xirorig.Algorithm.Xiropht.Decentralized;
 using Xirorig.Network.Api.JobResult;
 using Xirorig.Network.Api.JobTemplate;
@@ -95,16 +94,16 @@ namespace Xirorig.Miner.Backend
 
             if (poolAlgorithm.Equals("xiropht_decentralized", StringComparison.OrdinalIgnoreCase))
             {
-                return new XirophtDecentralizedCpuMiner(threadId, threadConfiguration, cancellationToken, pool);
+                return new XirophtDecentralizedCpuMiner(threadId, threadConfiguration, pool, cancellationToken);
             }
 
             throw new NotImplementedException($"{pool.Algorithm} is not implemented.");
         }
 
-        [DllImport("Kernel32", EntryPoint = "GetCurrentThreadId")]
+        [DllImport("kernel32", EntryPoint = "GetCurrentThreadId")]
         private static extern int GetCurrentThreadId_Windows();
 
-        [DllImport("Kernel32", EntryPoint = "OpenThread")]
+        [DllImport("kernel32", EntryPoint = "OpenThread")]
         private static extern IntPtr OpenThread_Windows(int desiredAccess, bool inheritHandle, int threadId);
 
         [DllImport("kernel32", EntryPoint = "SetThreadAffinityMask")]
@@ -195,6 +194,11 @@ namespace Xirorig.Miner.Backend
 
                     ExecuteJob(newJobTemplate, _jobCancellationTokenSource.Token);
                 }
+            }
+            
+            catch (Exception exception) when(exception is not (OperationCanceledException or InvalidOperationException))
+            {
+                LogCurrentJob($"{AnsiEscapeCodeConstants.RedForegroundColor}Error: Oops, this miner has caught an exception.{Environment.NewLine}{{exception}}{AnsiEscapeCodeConstants.Reset}", exception.ToString());
             }
             catch (Exception)
             {

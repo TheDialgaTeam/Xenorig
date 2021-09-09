@@ -2,164 +2,152 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using Org.BouncyCastle.Crypto.Digests;
 
 namespace Xirorig.Utility
 {
     internal static class Sha2Utility
     {
-        public const int Sha256OutputSize = 256 / 8;
-        public const int Sha512OutputSize = 512 / 8;
+        private static class Native
+        {
+            [DllImport("xirorig_native")]
+            public static extern int Sha2Utility_TryComputeSha256Hash(in byte source, int sourceLength, ref byte destination, out int bytesWritten);
+
+            [DllImport("xirorig_native")]
+            public static extern int Sha2Utility_TryComputeSha512Hash(in byte source, int sourceLength, ref byte destination, out int bytesWritten);
+        }
+
+        private const int Sha256OutputSize = 256 / 8;
+        private const int Sha512OutputSize = 512 / 8;
 
         private static bool _isNativeImplementationAvailable = true;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] ComputeSha256Hash(byte[] input)
+        public static byte[] ComputeSha256Hash(byte[] source)
         {
-            return ComputeSha256Hash(input, 0, input.Length);
+            return ComputeSha256Hash(source.AsSpan());
         }
 
-        public static unsafe byte[] ComputeSha256Hash(byte[] input, int inputOffset, int inputSize)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] ComputeSha256Hash(byte[] source, int offset, int length)
         {
-            if (!_isNativeImplementationAvailable) SoftwareComputeSha256Hash(input, inputOffset, inputSize);
+            return ComputeSha256Hash(source.AsSpan(offset, length));
+        }
+
+        public static byte[] ComputeSha256Hash(ReadOnlySpan<byte> source)
+        {
+            if (!_isNativeImplementationAvailable) return SoftwareComputeSha256Hash(source);
 
             try
             {
                 var result = new byte[Sha256OutputSize];
 
-                fixed (byte* inputPtr = input, outputPtr = result)
-                {
-                    if (Sha2Utility_ComputeSha256Hash(inputPtr + inputOffset, inputSize, outputPtr) == 0) throw new CryptographicException();
-                }
+                if (Native.Sha2Utility_TryComputeSha256Hash(MemoryMarshal.GetReference(source), source.Length, ref Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
 
                 return result;
             }
             catch (Exception)
             {
                 _isNativeImplementationAvailable = false;
-                return SoftwareComputeSha256Hash(input, inputOffset, inputSize);
+                return SoftwareComputeSha256Hash(source);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ComputeSha256Hash(byte[] input, byte[] output)
+        public static bool TryComputeSha256Hash(byte[] source, byte[] destination, out int bytesWritten)
         {
-            ComputeSha256Hash(input, 0, input.Length, output);
+            return TryComputeSha256Hash(source.AsSpan(), destination.AsSpan(), out bytesWritten);
         }
 
-        public static unsafe void ComputeSha256Hash(byte[] input, int inputOffset, int inputSize, byte[] output)
+        public static bool TryComputeSha256Hash(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
         {
-            if (output.Length < Sha256OutputSize) throw new ArgumentException($"{nameof(output)} length is too small.");
-
-            if (!_isNativeImplementationAvailable)
-            {
-                SoftwareComputeSha256Hash(input, inputOffset, inputSize, output);
-                return;
-            }
+            if (!_isNativeImplementationAvailable) return SoftwareTryComputeSha256Hash(source, destination, out bytesWritten);
 
             try
             {
-                fixed (byte* inputPtr = input, outputPtr = output)
-                {
-                    if (Sha2Utility_ComputeSha256Hash(inputPtr + inputOffset, inputSize, outputPtr) == 0) throw new CryptographicException();
-                }
+                return Native.Sha2Utility_TryComputeSha256Hash(MemoryMarshal.GetReference(source), source.Length, ref MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
             }
             catch (Exception)
             {
                 _isNativeImplementationAvailable = false;
-                SoftwareComputeSha256Hash(input, inputOffset, inputSize, output);
+                return SoftwareTryComputeSha256Hash(source, destination, out bytesWritten);
             }
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] ComputeSha512Hash(byte[] input)
+        public static byte[] ComputeSha512Hash(byte[] source)
         {
-            return ComputeSha512Hash(input, 0, input.Length);
+            return ComputeSha512Hash(source.AsSpan());
         }
 
-        public static unsafe byte[] ComputeSha512Hash(byte[] input, int inputOffset, int inputSize)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] ComputeSha512Hash(byte[] source, int offset, int length)
         {
-            if (!_isNativeImplementationAvailable) SoftwareComputeSha512Hash(input, inputOffset, inputSize);
+            return ComputeSha512Hash(source.AsSpan(offset, length));
+        }
+
+        public static byte[] ComputeSha512Hash(ReadOnlySpan<byte> source)
+        {
+            if (!_isNativeImplementationAvailable) return SoftwareComputeSha512Hash(source);
 
             try
             {
                 var result = new byte[Sha512OutputSize];
 
-                fixed (byte* inputPtr = input, outputPtr = result)
-                {
-                    if (Sha2Utility_ComputeSha512Hash(inputPtr + inputOffset, inputSize, outputPtr) == 0) throw new CryptographicException();
-                }
+                if (Native.Sha2Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, ref Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
 
                 return result;
             }
             catch (Exception)
             {
                 _isNativeImplementationAvailable = false;
-                return SoftwareComputeSha512Hash(input, inputOffset, inputSize);
+                return SoftwareComputeSha512Hash(source);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ComputeSha512Hash(byte[] input, byte[] output)
+        public static bool TryComputeSha512Hash(byte[] source, byte[] destination, out int bytesWritten)
         {
-            ComputeSha512Hash(input, 0, input.Length, output);
+            return TryComputeSha512Hash(source.AsSpan(), destination.AsSpan(), out bytesWritten);
         }
 
-        public static unsafe void ComputeSha512Hash(byte[] input, int inputOffset, int inputSize, byte[] output)
+        public static bool TryComputeSha512Hash(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
         {
-            if (output.Length < Sha512OutputSize) throw new ArgumentException($"{nameof(output)} length is too small.");
-
-            if (!_isNativeImplementationAvailable)
-            {
-                SoftwareComputeSha512Hash(input, inputOffset, inputSize, output);
-                return;
-            }
+            if (!_isNativeImplementationAvailable) return SoftwareTryComputeSha512Hash(source, destination, out bytesWritten);
 
             try
             {
-                fixed (byte* inputPtr = input, outputPtr = output)
-                {
-                    if (Sha2Utility_ComputeSha512Hash(inputPtr + inputOffset, inputSize, outputPtr) == 0) throw new CryptographicException();
-                }
+                return Native.Sha2Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, ref MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
             }
             catch (Exception)
             {
                 _isNativeImplementationAvailable = false;
-                SoftwareComputeSha512Hash(input, inputOffset, inputSize, output);
+                return SoftwareTryComputeSha512Hash(source, destination, out bytesWritten);
             }
         }
 
-        [DllImport("xirorig_native")]
-        private static extern unsafe int Sha2Utility_ComputeSha256Hash(byte* input, int inputSize, byte* output);
-
-        [DllImport("xirorig_native")]
-        private static extern unsafe int Sha2Utility_ComputeSha512Hash(byte* input, int inputSize, byte* output);
-
-        private static byte[] SoftwareComputeSha256Hash(byte[] input, int inputOffset, int inputSize)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte[] SoftwareComputeSha256Hash(ReadOnlySpan<byte> source)
         {
-            using var sha256 = SHA256.Create();
-            return sha256.ComputeHash(input, inputOffset, inputSize);
+            return SHA256.HashData(source);
         }
 
-        private static void SoftwareComputeSha256Hash(byte[] input, int inputOffset, int inputSize, byte[] output)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool SoftwareTryComputeSha256Hash(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
         {
-            using var sha256 = SHA256.Create();
-            var hash = sha256.ComputeHash(input, inputOffset, inputSize);
-            Buffer.BlockCopy(hash, 0, output, 0, hash.Length);
+            return SHA256.TryHashData(source, destination, out bytesWritten);
         }
 
-        private static byte[] SoftwareComputeSha512Hash(byte[] input, int inputOffset, int inputSize)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte[] SoftwareComputeSha512Hash(ReadOnlySpan<byte> source)
         {
-            using var sha512 = SHA512.Create();
-            return sha512.ComputeHash(input, inputOffset, inputSize);
+            return SHA512.HashData(source);
         }
 
-        private static void SoftwareComputeSha512Hash(byte[] input, int inputOffset, int inputSize, byte[] output)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool SoftwareTryComputeSha512Hash(ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
         {
-            using var sha512 = SHA512.Create();
-            var hash = sha512.ComputeHash(input, inputOffset, inputSize);
-            Buffer.BlockCopy(hash, 0, output, 0, hash.Length);
+            return SHA512.TryHashData(source, destination, out bytesWritten);
         }
     }
 }

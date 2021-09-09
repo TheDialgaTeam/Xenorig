@@ -8,49 +8,53 @@ namespace Xirorig.Utility
     {
         public static unsafe int GetRandomBetween(int minimumValue, int maximumValue)
         {
-            var num1 = (uint) (maximumValue - minimumValue);
-            if (num1 == 0) return minimumValue;
+            if (maximumValue < minimumValue) throw new ArgumentException();
 
-            var num3 = num1 | (num1 >> 1);
-            var num4 = num3 | (num3 >> 2);
-            var num5 = num4 | (num4 >> 4);
-            var num6 = num5 | (num5 >> 8);
-            var num7 = num6 | (num6 >> 16);
+            var range = (uint) maximumValue - (uint) minimumValue;
+            if (range == 0) return minimumValue;
+
+            var maxValue = range | (range >> 1);
+            maxValue |= maxValue >> 2;
+            maxValue |= maxValue >> 4;
+            maxValue |= maxValue >> 8;
+            maxValue |= maxValue >> 16;
 
             Span<uint> span = stackalloc uint[1];
-            uint num8;
+            uint result;
 
             do
             {
                 RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                num8 = num7 & span[0];
-            } while (num8 > num1);
+                result = maxValue & span[0];
+            } while (result > range);
 
-            return (int) num8 + minimumValue;
+            return (int) result + minimumValue;
         }
 
         public static unsafe long GetRandomBetween(long minimumValue, long maximumValue)
         {
-            var num1 = (ulong) (maximumValue - minimumValue);
-            if (num1 == 0) return minimumValue;
+            if (maximumValue < minimumValue) throw new ArgumentException();
 
-            var num3 = num1 | (num1 >> 1);
-            var num4 = num3 | (num3 >> 2);
-            var num5 = num4 | (num4 >> 4);
-            var num6 = num5 | (num5 >> 8);
-            var num7 = num6 | (num6 >> 16);
-            var num8 = num7 | (num7 >> 32);
+            var range = (ulong) maximumValue - (ulong) minimumValue;
+            if (range == 0) return minimumValue;
+
+            var maxValue = range | (range >> 1);
+            maxValue |= maxValue >> 2;
+            maxValue |= maxValue >> 4;
+            maxValue |= maxValue >> 8;
+            maxValue |= maxValue >> 16;
+            maxValue |= maxValue >> 32;
 
             Span<ulong> span = stackalloc ulong[1];
-            ulong num9;
+            ulong result;
 
             do
             {
                 RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                num9 = num8 & span[0];
-            } while (num9 > num1);
+                result = maxValue & span[0];
+            } while (result > range);
 
-            return (long) num9 + minimumValue;
+            return (long) result + minimumValue;
         }
     }
 }

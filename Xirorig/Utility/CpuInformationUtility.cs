@@ -7,6 +7,21 @@ namespace Xirorig.Utility
 {
     internal static class CpuInformationUtility
     {
+        private static class Native
+        {
+            [DllImport("xirorig_native")]
+            public static extern string CpuInformationUtility_GetProcessorName();
+
+            [DllImport("xirorig_native")]
+            public static extern ulong CpuInformationUtility_GetProcessorL2Cache();
+
+            [DllImport("xirorig_native")]
+            public static extern ulong CpuInformationUtility_GetProcessorL3Cache();
+
+            [DllImport("xirorig_native")]
+            public static extern ulong CpuInformationUtility_GetProcessorCoreCount();
+        }
+
         public static string ProcessorName { get; }
 
         public static string ProcessorInstructionSetsSupported { get; }
@@ -23,7 +38,7 @@ namespace Xirorig.Utility
         {
             try
             {
-                ProcessorName = CpuInformationUtility_GetProcessorName();
+                ProcessorName = Native.CpuInformationUtility_GetProcessorName();
             }
             catch (Exception)
             {
@@ -76,8 +91,8 @@ namespace Xirorig.Utility
 
             try
             {
-                ProcessorL2Cache = CpuInformationUtility_GetProcessorL2Cache();
-                ProcessorL3Cache = CpuInformationUtility_GetProcessorL3Cache();
+                ProcessorL2Cache = Native.CpuInformationUtility_GetProcessorL2Cache();
+                ProcessorL3Cache = Native.CpuInformationUtility_GetProcessorL3Cache();
             }
             catch (Exception)
             {
@@ -87,24 +102,12 @@ namespace Xirorig.Utility
 
             try
             {
-                ProcessorCoreCount = CpuInformationUtility_GetProcessorCoreCount();
+                ProcessorCoreCount = Native.CpuInformationUtility_GetProcessorCoreCount();
             }
             catch (Exception)
             {
                 ProcessorCoreCount = Convert.ToUInt64(Environment.ProcessorCount) / 2;
             }
         }
-
-        [DllImport("xirorig_native", CharSet = CharSet.Ansi)]
-        private static extern string CpuInformationUtility_GetProcessorName();
-
-        [DllImport("xirorig_native")]
-        private static extern ulong CpuInformationUtility_GetProcessorL2Cache();
-
-        [DllImport("xirorig_native")]
-        private static extern ulong CpuInformationUtility_GetProcessorL3Cache();
-
-        [DllImport("xirorig_native")]
-        private static extern ulong CpuInformationUtility_GetProcessorCoreCount();
     }
 }

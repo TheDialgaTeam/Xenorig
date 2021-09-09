@@ -6,7 +6,7 @@ using Xirorig.Options;
 
 namespace Xirorig
 {
-    internal class ApplicationContext
+    internal class ProgramContext
     {
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
         private readonly IOptionsMonitor<XirorigOptions> _optionsMonitor;
@@ -15,9 +15,9 @@ namespace Xirorig
 
         public XirorigOptions Options => _optionsMonitor.CurrentValue;
 
-        public ILoggerTemplate<ApplicationContext> Logger { get; }
+        public ILoggerTemplate<ProgramContext> Logger { get; }
 
-        public ApplicationContext(IHostApplicationLifetime hostApplicationLifetime, IOptionsMonitor<XirorigOptions> optionsMonitor, ILoggerTemplate<ApplicationContext> logger)
+        public ProgramContext(IHostApplicationLifetime hostApplicationLifetime, IOptionsMonitor<XirorigOptions> optionsMonitor, ILoggerTemplate<ProgramContext> logger)
         {
             _hostApplicationLifetime = hostApplicationLifetime;
             _optionsMonitor = optionsMonitor;

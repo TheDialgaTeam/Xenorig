@@ -23,7 +23,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
         public event NetworkJob? NewJob;
         public event NetworkJobResult? JobResult;
 
-        private readonly ApplicationContext _context;
+        private readonly ProgramContext _context;
         private readonly Pool _pool;
 
         private readonly string _blockchainVersion;
@@ -34,7 +34,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
         private string? _currentBlockHash;
 
-        public XirophtDecentralizedNetwork(ApplicationContext context, Pool pool)
+        public XirophtDecentralizedNetwork(ProgramContext context, Pool pool)
         {
             _context = context;
             _pool = pool;

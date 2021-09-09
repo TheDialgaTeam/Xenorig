@@ -3,70 +3,81 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net6.0</TargetFramework>
+
+		<Configurations>Debug_windows;Release_windows;Release_windows_aot;Release_linux;Release_osx</Configurations>
+		<Platforms>x64;x86;ARM32;ARM64</Platforms>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
 		<PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>
-		<Version>1.0.0</Version>
+		<Version>1.0.0.0</Version>
 		<Authors>Yong Jian Ming</Authors>
 		<Company>The Dialga Team</Company>
 		<Product>Xirorig</Product>
 		<Description>Xiropht cryptocurrency miner</Description>
 		<PackageProjectUrl>https://github.com/TheDialgaTeam/Xirorig</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/TheDialgaTeam/Xirorig</RepositoryUrl>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<Platforms>AnyCPU;x64;x86;ARM32</Platforms>
-		<Nullable>enable</Nullable>
-		<Configurations>Debug;Release_Windows;Release_Linux</Configurations>
+
 		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+	<PropertyGroup Condition="$(Configuration.StartsWith('Debug'))">
 		<DefineConstants>DEBUG</DefineConstants>
 		<Optimize>false</Optimize>
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release_Windows'">
+	<PropertyGroup Condition="$(Configuration.StartsWith('Release'))">
 		<Optimize>true</Optimize>
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release_Linux'">
-	  <Optimize>true</Optimize>
-	  <DebugType>none</DebugType>
+	<PropertyGroup Condition="$(Configuration.EndsWith('_aot'))">
+		<DefineConstants>AOT</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="lz4net.netcore.signed" Version="1.0.15.93" />
-	  <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-	  <PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
-	  <PackageReference Include="Serilog.Extensions.Hosting" Version="4.1.2" />
-	  <PackageReference Include="Serilog.Settings.Configuration" Version="3.2.0" />
+		<ProjectReference Include="..\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="appsettings.Development.json" Condition="'$(Configuration)'=='Debug'">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="appsettings.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+		<PackageReference Include="lz4net.netcore.signed" Version="1.0.15.93" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+		<PackageReference Include="Portable.BouncyCastle" Version="1.8.10" />
+		<PackageReference Include="Serilog.Extensions.Hosting" Version="4.1.2" />
+		<PackageReference Include="Serilog.Settings.Configuration" Version="3.2.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(Configuration.EndsWith('_aot'))">
+		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+		<DirectPInvoke Include="kernel32!GetCurrentThreadId" />
+		<DirectPInvoke Include="kernel32!OpenThread" />
+		<DirectPInvoke Include="kernel32!SetThreadAffinityMask" />
+		<RdXmlFile Include="rd.xml" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\Xirorig.Native\xirorig_native\out\install\Release-win-$(Platform)\bin\xirorig_native.dll" Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Release_Windows'">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows'))">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="..\Xirorig.Native\xirorig_native\out\install\Release-linux-$(Platform)\lib\libxirorig_native.so.1.0.0" Condition="'$(Configuration)'=='Release_Linux'">
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0" Condition="$(Configuration.Contains('linux'))">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger.csproj" />
+		<None Update="appsettings.Development.json" Condition="$(Configuration.StartsWith('Debug'))">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
+
 	<ItemGroup>
-	  <Folder Include="Algorithm\Xiropht\Centralized\Api\JobResult\" />
-	  <Folder Include="Algorithm\Xiropht\Centralized\Api\JobTemplate\" />
+		<Folder Include="Algorithm\Xiropht\Centralized\Api\JobResult\" />
+		<Folder Include="Algorithm\Xiropht\Centralized\Api\JobTemplate\" />
 	</ItemGroup>
 
 </Project>

@@ -2,7 +2,7 @@
 
 #include "Utility/Sha3Utility.h"
 
-int32_t Sha3Utility_ComputeSha512Hash(const uint8_t* input, const size_t inputSize, uint8_t* output)
+int32_t Sha3Utility_TryComputeSha512Hash(const uint8_t* source, const size_t sourceLength, uint8_t* destination, uint32_t* bytesWritten)
 {
     EVP_MD_CTX* context = EVP_MD_CTX_new();
 
@@ -17,13 +17,13 @@ int32_t Sha3Utility_ComputeSha512Hash(const uint8_t* input, const size_t inputSi
         return 0;
     }
 
-    if (EVP_DigestUpdate(context, input, inputSize) == 0)
+    if (EVP_DigestUpdate(context, source, sourceLength) == 0)
     {
         EVP_MD_CTX_free(context);
         return 0;
     }
 
-    if (EVP_DigestFinal_ex(context, output, NULL) == 0)
+    if (EVP_DigestFinal_ex(context, destination, bytesWritten) == 0)
     {
         EVP_MD_CTX_free(context);
         return 0;

@@ -7,7 +7,7 @@
 #include "Algorithm/Xiropht/Decentralized/XirophtDecentralizedCpuMiner.h"
 #include "Utility/Sha3Utility.h"
 
-void XirophtDecentralizedCpuMiner_GeneratePocRandomData(uint8_t *pocRandomData, const int32_t randomNumber, const int32_t randomNumber2, const int64_t timestamp, const size_t randomDataShareChecksumSize, const uint8_t *walletAddress, const size_t walletAddressSize, const int64_t currentBlockHeight, const int64_t nonce)
+void XirophtDecentralizedCpuMiner_GeneratePocRandomData(uint8_t *pocRandomData, const int32_t randomNumber, const int32_t randomNumber2, const int64_t timestamp, const int32_t randomDataShareChecksumSize, const uint8_t *walletAddress, const int32_t walletAddressSize, const int64_t currentBlockHeight, const int64_t nonce)
 {
     // randomNumber - 4 bytes
     memcpy(pocRandomData, &randomNumber, sizeof(int32_t));
@@ -28,13 +28,39 @@ void XirophtDecentralizedCpuMiner_GeneratePocRandomData(uint8_t *pocRandomData, 
     memcpy(pocRandomData + 16 + randomDataShareChecksumSize + walletAddressSize + 8, &nonce, sizeof(int64_t));
 }
 
-void XirophtDecentralizedCpuMiner_UpdatePocRandomData(uint8_t *pocRandomData, const int64_t timestamp, const size_t randomDataShareChecksumSize, const size_t walletAddressSize, const int64_t nonce)
+void XirophtDecentralizedCpuMiner_UpdatePocRandomData(uint8_t *pocRandomData, const int64_t timestamp, const int32_t randomDataShareChecksumSize, const int32_t walletAddressSize, const int64_t nonce)
 {
     // timestamp - 8 bytes
     memcpy(pocRandomData + 8, &timestamp, sizeof(int64_t));
 
     // nonce - 8 bytes
     memcpy(pocRandomData + 16 + randomDataShareChecksumSize + walletAddressSize + 8, &nonce, sizeof(int64_t));
+}
+
+void XirophtDecentralizedCpuMiner_DoNonceIvMiningInstruction(uint8_t *pocShareIv, int32_t *pocShareIvSize, const int32_t pocRoundShaNonce)
+{
+    for (int32_t i = pocRoundShaNonce - 1; i >= 0; --i)
+    {
+        Sha3Utility_TryComputeSha512Hash(pocShareIv, *pocShareIvSize, pocShareIv, (uint32_t*) pocShareIvSize);
+    }
+}
+
+void XirophtDecentralizedCpuMiner_DoNonceIvXorMiningInstruction(uint8_t *pocShareIv, const int32_t pocShareIvSize)
+{
+    const div_t divResult = div(pocShareIvSize, 2);
+
+    for (int32_t i = divResult.quot - 1; i >= 0; --i)
+    {
+        const uint8_t value = *(pocShareIv + i) ^ *(pocShareIv + pocShareIvSize - 1 - i);
+
+        *(pocShareIv + i) = value;
+        *(pocShareIv + pocShareIvSize - 1 - i) = value;
+    }
+
+    if (divResult.rem != 0)
+    {
+        *(pocShareIv + divResult.quot) = 0;
+    }
 }
 
 int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
@@ -44,33 +70,26 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
     const int64_t pocShareNonceMax,
     const int64_t currentBlockHeight,
     uint8_t *pocShareIv,
-    const size_t pocShareIvLength,
+    size_t *pocShareIvSize,
+    uint8_t *pocShareWorkToDoBytes,
+    const uint8_t *currentBlockDifficulty,
+    const size_t currentBlockDifficultyLength,
     const uint8_t *previousFinalBlockTransactionHashKey,
-    const size_t previousFinalBlockTransactionHashKeyLength,
-    const uint8_t *blockDifficulty,
-    const size_t blockDifficultyLength
+    const size_t previousFinalBlockTransactionHashKeyLength
 )
 {
     size_t totalRetry = 0;
     int32_t newNonceGenerated = 0;
     int64_t newNonce = 0;
 
-    const size_t minimumLength = pocShareIvLength + previousFinalBlockTransactionHashKeyLength + 8 + blockDifficultyLength;
-    uint8_t *pocShareWorkToDoBytes = malloc(minimumLength);
-
     while (totalRetry < pocShareNonceMaxSquareRetry)
     {
-        memcpy(pocShareWorkToDoBytes, pocShareIv, pocShareIvLength);
-        memcpy(pocShareWorkToDoBytes + pocShareIvLength, blockDifficulty, blockDifficultyLength);
+        memcpy(pocShareWorkToDoBytes, pocShareIv, *pocShareIvSize);
+        memcpy(pocShareWorkToDoBytes + *pocShareIvSize, currentBlockDifficulty, currentBlockDifficultyLength);
+        memcpy(pocShareWorkToDoBytes + *pocShareIvSize + currentBlockDifficultyLength, &currentBlockHeight, sizeof(int64_t));
+        memcpy(pocShareWorkToDoBytes + *pocShareIvSize + currentBlockDifficultyLength + 8, previousFinalBlockTransactionHashKey, previousFinalBlockTransactionHashKeyLength);
 
-        const size_t offset = pocShareIvLength + blockDifficultyLength;
-
-        // Block Height
-        memcpy(pocShareWorkToDoBytes + offset, &currentBlockHeight, sizeof(int64_t));
-
-        memcpy(pocShareWorkToDoBytes + offset + 8, previousFinalBlockTransactionHashKey, previousFinalBlockTransactionHashKeyLength);
-
-        Sha3Utility_ComputeSha512Hash(pocShareWorkToDoBytes, minimumLength, pocShareWorkToDoBytes);
+        Sha3Utility_TryComputeSha512Hash(pocShareWorkToDoBytes, *pocShareIvSize + currentBlockDifficultyLength + 8 + previousFinalBlockTransactionHashKeyLength, pocShareWorkToDoBytes, NULL);
 
         for (size_t i = 0; i < 64; i += 8)
         {
@@ -97,58 +116,59 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
         }
 
         if (newNonceGenerated)
+        {
             break;
+        }
 
-        Sha3Utility_ComputeSha512Hash(pocShareIv, pocShareIvLength, pocShareIv);
-
+        Sha3Utility_TryComputeSha512Hash(pocShareIv, *pocShareIvSize, pocShareIv, pocShareIvSize);
         totalRetry++;
     }
 
-    free(pocShareWorkToDoBytes);
-
     if (newNonceGenerated == 0)
     {
-        for (size_t i = 0; i < pocShareNonceNoSquareFoundShaRounds; i++)
+        for (int32_t i = (int32_t) pocShareNonceNoSquareFoundShaRounds - 1; i >= 0; --i)
         {
-            Sha3Utility_ComputeSha512Hash(pocShareIv, pocShareIvLength, pocShareIv);
+            Sha3Utility_TryComputeSha512Hash(pocShareIv, *pocShareIvSize, pocShareIv, pocShareIvSize);
         }
 
-        newNonce = (int64_t) *pocShareIv + ((int64_t) *(pocShareIv + 1) << 8) + ((int64_t) *(pocShareIv + 2) << 16) + ((int64_t) *(pocShareIv + 3) << 24);
+        memcpy(&newNonce, pocShareIv, sizeof(uint32_t));
     }
 
-    if (newNonce >= pocShareNonceMin && newNonce <= pocShareNonceMax)
+    if (newNonce < pocShareNonceMin || newNonce > pocShareNonceMax)
     {
-        memcpy(pocShareIv, &newNonce, sizeof(int64_t));
-        return 1;
+        return 0;
     }
 
-    return 0;
+    memcpy(pocShareIv, &newNonce, sizeof(int64_t));
+    *pocShareIvSize = sizeof(int64_t);
+
+    return 1;
 }
 
-int32_t XirophtDecentralizedCpuMiner_GetMaxLz4CompressSize(const int32_t inputSize)
+void XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(uint8_t *pocShareIv, int32_t *pocShareIvSize)
 {
-    return LZ4_COMPRESSBOUND(inputSize);
-}
+    const int32_t compressMaxSize = LZ4_COMPRESSBOUND(*pocShareIvSize);
+    uint8_t* output = pocShareIv + *pocShareIvSize;
+    const int32_t actualCompressSize = LZ4_compress_default(pocShareIv, output, *pocShareIvSize, compressMaxSize);
 
-int32_t XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(const uint8_t *input, const int32_t inputSize, uint8_t *output)
-{
-    const int32_t compressMaxSize = LZ4_COMPRESSBOUND(inputSize);
-    const int32_t actualCompressSize = LZ4_compress_default(input, output, inputSize, compressMaxSize);
-
-    if (actualCompressSize >= inputSize || actualCompressSize <= 0)
+    if (actualCompressSize >= *pocShareIvSize || actualCompressSize <= 0)
     {
-        memcpy(output, &inputSize, sizeof(int32_t));
-        memcpy(output + 4, &inputSize, sizeof(int32_t));
-        memcpy(output + 8, input, inputSize);
+        memcpy(output, pocShareIvSize, sizeof(int32_t));
+        memcpy(output + 4, pocShareIvSize, sizeof(int32_t));
+        memcpy(output + 8, pocShareIv, *pocShareIvSize);
 
-        return inputSize + 8;
+        *pocShareIvSize = *pocShareIvSize + 8;
+
+        memmove(pocShareIv, output, *pocShareIvSize);
+        return;
     }
 
-    memcpy(output, &inputSize, sizeof(int32_t));
+    memmove(output + 8, output, actualCompressSize);
+    memcpy(output, pocShareIvSize, sizeof(int32_t));
     memcpy(output + 4, &actualCompressSize, sizeof(int32_t));
-    memcpy(output + 8, output, actualCompressSize);
 
-    return actualCompressSize + 8;
+    *pocShareIvSize = actualCompressSize + 8;
+    memmove(pocShareIv, output, *pocShareIvSize);
 }
 
 int32_t XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(const uint8_t *password, const int32_t passwordLength, const uint8_t *salt, const int32_t saltLength, const int32_t iterations, const int32_t keyLength, uint8_t *output)
@@ -156,28 +176,19 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(const 
     return PKCS5_PBKDF2_HMAC_SHA1(password, passwordLength, salt, saltLength, iterations, keyLength, output);
 }
 
-int32_t XirophtDecentralizedCpuMiner_GetAes256Cfb128OutputSize(const int32_t iterations, const int32_t dataLength)
-{
-    int32_t outputLength = dataLength;
-
-    for (int32_t i = 0; i < iterations; i++)
-    {
-        outputLength = outputLength + (16 - outputLength % 16);
-    }
-
-    return outputLength;
-}
-
-int32_t XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(const uint8_t *key, const uint8_t *iv, const int32_t iterations, const uint8_t *data, const int32_t dataLength, uint8_t *output)
+int32_t XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(const uint8_t *key, const uint8_t *iv, const int32_t iterations, uint8_t *data, int32_t *dataLength)
 {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+
     if (ctx == NULL)
+    {
         return 0;
+    }
 
-    memcpy(output, data, dataLength);
-    int32_t outputLength = dataLength;
+    memcpy(data + *dataLength, data, *dataLength);
+    uint8_t* newData = data + *dataLength;
 
-    for (int32_t i = 0; i < iterations; i++)
+    for (int32_t i = iterations - 1; i >= 0; --i)
     {
         if (EVP_CIPHER_CTX_set_padding(ctx, 0) == 0)
         {
@@ -191,18 +202,18 @@ int32_t XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(const 
             return 0;
         }
 
-        const int32_t paddingSizeRequired = 16 - outputLength % 16;
+        const uint8_t paddingSizeRequired = 16 - *dataLength % 16;
 
-        for (int32_t j = 0; j < paddingSizeRequired; j++)
+        for (int j = paddingSizeRequired - 1; j >= 0; --j)
         {
-            *(output + outputLength + j) = paddingSizeRequired;
+            *(newData + *dataLength + j) = paddingSizeRequired;
         }
 
-        outputLength += paddingSizeRequired;
+        *dataLength = *dataLength + paddingSizeRequired;
 
         int32_t updateLength = 0;
 
-        if (EVP_EncryptUpdate(ctx, output, &updateLength, output, outputLength) == 0)
+        if (EVP_EncryptUpdate(ctx, newData, &updateLength, newData, *dataLength) == 0)
         {
             EVP_CIPHER_CTX_free(ctx);
             return 0;
@@ -210,13 +221,13 @@ int32_t XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(const 
 
         int32_t finalLength = 0;
 
-        if (EVP_EncryptFinal_ex(ctx, output + updateLength, &finalLength) == 0)
+        if (EVP_EncryptFinal_ex(ctx, newData + updateLength, &finalLength) == 0)
         {
             EVP_CIPHER_CTX_free(ctx);
             return 0;
         }
 
-        outputLength = updateLength + finalLength;
+        *dataLength = updateLength + finalLength;
 
         if (EVP_CIPHER_CTX_reset(ctx) == 0)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,7 +40,7 @@ namespace Xirorig
                     }));
 
                     // Application Context
-                    serviceCollection.AddSingleton<ApplicationContext>();
+                    serviceCollection.AddSingleton<ProgramContext>();
 
                     // Program
                     serviceCollection.AddHostedService<ProgramHostedService>();

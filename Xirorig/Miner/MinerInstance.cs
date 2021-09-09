@@ -15,11 +15,10 @@ namespace Xirorig.Miner
 {
     internal class MinerInstance : IDisposable
     {
-        private readonly ApplicationContext _context;
-        private readonly Options.MinerInstance _minerInstance;
+        private readonly ProgramContext _context;
+        private readonly Options.MinerInstance _minerInstanceOptions;
 
         private readonly INetwork[] _networks;
-        private readonly INetwork[] _devNetworks;
 
         private readonly CpuMiner?[] _cpuMiners;
 
@@ -28,27 +27,30 @@ namespace Xirorig.Miner
         private readonly Timer _calculateAverageHashCalculatedIn15Minutes;
 
         private INetwork? _currentNetwork;
-        private int _currentNetworkIndex = 0;
+        private int _currentNetworkIndex;
         private int _retryCount;
 
-        public long[] AverageHashCalculatedIn10Seconds { get; }
-        public long[] AverageHashCalculatedIn60Seconds { get; }
-        public long[] AverageHashCalculatedIn15Minutes { get; }
+        public double[] AverageHashCalculatedIn10Seconds { get; }
+
+        public double[] AverageHashCalculatedIn60Seconds { get; }
+
+        public double[] AverageHashCalculatedIn15Minutes { get; }
 
         public long TotalGoodJobsSubmitted { get; private set; }
+
         public long TotalBadJobsSubmitted { get; private set; }
 
-        public MinerInstance(ApplicationContext context, Options.MinerInstance minerInstance, int index)
+        public MinerInstance(ProgramContext context, Options.MinerInstance minerInstanceOptions, int index)
         {
             _context = context;
-            _minerInstance = minerInstance;
+            _minerInstanceOptions = minerInstanceOptions;
 
-            var pools = minerInstance.GetPools();
+            var pools = minerInstanceOptions.GetPools();
             var poolLength = pools.Length;
-            if (poolLength == 0) throw new JsonException($"{minerInstance.Pools} is empty.");
+            if (poolLength == 0) throw new JsonException($"{minerInstanceOptions.Pools} is empty.");
 
             context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
-            context.Logger.LogInformation("   {Category:l}{Index}", false, "MINER INSTANCE #", index + 1);
+            context.Logger.LogInformation($"   {AnsiEscapeCodeConstants.WhiteForegroundColor}MINER INSTANCE #{{Index}}{AnsiEscapeCodeConstants.Reset}", false, index + 1);
             context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
 
             _networks = new INetwork[poolLength];
@@ -56,14 +58,12 @@ namespace Xirorig.Miner
             for (var i = 0; i < poolLength; i++)
             {
                 _networks[i] = NetworkUtility.CreateNetwork(context, pools[i]);
-                context.Logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {{Category,-12:l}} {AnsiEscapeCodeConstants.GreenForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}algo{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Algo:l}}{AnsiEscapeCodeConstants.Reset}", false, $"POOL #{i + 1}", pools[i].GetUrl(), pools[i].GetAlgorithm());
+                context.Logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GreenForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}algo{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Algo:l}}{AnsiEscapeCodeConstants.Reset}", false, $"POOL #{i + 1}", pools[i].GetUrl(), pools[i].GetAlgorithm());
             }
 
             context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
 
-            _devNetworks = NetworkUtility.CreateDevNetworks(context);
-
-            var cpuMiner = minerInstance.GetCpuMiner();
+            var cpuMiner = minerInstanceOptions.GetCpuMiner();
             var numberOfThreads = cpuMiner.GetNumberOfThreads();
 
             _cpuMiners = new CpuMiner[numberOfThreads];
@@ -72,9 +72,9 @@ namespace Xirorig.Miner
             _calculateAverageHashCalculatedIn60Seconds = new Timer(CalculateAverageHashCalculatedIn60Seconds, null, Timeout.Infinite, Timeout.Infinite);
             _calculateAverageHashCalculatedIn15Minutes = new Timer(CalculateAverageHashCalculatedIn15Minutes, null, Timeout.Infinite, Timeout.Infinite);
  
-            AverageHashCalculatedIn10Seconds = new long[numberOfThreads];
-            AverageHashCalculatedIn60Seconds = new long[numberOfThreads];
-            AverageHashCalculatedIn15Minutes = new long[numberOfThreads];
+            AverageHashCalculatedIn10Seconds = new double[numberOfThreads];
+            AverageHashCalculatedIn60Seconds = new double[numberOfThreads];
+            AverageHashCalculatedIn15Minutes = new double[numberOfThreads];
         }
 
         public void StartInstance()
@@ -95,9 +95,9 @@ namespace Xirorig.Miner
 
             _currentNetwork?.StopNetwork();
 
-            _calculateAverageHashCalculatedIn10Seconds.Change(Timeout.Infinite, Timeout.Infinite);
-            _calculateAverageHashCalculatedIn60Seconds.Change(Timeout.Infinite, Timeout.Infinite);
-            _calculateAverageHashCalculatedIn15Minutes.Change(Timeout.Infinite, Timeout.Infinite);
+            _calculateAverageHashCalculatedIn10Seconds.Change(0, Timeout.Infinite);
+            _calculateAverageHashCalculatedIn60Seconds.Change(0, Timeout.Infinite);
+            _calculateAverageHashCalculatedIn15Minutes.Change(0, Timeout.Infinite);
         }
 
         private void SwapNetwork(INetwork network)
@@ -108,9 +108,9 @@ namespace Xirorig.Miner
                 UnregisterNetworkEvent(_currentNetwork);
             }
 
-            var cpuMinerConfig = _minerInstance.GetCpuMiner();
+            var cpuMinerConfig = _minerInstanceOptions.GetCpuMiner();
             var cpuMinerThreads = cpuMinerConfig.GetThreads();
-            var pool = _minerInstance.GetPools();
+            var pool = _minerInstanceOptions.GetPools();
 
             for (var i = 0; i < _cpuMiners.Length; i++)
             {
@@ -187,6 +187,12 @@ namespace Xirorig.Miner
             {
                 _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Disconnected{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
             }
+            else if (exception != null)
+            {
+                _context.Logger.LogError(exception, $"{AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Oops, this miner has caught an exception.{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
+                StopInstance();
+                return;
+            }
 
             _retryCount++;
 
@@ -241,36 +247,42 @@ namespace Xirorig.Miner
 
         private void CalculateAverageHashCalculatedIn10Seconds(object? state)
         {
+            var startTime = DateTime.Now;
+
             for (var i = 0; i < _cpuMiners.Length; i++)
             {
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
 
-                AverageHashCalculatedIn10Seconds[i] = cpuMiner.TotalHashCalculatedIn10Seconds / 10;
+                AverageHashCalculatedIn10Seconds[i] = cpuMiner.TotalHashCalculatedIn10Seconds / (10 + (DateTime.Now - startTime).TotalSeconds);
                 cpuMiner.TotalHashCalculatedIn10Seconds = 0;
             }
         }
 
         private void CalculateAverageHashCalculatedIn60Seconds(object? state)
         {
+            var startTime = DateTime.Now;
+
             for (var i = 0; i < _cpuMiners.Length; i++)
             {
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
 
-                AverageHashCalculatedIn60Seconds[i] = cpuMiner.TotalHashCalculatedIn60Seconds / 60;
+                AverageHashCalculatedIn60Seconds[i] = cpuMiner.TotalHashCalculatedIn60Seconds / (60 + (DateTime.Now - startTime).TotalSeconds);
                 cpuMiner.TotalHashCalculatedIn60Seconds = 0;
             }
         }
 
         private void CalculateAverageHashCalculatedIn15Minutes(object? state)
         {
+            var startTime = DateTime.Now;
+
             for (var i = 0; i < _cpuMiners.Length; i++)
             {
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
 
-                AverageHashCalculatedIn15Minutes[i] = cpuMiner.TotalHashCalculatedIn15Minutes / 900;
+                AverageHashCalculatedIn15Minutes[i] = cpuMiner.TotalHashCalculatedIn15Minutes / (900 + (DateTime.Now - startTime).TotalSeconds);
                 cpuMiner.TotalHashCalculatedIn15Minutes = 0;
             }
         }

@@ -52,7 +52,6 @@ target_compile_definitions(
 set_target_properties(
 	${PROJECT_NAME}
 		PROPERTIES 
-			C_STANDARD 99
 			VERSION ${PROJECT_VERSION}
 			SOVERSION 1
 			PUBLIC_HEADER "${XIRORIG_NATIVE_PUBLIC_HEADER}"
