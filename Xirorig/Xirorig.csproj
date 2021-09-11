@@ -33,6 +33,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Algorithm\Xiropht\Centralized\**" />
+	  <EmbeddedResource Remove="Algorithm\Xiropht\Centralized\**" />
+	  <None Remove="Algorithm\Xiropht\Centralized\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger.csproj" />
 	</ItemGroup>
 
@@ -45,10 +51,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows'))">
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0" Condition="$(Configuration.Contains('linux'))">
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0" Condition="$(Configuration.Contains('linux')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
@@ -60,12 +66,6 @@
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-	</ItemGroup>
-
-
-	<ItemGroup>
-		<Folder Include="Algorithm\Xiropht\Centralized\Api\JobResult\" />
-		<Folder Include="Algorithm\Xiropht\Centralized\Api\JobTemplate\" />
 	</ItemGroup>
 
 </Project>
