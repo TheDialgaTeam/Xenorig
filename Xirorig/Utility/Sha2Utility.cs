@@ -10,10 +10,10 @@ namespace Xirorig.Utility
         private static class Native
         {
             [DllImport("xirorig_native")]
-            public static extern int Sha2Utility_TryComputeSha256Hash(in byte source, int sourceLength, ref byte destination, out int bytesWritten);
+            public static extern int Sha2Utility_TryComputeSha256Hash(in byte source, int sourceLength, in byte destination, out int bytesWritten);
 
             [DllImport("xirorig_native")]
-            public static extern int Sha2Utility_TryComputeSha512Hash(in byte source, int sourceLength, ref byte destination, out int bytesWritten);
+            public static extern int Sha2Utility_TryComputeSha512Hash(in byte source, int sourceLength, in byte destination, out int bytesWritten);
         }
 
         private const int Sha256OutputSize = 256 / 8;
@@ -41,7 +41,7 @@ namespace Xirorig.Utility
             {
                 var result = new byte[Sha256OutputSize];
 
-                if (Native.Sha2Utility_TryComputeSha256Hash(MemoryMarshal.GetReference(source), source.Length, ref Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
+                if (Native.Sha2Utility_TryComputeSha256Hash(MemoryMarshal.GetReference(source), source.Length, Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
 
                 return result;
             }
@@ -64,7 +64,7 @@ namespace Xirorig.Utility
 
             try
             {
-                return Native.Sha2Utility_TryComputeSha256Hash(MemoryMarshal.GetReference(source), source.Length, ref MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
+                return Native.Sha2Utility_TryComputeSha256Hash(MemoryMarshal.GetReference(source), source.Length, MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
             }
             catch (Exception)
             {
@@ -93,7 +93,7 @@ namespace Xirorig.Utility
             {
                 var result = new byte[Sha512OutputSize];
 
-                if (Native.Sha2Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, ref Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
+                if (Native.Sha2Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
 
                 return result;
             }
@@ -116,7 +116,7 @@ namespace Xirorig.Utility
 
             try
             {
-                return Native.Sha2Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, ref MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
+                return Native.Sha2Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
             }
             catch (Exception)
             {

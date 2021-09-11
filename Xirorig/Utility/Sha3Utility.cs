@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography;
 
 namespace Xirorig.Utility
@@ -10,7 +12,7 @@ namespace Xirorig.Utility
         private static class Native
         {
             [DllImport("xirorig_native")]
-            public static extern int Sha3Utility_TryComputeSha512Hash(in byte source, int sourceLength, ref byte output, out int bytesWritten);
+            public static extern int Sha3Utility_TryComputeSha512Hash(in byte source, int sourceLength, in byte output, out int bytesWritten);
         }
 
         private class KeccakDigest
@@ -345,7 +347,7 @@ namespace Xirorig.Utility
                     var d3 = ((c3 << 1) | (c3 >> -1)) ^ c1;
                     var d4 = ((c4 << 1) | (c4 >> -1)) ^ c2;
                     var d0 = ((c0 << 1) | (c0 >> -1)) ^ c3;
-
+                    
                     a00 ^= d1;
                     a05 ^= d1;
                     a10 ^= d1;
@@ -555,7 +557,7 @@ namespace Xirorig.Utility
             {
                 var result = new byte[Sha512OutputSize];
 
-                if (Native.Sha3Utility_TryComputeSha512Hash(Unsafe.AsRef(source[0]), source.Length, ref Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
+                if (Native.Sha3Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, Unsafe.AsRef(result[0]), out var _) == 0) throw new CryptographicException();
 
                 return result;
             }
@@ -578,7 +580,7 @@ namespace Xirorig.Utility
 
             try
             {
-                return Native.Sha3Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, ref MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
+                return Native.Sha3Utility_TryComputeSha512Hash(MemoryMarshal.GetReference(source), source.Length, MemoryMarshal.GetReference(destination), out bytesWritten) == 1;
             }
             catch (Exception)
             {

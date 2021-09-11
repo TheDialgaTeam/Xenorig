@@ -58,22 +58,22 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             public static extern void XirophtDecentralizedCpuMiner_UpdatePocRandomData(in byte pocRandomData, long timestamp, int randomDataShareChecksumSize, int walletAddressSize, long nonce);
 
             [DllImport("xirorig_native")]
-            public static extern void XirophtDecentralizedCpuMiner_DoNonceIvMiningInstruction(ref byte pocShareIv, ref int pocShareIvSize, int pocRoundShaNonce);
+            public static extern void XirophtDecentralizedCpuMiner_DoNonceIvMiningInstruction(in byte pocShareIv, ref int pocShareIvSize, int pocRoundShaNonce);
 
             [DllImport("xirorig_native")]
-            public static extern void XirophtDecentralizedCpuMiner_DoNonceIvXorMiningInstruction(ref byte pocShareIv, int pocShareIvSize);
+            public static extern void XirophtDecentralizedCpuMiner_DoNonceIvXorMiningInstruction(in byte pocShareIv, int pocShareIvSize);
 
             [DllImport("xirorig_native")]
-            public static extern int XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(int pocShareNonceMaxSquareRetry, int pocShareNonceNoSquareFoundShaRounds, long pocShareNonceMin, long pocShareNonceMax, long currentBlockHeight, ref byte pocShareIv, ref int pocShareIvLength, ref byte pocShareWorkToDoBytes, in byte blockDifficulty, int blockDifficultyLength, in byte previousFinalBlockTransactionHashKey, int previousFinalBlockTransactionHashKeyLength);
+            public static extern int XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(int pocShareNonceMaxSquareRetry, int pocShareNonceNoSquareFoundShaRounds, long pocShareNonceMin, long pocShareNonceMax, long currentBlockHeight, in byte pocShareIv, ref int pocShareIvLength, in byte pocShareWorkToDoBytes, in byte blockDifficulty, int blockDifficultyLength, in byte previousFinalBlockTransactionHashKey, int previousFinalBlockTransactionHashKeyLength);
 
             [DllImport("xirorig_native")]
-            public static extern void XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(ref byte input, ref int inputSize);
+            public static extern void XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(in byte input, ref int inputSize);
 
             [DllImport("xirorig_native")]
-            public static extern int XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(in byte password, int passwordLength, in byte salt, int saltLength, int iterations, int keyLength, ref byte output);
+            public static extern int XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(in byte pocShareIv, ref int pocShareIvSize, in byte blockchainMarkKey, int blockchainMarkKeySize, int pocShareNonceIvIteration, int keyLength);
 
             [DllImport("xirorig_native")]
-            public static extern int XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(in byte key, in byte iv, int iterations, ref byte data, ref int dataLength);
+            public static extern int XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(in byte key, in byte iv, int iterations, in byte data, ref int dataLength);
         }
 
         private const int MaxStackSize = 1024;
@@ -157,13 +157,13 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             var randomNumber2 = previousBlockTransactionCount - randomNumber;
 
             // randomNumber
-            Unsafe.As<byte, int>(ref pocRandomData[0]) = randomNumber;
+            MemoryMarshal.AsRef<int>(pocRandomData) = randomNumber;
 
             // randomNumber2
-            Unsafe.As<byte, int>(ref pocRandomData[4]) = randomNumber2;
+            MemoryMarshal.AsRef<int>(pocRandomData[4..]) = randomNumber2;
 
             // timestamp
-            Unsafe.As<byte, long>(ref pocRandomData[8]) = timestamp;
+            MemoryMarshal.AsRef<long>(pocRandomData[8..]) = timestamp;
 
             var minerSettings = blockTemplate.MiningSettings;
             var randomDataShareChecksum = minerSettings.RandomDataShareChecksum;
@@ -174,10 +174,10 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             walletAddress[..walletAddressDataSize].CopyTo(pocRandomData.Slice(16 + randomDataShareChecksum, walletAddressDataSize));
 
             // block height
-            Unsafe.As<byte, long>(ref pocRandomData[16 + randomDataShareChecksum + walletAddressDataSize]) = blockTemplate.CurrentBlockHeight;
+            MemoryMarshal.AsRef<long>(pocRandomData[(16 + randomDataShareChecksum + walletAddressDataSize)..]) = blockTemplate.CurrentBlockHeight;
 
             // nonce
-            Unsafe.As<byte, long>(ref pocRandomData[16 + randomDataShareChecksum + walletAddressDataSize + 8]) = nonce;
+            MemoryMarshal.AsRef<long>(pocRandomData[(16 + randomDataShareChecksum + walletAddressDataSize + 8)..]) = nonce;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -186,6 +186,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             if (!_isUpdatePocRandomDataAvailable)
             {
                 SoftwareUpdatePocRandomData(blockTemplate, pocRandomData, timestamp, nonce);
+                return;
             }
 
             try
@@ -206,10 +207,10 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             var minerSettings = blockTemplate.MiningSettings;
 
             // timestamp
-            Unsafe.As<byte, long>(ref pocRandomData[8]) = timestamp;
+            MemoryMarshal.AsRef<long>(pocRandomData[8..]) = timestamp;
 
             // nonce
-            Unsafe.As<byte, long>(ref pocRandomData[16 + minerSettings.RandomDataShareChecksum + minerSettings.WalletAddressDataSize + 8]) = nonce;
+            MemoryMarshal.AsRef<long>(pocRandomData[(16 + minerSettings.RandomDataShareChecksum + minerSettings.WalletAddressDataSize + 8)..]) = nonce;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -218,7 +219,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             var pocShareIv = dataBuffer.PocShareIv;
             var pocShareIvSize = 8;
 
-            MemoryMarshal.AsRef<long>(pocShareIv[..pocShareIvSize]) = nonce;
+            MemoryMarshal.AsRef<long>(pocShareIv) = nonce;
 
             var miningSettings = blockTemplate.MiningSettings;
             var miningInstructions = miningSettings.MiningInstructions;
@@ -285,7 +286,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
             try
             {
-                Native.XirophtDecentralizedCpuMiner_DoNonceIvMiningInstruction(ref MemoryMarshal.GetReference(pocShareIv), ref pocShareIvSize, pocRoundShaNonce);
+                Native.XirophtDecentralizedCpuMiner_DoNonceIvMiningInstruction(MemoryMarshal.GetReference(pocShareIv), ref pocShareIvSize, pocRoundShaNonce);
             }
             catch (Exception)
             {
@@ -314,7 +315,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
             try
             {
-                Native.XirophtDecentralizedCpuMiner_DoNonceIvXorMiningInstruction(ref MemoryMarshal.GetReference(pocShareIv), pocShareIvSize);
+                Native.XirophtDecentralizedCpuMiner_DoNonceIvXorMiningInstruction(MemoryMarshal.GetReference(pocShareIv), pocShareIvSize);
             }
             catch (Exception)
             {
@@ -357,9 +358,9 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
                     minerSettings.PocShareNonceMin,
                     minerSettings.PocShareNonceMax,
                     blockTemplate.CurrentBlockHeight,
-                    ref MemoryMarshal.GetReference(pocShareIv),
+                    MemoryMarshal.GetReference(pocShareIv),
                     ref pocShareIvSize,
-                    ref MemoryMarshal.GetReference(pocShareWorkToDoBytes),
+                    MemoryMarshal.GetReference(pocShareWorkToDoBytes),
                     MemoryMarshal.GetReference(currentBlockDifficulty),
                     currentBlockDifficulty.Length,
                     MemoryMarshal.GetReference(previousFinalBlockTransactionHashKey),
@@ -391,7 +392,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
                 currentBlockDifficulty.CopyTo(pocShareWorkToDoBytes[pocShareIvSize..]);
 
                 // Block Height
-                Unsafe.As<byte, long>(ref pocShareWorkToDoBytes[pocShareIvSize + currentBlockDifficulty.Length]) = blockTemplate.CurrentBlockHeight;
+                MemoryMarshal.AsRef<long>(pocShareWorkToDoBytes[(pocShareIvSize + currentBlockDifficulty.Length)..]) = blockTemplate.CurrentBlockHeight;
 
                 previousFinalBlockTransactionHashKey.CopyTo(pocShareWorkToDoBytes[(pocShareIvSize + currentBlockDifficulty.Length + 8)..]);
 
@@ -439,7 +440,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
             if (newNonce < minerSettings.PocShareNonceMin || newNonce > minerSettings.PocShareNonceMax) return false;
 
-            Unsafe.As<byte, long>(ref MemoryMarshal.GetReference(pocShareIv)) = newNonce;
+            MemoryMarshal.AsRef<long>(pocShareIv) = newNonce;
             pocShareIvSize = 8;
 
             return true;
@@ -456,7 +457,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
             try
             {
-                Native.XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(ref MemoryMarshal.GetReference(pocShareIv), ref pocShareIvSize);
+                Native.XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(MemoryMarshal.GetReference(pocShareIv), ref pocShareIvSize);
             }
             catch (Exception)
             {
@@ -486,30 +487,29 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void DoNonceIvIterationsMiningInstruction(Span<byte> pocShareIv, ref int pocShareIvSize, ReadOnlySpan<byte> blockchainMarkKey, int iterations)
+        private static void DoNonceIvIterationsMiningInstruction(Span<byte> pocShareIv, ref int pocShareIvSize, ReadOnlySpan<byte> blockchainMarkKey, int pocShareNonceIvIteration)
         {
             if (!_isNonceIvIterationsAvailable)
             {
-                SoftwareDoNonceIvIterationsMiningInstruction(pocShareIv, ref pocShareIvSize, blockchainMarkKey, iterations);
+                SoftwareDoNonceIvIterationsMiningInstruction(pocShareIv, ref pocShareIvSize, blockchainMarkKey, pocShareNonceIvIteration);
                 return;
             }
 
             try
             {
-                Native.XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(MemoryMarshal.GetReference(pocShareIv), pocShareIvSize, MemoryMarshal.GetReference(blockchainMarkKey), blockchainMarkKey.Length, iterations, 16, ref MemoryMarshal.GetReference(pocShareIv));
-                pocShareIvSize = 16;
+                Native.XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(MemoryMarshal.GetReference(pocShareIv), ref pocShareIvSize, MemoryMarshal.GetReference(blockchainMarkKey), blockchainMarkKey.Length, pocShareNonceIvIteration, 16);
             }
             catch (Exception)
             {
                 _isNonceIvIterationsAvailable = false;
-                SoftwareDoNonceIvIterationsMiningInstruction(pocShareIv, ref pocShareIvSize, blockchainMarkKey, iterations);
+                SoftwareDoNonceIvIterationsMiningInstruction(pocShareIv, ref pocShareIvSize, blockchainMarkKey, pocShareNonceIvIteration);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SoftwareDoNonceIvIterationsMiningInstruction(Span<byte> pocShareIv, ref int pocShareIvSize, ReadOnlySpan<byte> blockchainMarkKey, int iterations)
+        private static void SoftwareDoNonceIvIterationsMiningInstruction(Span<byte> pocShareIv, ref int pocShareIvSize, ReadOnlySpan<byte> blockchainMarkKey, int pocShareNonceIvIteration)
         {
-            Rfc2898DeriveBytes.Pbkdf2(pocShareIv[..pocShareIvSize], blockchainMarkKey, pocShareIv, iterations, HashAlgorithmName.SHA1);
+            Rfc2898DeriveBytes.Pbkdf2(pocShareIv[..pocShareIvSize], blockchainMarkKey, pocShareIv[..16], pocShareNonceIvIteration, HashAlgorithmName.SHA1);
             pocShareIvSize = 16;
         }
 
@@ -524,7 +524,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
             try
             {
-                Native.XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(MemoryMarshal.GetReference(key), MemoryMarshal.GetReference(iv), iterations, ref MemoryMarshal.GetReference(data), ref dataSize);
+                Native.XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(MemoryMarshal.GetReference(key), MemoryMarshal.GetReference(iv), iterations, MemoryMarshal.GetReference(data), ref dataSize);
             }
             catch (Exception)
             {
@@ -614,9 +614,9 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
                     if (miningPowShare.PoWaCShareDifficulty >= blockTemplate.CurrentBlockDifficulty)
                     {
-                        LogCurrentJob($"{AnsiEscapeCodeConstants.GreenForegroundColor}Thread: {{ThreadId}} | Block Found | Nonce: {{Nonce}} | Diff: {{ShareDifficulty:l}}{AnsiEscapeCodeConstants.Reset}", ThreadId, currentNonce, miningPowShare.PoWaCShareDifficulty.ToString());
-                        SubmitJobResult(blockTemplate, new MiningShare(miningPowShare, timestamp));
-                        break;
+                        //LogCurrentJob($"{AnsiEscapeCodeConstants.GreenForegroundColor}Thread: {{ThreadId}} | Block Found | Nonce: {{Nonce}} | Diff: {{ShareDifficulty:l}}{AnsiEscapeCodeConstants.Reset}", ThreadId, currentNonce, miningPowShare.PoWaCShareDifficulty.ToString());
+                        //SubmitJobResult(blockTemplate, new MiningShare(miningPowShare, timestamp));
+                        //break;
                     }
                 }
 

@@ -145,7 +145,7 @@ namespace Xirorig
                 double average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
                 var threadCount = minerInstance.AverageHashCalculatedIn10Seconds.Length;
 
-                for (var i = 0; i < threadCount; i++)
+                for (var i = threadCount - 1; i >= 0; i--)
                 {
                     average10SecondsSum += minerInstance.AverageHashCalculatedIn10Seconds[i];
                     average60SecondsSum += minerInstance.AverageHashCalculatedIn60Seconds[i];

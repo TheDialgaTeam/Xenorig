@@ -33,9 +33,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Algorithm\Xiropht\Centralized\**" />
-	  <EmbeddedResource Remove="Algorithm\Xiropht\Centralized\**" />
-	  <None Remove="Algorithm\Xiropht\Centralized\**" />
+		<Compile Remove="publish\**" />
+		<EmbeddedResource Remove="publish\**" />
+		<None Remove="publish\**" />
 	</ItemGroup>
 
 	<ItemGroup>

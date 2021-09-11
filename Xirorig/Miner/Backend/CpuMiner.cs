@@ -107,10 +107,10 @@ namespace Xirorig.Miner.Backend
         private static extern IntPtr OpenThread_Windows(int desiredAccess, bool inheritHandle, int threadId);
 
         [DllImport("kernel32", EntryPoint = "SetThreadAffinityMask")]
-        private static extern UIntPtr SetThreadAffinityMask_Windows(IntPtr hThread, UIntPtr dwThreadAffinityMask);
+        private static extern UIntPtr SetThreadAffinityMask_Windows(IntPtr hThread, in ulong dwThreadAffinityMask);
 
         [DllImport("libc", EntryPoint = "sched_setaffinity")]
-        private static extern int SetThreadAffinityMask_Linux(int pid, int cpuSetSize, ref ulong mask);
+        private static extern int SetThreadAffinityMask_Linux(int pid, int cpuSetSize, in ulong mask);
 
         public void StartMining()
         {
@@ -172,11 +172,11 @@ namespace Xirorig.Miner.Backend
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         var threadPtr = OpenThread_Windows(96, false, GetCurrentThreadId_Windows());
-                        SetThreadAffinityMask_Windows(threadPtr, new UIntPtr(threadAffinity));
+                        SetThreadAffinityMask_Windows(threadPtr, threadAffinity);
                     }
                     else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
-                        SetThreadAffinityMask_Linux(0, sizeof(ulong), ref threadAffinity);
+                        SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
                     }
                 }
 

@@ -249,7 +249,7 @@ namespace Xirorig.Miner
         {
             var startTime = DateTime.Now;
 
-            for (var i = 0; i < _cpuMiners.Length; i++)
+            for (var i = _cpuMiners.Length - 1; i >= 0; i--)
             {
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
@@ -263,7 +263,7 @@ namespace Xirorig.Miner
         {
             var startTime = DateTime.Now;
 
-            for (var i = 0; i < _cpuMiners.Length; i++)
+            for (var i = _cpuMiners.Length - 1; i >= 0; i--)
             {
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
@@ -277,7 +277,7 @@ namespace Xirorig.Miner
         {
             var startTime = DateTime.Now;
 
-            for (var i = 0; i < _cpuMiners.Length; i++)
+            for (var i = _cpuMiners.Length - 1; i >= 0; i--)
             {
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;

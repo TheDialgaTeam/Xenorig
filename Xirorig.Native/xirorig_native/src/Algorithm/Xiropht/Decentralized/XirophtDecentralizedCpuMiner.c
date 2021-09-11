@@ -64,21 +64,21 @@ void XirophtDecentralizedCpuMiner_DoNonceIvXorMiningInstruction(uint8_t *pocShar
 }
 
 int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
-    const size_t pocShareNonceMaxSquareRetry,
-    const size_t pocShareNonceNoSquareFoundShaRounds,
+    const int32_t pocShareNonceMaxSquareRetry,
+    const int32_t pocShareNonceNoSquareFoundShaRounds,
     const int64_t pocShareNonceMin,
     const int64_t pocShareNonceMax,
     const int64_t currentBlockHeight,
-    uint8_t *pocShareIv,
-    uint32_t *pocShareIvSize,
-    uint8_t *pocShareWorkToDoBytes,
-    const uint8_t *currentBlockDifficulty,
-    const size_t currentBlockDifficultyLength,
-    const uint8_t *previousFinalBlockTransactionHashKey,
-    const size_t previousFinalBlockTransactionHashKeyLength
+    uint8_t* pocShareIv,
+    int32_t* pocShareIvSize,
+    uint8_t* pocShareWorkToDoBytes,
+    const uint8_t* currentBlockDifficulty,
+    const int32_t currentBlockDifficultyLength,
+    const uint8_t* previousFinalBlockTransactionHashKey,
+    const int32_t previousFinalBlockTransactionHashKeyLength
 )
 {
-    size_t totalRetry = 0;
+    int32_t totalRetry = 0;
     int32_t newNonceGenerated = 0;
     int64_t newNonce = 0;
 
@@ -91,7 +91,7 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
 
         Sha3Utility_TryComputeSha512Hash(pocShareWorkToDoBytes, *pocShareIvSize + currentBlockDifficultyLength + 8 + previousFinalBlockTransactionHashKeyLength, pocShareWorkToDoBytes, NULL);
 
-        for (size_t i = 0; i < 64; i += 8)
+        for (int32_t i = 0; i < 64; i += 8)
         {
             const int32_t x1 = *(pocShareWorkToDoBytes + i) + (*(pocShareWorkToDoBytes + i + 1) << 8);
             const int32_t y1 = *(pocShareWorkToDoBytes + i + 1) + (*(pocShareWorkToDoBytes + i) << 8);
@@ -120,15 +120,15 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
             break;
         }
 
-        Sha3Utility_TryComputeSha512Hash(pocShareIv, *pocShareIvSize, pocShareIv, pocShareIvSize);
+        Sha3Utility_TryComputeSha512Hash(pocShareIv, *pocShareIvSize, pocShareIv, (uint32_t*) pocShareIvSize);
         totalRetry++;
     }
 
     if (newNonceGenerated == 0)
     {
-        for (int32_t i = (int32_t) pocShareNonceNoSquareFoundShaRounds - 1; i >= 0; --i)
+        for (int32_t i = pocShareNonceNoSquareFoundShaRounds - 1; i >= 0; --i)
         {
-            Sha3Utility_TryComputeSha512Hash(pocShareIv, *pocShareIvSize, pocShareIv, pocShareIvSize);
+            Sha3Utility_TryComputeSha512Hash(pocShareIv, *pocShareIvSize, pocShareIv, (uint32_t*) pocShareIvSize);
         }
 
         memcpy(&newNonce, pocShareIv, sizeof(uint32_t));
@@ -148,7 +148,7 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
 void XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(uint8_t *pocShareIv, int32_t *pocShareIvSize)
 {
     const int32_t compressMaxSize = LZ4_COMPRESSBOUND(*pocShareIvSize);
-    uint8_t* output = pocShareIv + *pocShareIvSize;
+    uint8_t *output = pocShareIv + *pocShareIvSize;
     const int32_t actualCompressSize = LZ4_compress_default(pocShareIv, output, *pocShareIvSize, compressMaxSize);
 
     if (actualCompressSize >= *pocShareIvSize || actualCompressSize <= 0)
@@ -171,9 +171,17 @@ void XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(uint8_t 
     memmove(pocShareIv, output, *pocShareIvSize);
 }
 
-int32_t XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(const uint8_t *password, const int32_t passwordLength, const uint8_t *salt, const int32_t saltLength, const int32_t iterations, const int32_t keyLength, uint8_t *output)
+int32_t XirophtDecentralizedCpuMiner_DoNonceIvIterationsMiningInstruction(uint8_t *pocShareIv, int32_t *pocShareIvSize, const uint8_t *blockchainMarkKey, const int32_t blockchainMarkKeySize, const int32_t pocShareNonceIvIteration, const int32_t keyLength)
 {
-    return PKCS5_PBKDF2_HMAC_SHA1(password, passwordLength, salt, saltLength, iterations, keyLength, output);
+    const int32_t passwordLength = *pocShareIvSize;
+
+    if (PKCS5_PBKDF2_HMAC_SHA1((const char*) pocShareIv, passwordLength, blockchainMarkKey, blockchainMarkKeySize, pocShareNonceIvIteration, keyLength, pocShareIv) == 1)
+    {
+        *pocShareIvSize = keyLength;
+        return 1;
+    }
+
+    return 0;
 }
 
 int32_t XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(const uint8_t *key, const uint8_t *iv, const int32_t iterations, uint8_t *data, int32_t *dataLength)
@@ -186,7 +194,7 @@ int32_t XirophtDecentralizedCpuMiner_DoEncryptedPocShareMiningInstruction(const 
     }
 
     memcpy(data + *dataLength, data, *dataLength);
-    uint8_t* newData = data + *dataLength;
+    uint8_t *newData = data + *dataLength;
 
     for (int32_t i = iterations - 1; i >= 0; --i)
     {
