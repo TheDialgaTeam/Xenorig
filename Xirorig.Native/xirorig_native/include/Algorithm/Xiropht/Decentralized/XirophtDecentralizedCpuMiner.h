@@ -19,7 +19,7 @@ XIRORIG_NATIVE_EXPORT int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMa
     int64_t pocShareNonceMax,
     int64_t currentBlockHeight,
     uint8_t *pocShareIv,
-    size_t *pocShareIvSize,
+    uint32_t *pocShareIvSize,
     uint8_t *pocShareWorkToDoBytes,
     const uint8_t *currentBlockDifficulty,
     size_t currentBlockDifficultyLength,

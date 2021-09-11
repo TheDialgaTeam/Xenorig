@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "cpuinfo.h"
 
 #include "Utility/CpuInformationUtility.h"

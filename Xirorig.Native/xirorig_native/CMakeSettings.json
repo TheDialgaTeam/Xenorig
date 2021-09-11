@@ -17,7 +17,7 @@
           "FLAVOR": "x86_64-w64-mingw32",
           "TOOLSET_VERSION": "10.3.0",
           "PATH": "${env.MINGW64_ROOT}/bin;${env.MINGW64_ROOT}/../usr/local/bin;${env.MINGW64_ROOT}/../usr/bin;${env.MINGW64_ROOT}/../bin;${env.PATH}",
-          "INCLUDE": "${env.INCLUDE};${env.MINGW64_ROOT}/${env.FLAVOR}/include",
+          "INCLUDE": "${env.MINGW64_ROOT}/${env.FLAVOR}/include;${env.INCLUDE}",
           "environment": "mingw_x64"
         }
       ],
@@ -56,7 +56,7 @@
           "FLAVOR": "i686-w64-mingw32",
           "TOOLSET_VERSION": "10.3.0",
           "PATH": "${env.MINGW32_ROOT}/bin;${env.MINGW32_ROOT}/../usr/local/bin;${env.MINGW32_ROOT}/../usr/bin;${env.MINGW32_ROOT}/../bin;${env.PATH}",
-          "INCLUDE": "${env.INCLUDE};${env.MINGW32_ROOT}/${env.FLAVOR}/include",
+          "INCLUDE": "${env.MINGW32_ROOT}/${env.FLAVOR}/include;${env.INCLUDE}",
           "environment": "mingw_x86"
         }
       ],
@@ -94,11 +94,11 @@
       "remoteInstallRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/install/${name}",
       "remoteCopySources": true,
       "rsyncCommandArgs": "-t --delete --delete-excluded",
-      "remoteCopyBuildOutput": false,
+      "remoteCopyBuildOutput": true,
       "remoteCopySourcesMethod": "rsync",
       "variables": [
         {
-          "name": "VCPKG_TARGET_TRIPLES",
+          "name": "VCPKG_TARGET_TRIPLET",
           "value": "x64-linux",
           "type": "STRING"
         }
@@ -120,16 +120,16 @@
       "remoteInstallRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/install/${name}",
       "remoteCopySources": true,
       "rsyncCommandArgs": "-t --delete --delete-excluded",
-      "remoteCopyBuildOutput": false,
+      "remoteCopyBuildOutput": true,
       "remoteCopySourcesMethod": "rsync",
       "variables": [
         {
           "name": "VCPKG_CHAINLOAD_TOOLCHAIN_FILE",
-          "value": "${projectDir}/cmake/raspberrypi-arm.cmake",
+          "value": "$HOME/.vs/${projectDirName}/${workspaceHash}/src/cmake/raspberrypi-arm.cmake",
           "type": "FILEPATH"
         },
         {
-          "name": "VCPKG_TARGET_TRIPLES",
+          "name": "VCPKG_TARGET_TRIPLET",
           "value": "arm-linux",
           "type": "STRING"
         }
@@ -151,16 +151,16 @@
       "remoteInstallRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/install/${name}",
       "remoteCopySources": true,
       "rsyncCommandArgs": "-t --delete --delete-excluded",
-      "remoteCopyBuildOutput": false,
+      "remoteCopyBuildOutput": true,
       "remoteCopySourcesMethod": "rsync",
       "variables": [
         {
           "name": "VCPKG_CHAINLOAD_TOOLCHAIN_FILE",
-          "value": "${projectDir}/cmake/raspberrypi-arm64.cmake",
+          "value": "$HOME/.vs/${projectDirName}/${workspaceHash}/src/cmake/raspberrypi-arm64.cmake",
           "type": "FILEPATH"
         },
         {
-          "name": "VCPKG_TARGET_TRIPLES",
+          "name": "VCPKG_TARGET_TRIPLET",
           "value": "arm64-linux",
           "type": "STRING"
         }

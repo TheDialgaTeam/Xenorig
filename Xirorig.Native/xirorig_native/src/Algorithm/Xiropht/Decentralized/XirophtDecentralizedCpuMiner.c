@@ -70,7 +70,7 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
     const int64_t pocShareNonceMax,
     const int64_t currentBlockHeight,
     uint8_t *pocShareIv,
-    size_t *pocShareIvSize,
+    uint32_t *pocShareIvSize,
     uint8_t *pocShareWorkToDoBytes,
     const uint8_t *currentBlockDifficulty,
     const size_t currentBlockDifficultyLength,
