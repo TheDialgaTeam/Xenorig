@@ -8,7 +8,6 @@ using Xirorig.Network;
 using Xirorig.Network.Api.JobResult;
 using Xirorig.Network.Api.JobTemplate;
 using Xirorig.Options;
-using Xirorig.Utility;
 using CpuMiner = Xirorig.Miner.Backend.CpuMiner;
 
 namespace Xirorig.Miner
@@ -17,8 +16,9 @@ namespace Xirorig.Miner
     {
         private readonly ProgramContext _context;
         private readonly Options.MinerInstance _minerInstanceOptions;
+        private readonly int _minerIndex;
 
-        private readonly INetwork[] _networks;
+        private readonly MinerNetwork[] _networks;
 
         private readonly CpuMiner?[] _cpuMiners;
 
@@ -26,42 +26,46 @@ namespace Xirorig.Miner
         private readonly Timer _calculateAverageHashCalculatedIn60Seconds;
         private readonly Timer _calculateAverageHashCalculatedIn15Minutes;
 
-        private INetwork? _currentNetwork;
+        private MinerNetwork? _currentNetwork;
         private int _currentNetworkIndex;
         private int _retryCount;
 
-        public double[] AverageHashCalculatedIn10Seconds { get; }
+        private readonly object _submitLock = new();
+        private IJobTemplate? _lastJobTemplateSubmitted;
 
-        public double[] AverageHashCalculatedIn60Seconds { get; }
+        public float[] AverageHashCalculatedIn10Seconds { get; }
 
-        public double[] AverageHashCalculatedIn15Minutes { get; }
+        public float[] AverageHashCalculatedIn60Seconds { get; }
 
-        public long TotalGoodJobsSubmitted { get; private set; }
+        public float[] AverageHashCalculatedIn15Minutes { get; }
 
-        public long TotalBadJobsSubmitted { get; private set; }
+        public ulong TotalGoodJobsSubmitted { get; private set; }
 
-        public MinerInstance(ProgramContext context, Options.MinerInstance minerInstanceOptions, int index)
+        public ulong TotalBadJobsSubmitted { get; private set; }
+
+        public MinerInstance(ProgramContext context, int minerIndex, Options.MinerInstance minerInstanceOptions)
         {
             _context = context;
             _minerInstanceOptions = minerInstanceOptions;
+            _minerIndex = minerIndex;
 
             var pools = minerInstanceOptions.GetPools();
             var poolLength = pools.Length;
             if (poolLength == 0) throw new JsonException($"{minerInstanceOptions.Pools} is empty.");
 
-            context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
-            context.Logger.LogInformation($"   {AnsiEscapeCodeConstants.WhiteForegroundColor}MINER INSTANCE #{{Index}}{AnsiEscapeCodeConstants.Reset}", false, index + 1);
-            context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
+            context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{Dash:l}}{AnsiEscapeCodeConstants.Reset}", false, "=".PadRight(75, '='));
+            context.Logger.LogInformation($"   {AnsiEscapeCodeConstants.WhiteForegroundColor}MINER INSTANCE #{{Index}}{AnsiEscapeCodeConstants.Reset}", false, minerIndex + 1);
+            context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{Dash:l}}{AnsiEscapeCodeConstants.Reset}", false, "=".PadRight(75, '='));
 
-            _networks = new INetwork[poolLength];
+            _networks = new MinerNetwork[poolLength];
 
             for (var i = 0; i < poolLength; i++)
             {
-                _networks[i] = NetworkUtility.CreateNetwork(context, pools[i]);
-                context.Logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GreenForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}algo{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Algo:l}}{AnsiEscapeCodeConstants.Reset}", false, $"POOL #{i + 1}", pools[i].GetUrl(), pools[i].GetAlgorithm());
+                _networks[i] = MinerNetwork.CreateNetwork(context, pools[i]);
+                context.Logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}* {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}} {{Pool:l}}{AnsiEscapeCodeConstants.Reset}", false, $"POOL #{i + 1}", _networks[i].GetNetworkInfo());
             }
 
-            context.Logger.LogInformation("{Dash:l}", false, "=".PadRight(75, '='));
+            context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{Dash:l}}{AnsiEscapeCodeConstants.Reset}", false, "=".PadRight(75, '='));
 
             var cpuMiner = minerInstanceOptions.GetCpuMiner();
             var numberOfThreads = cpuMiner.GetNumberOfThreads();
@@ -71,10 +75,10 @@ namespace Xirorig.Miner
             _calculateAverageHashCalculatedIn10Seconds = new Timer(CalculateAverageHashCalculatedIn10Seconds, null, Timeout.Infinite, Timeout.Infinite);
             _calculateAverageHashCalculatedIn60Seconds = new Timer(CalculateAverageHashCalculatedIn60Seconds, null, Timeout.Infinite, Timeout.Infinite);
             _calculateAverageHashCalculatedIn15Minutes = new Timer(CalculateAverageHashCalculatedIn15Minutes, null, Timeout.Infinite, Timeout.Infinite);
- 
-            AverageHashCalculatedIn10Seconds = new double[numberOfThreads];
-            AverageHashCalculatedIn60Seconds = new double[numberOfThreads];
-            AverageHashCalculatedIn15Minutes = new double[numberOfThreads];
+
+            AverageHashCalculatedIn10Seconds = new float[numberOfThreads];
+            AverageHashCalculatedIn60Seconds = new float[numberOfThreads];
+            AverageHashCalculatedIn15Minutes = new float[numberOfThreads];
         }
 
         public void StartInstance()
@@ -100,7 +104,7 @@ namespace Xirorig.Miner
             _calculateAverageHashCalculatedIn15Minutes.Change(0, Timeout.Infinite);
         }
 
-        private void SwapNetwork(INetwork network)
+        private void SwapNetwork(MinerNetwork network)
         {
             if (_currentNetwork != null)
             {
@@ -144,7 +148,7 @@ namespace Xirorig.Miner
             _currentNetwork.StartNetwork();
         }
 
-        private void RegisterNetworkEvent(INetwork network)
+        private void RegisterNetworkEvent(MinerNetwork network)
         {
             network.Connected += CurrentNetworkOnConnected;
             network.Disconnected += CurrentNetworkOnDisconnected;
@@ -152,7 +156,7 @@ namespace Xirorig.Miner
             network.NewJob += CurrentNetworkOnNewJob;
         }
 
-        private void UnregisterNetworkEvent(INetwork network)
+        private void UnregisterNetworkEvent(MinerNetwork network)
         {
             network.Connected -= CurrentNetworkOnConnected;
             network.Disconnected -= CurrentNetworkOnDisconnected;
@@ -174,27 +178,27 @@ namespace Xirorig.Miner
 
         private void CurrentNetworkOnConnected(Pool pool, Exception? exception)
         {
-            _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}use pool{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
+            _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}use pool {AnsiEscapeCodeConstants.CyanForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset}", true, _minerIndex + 1, pool.GetUrl());
         }
 
         private void CurrentNetworkOnDisconnected(Pool pool, Exception? exception)
         {
             if (exception is TaskCanceledException)
             {
-                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Timeout{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
+                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Timeout{AnsiEscapeCodeConstants.Reset}", true, _minerIndex + 1, pool.GetUrl());
             }
             else if (exception is HttpRequestException)
             {
-                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Disconnected{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
+                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Disconnected{AnsiEscapeCodeConstants.Reset}", true, _minerIndex + 1, pool.GetUrl());
             }
             else if (exception != null)
             {
-                _context.Logger.LogError(exception, $"{AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Oops, this miner has caught an exception.{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl());
+                _context.Logger.LogError(exception, $"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.RedForegroundColor}[{{Pool:l}}] Oops, this miner has caught an exception.{AnsiEscapeCodeConstants.Reset}", true, _minerIndex + 1, pool.GetUrl());
                 StopInstance();
                 return;
             }
 
-            _retryCount++;
+            Interlocked.Increment(ref _retryCount);
 
             if (_retryCount >= _context.Options.GetMaxRetryCount())
             {
@@ -215,18 +219,18 @@ namespace Xirorig.Miner
             if (isAccepted)
             {
                 TotalGoodJobsSubmitted++;
-                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.GreenForegroundColor}accepted{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}({{Good}}/{{Bad}}) diff{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Difficulty:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GrayForegroundColor}({{Ping:F0}} ms){AnsiEscapeCodeConstants.Reset}", true, TotalGoodJobsSubmitted, TotalBadJobsSubmitted, difficulty, ping);
+                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GreenForegroundColor}accepted{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}({{Good}}/{{Bad}}) diff{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Difficulty:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GrayForegroundColor}({{Ping:F0}} ms){AnsiEscapeCodeConstants.Reset}", true, _minerIndex + 1, TotalGoodJobsSubmitted, TotalBadJobsSubmitted, difficulty, ping);
             }
             else
             {
                 TotalBadJobsSubmitted++;
-                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.RedForegroundColor}rejected{AnsiEscapeCodeConstants.Reset} ({{Good}}/{{Bad}}) {{Reason:l}}", true, TotalGoodJobsSubmitted, TotalBadJobsSubmitted, reason);
+                _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.RedForegroundColor}rejected{AnsiEscapeCodeConstants.Reset} ({{Good}}/{{Bad}}) {{Reason:l}}", true, _minerIndex + 1, TotalGoodJobsSubmitted, TotalBadJobsSubmitted, reason);
             }
         }
 
-        private void CurrentNetworkOnNewJob(Pool pool, IJobTemplate jobTemplate, string difficulty, long height)
+        private void CurrentNetworkOnNewJob(Pool pool, IJobTemplate jobTemplate, string difficulty, string algorithm, ulong height)
         {
-            _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.MagentaForegroundColor}new job{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}from{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Pool:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}diff{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Difficulty:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}algo{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Algorithm:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}height{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Height}}{AnsiEscapeCodeConstants.Reset}", true, pool.GetUrl(), difficulty, pool.GetAlgorithm(), height);
+            _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.MagentaForegroundColor}new job {AnsiEscapeCodeConstants.DarkGrayForegroundColor}from {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Pool:l}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}diff {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Difficulty:l}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}algo {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Algorithm:l}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}height {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Height}}{AnsiEscapeCodeConstants.Reset}", true, _minerIndex + 1, pool.GetUrl(), difficulty, algorithm, height);
 
             foreach (var cpuMiner in _cpuMiners)
             {
@@ -236,11 +240,17 @@ namespace Xirorig.Miner
 
         private void CurrentCpuMinerOnJobLog(string message, bool includeDefaultTemplate, object[] args)
         {
-            _context.Logger.LogInformation(message, true, args);
+            _context.Logger.LogDebug(message, true, args);
         }
 
         private async void CurrentCpuMinerOnJobResultFound(IJobTemplate jobTemplate, IJobResult jobResult)
         {
+            lock (_submitLock)
+            {
+                if (_lastJobTemplateSubmitted == jobTemplate) return;
+                _lastJobTemplateSubmitted = jobTemplate;
+            }
+
             if (_currentNetwork == null) return;
             await _currentNetwork.SubmitJobAsync(jobTemplate, jobResult);
         }
@@ -254,7 +264,7 @@ namespace Xirorig.Miner
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
 
-                AverageHashCalculatedIn10Seconds[i] = cpuMiner.TotalHashCalculatedIn10Seconds / (10 + (DateTime.Now - startTime).TotalSeconds);
+                AverageHashCalculatedIn10Seconds[i] = cpuMiner.TotalHashCalculatedIn10Seconds / (float) (10 + (DateTime.Now - startTime).TotalSeconds);
                 cpuMiner.TotalHashCalculatedIn10Seconds = 0;
             }
         }
@@ -268,7 +278,7 @@ namespace Xirorig.Miner
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
 
-                AverageHashCalculatedIn60Seconds[i] = cpuMiner.TotalHashCalculatedIn60Seconds / (60 + (DateTime.Now - startTime).TotalSeconds);
+                AverageHashCalculatedIn60Seconds[i] = cpuMiner.TotalHashCalculatedIn60Seconds / (float) (60 + (DateTime.Now - startTime).TotalSeconds);
                 cpuMiner.TotalHashCalculatedIn60Seconds = 0;
             }
         }
@@ -282,7 +292,7 @@ namespace Xirorig.Miner
                 var cpuMiner = _cpuMiners[i];
                 if (cpuMiner == null) continue;
 
-                AverageHashCalculatedIn15Minutes[i] = cpuMiner.TotalHashCalculatedIn15Minutes / (900 + (DateTime.Now - startTime).TotalSeconds);
+                AverageHashCalculatedIn15Minutes[i] = cpuMiner.TotalHashCalculatedIn15Minutes / (float) (900 + (DateTime.Now - startTime).TotalSeconds);
                 cpuMiner.TotalHashCalculatedIn15Minutes = 0;
             }
         }

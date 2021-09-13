@@ -16,30 +16,22 @@ using Xirorig.Utility;
 
 namespace Xirorig.Algorithm.Xiropht.Decentralized
 {
-    internal class XirophtDecentralizedNetwork : INetwork
+    internal class XirophtDecentralizedNetwork : MinerNetwork
     {
-        public event NetworkConnectionStatus? Connected;
-        public event NetworkConnectionStatus? Disconnected;
-        public event NetworkJob? NewJob;
-        public event NetworkJobResult? JobResult;
-
-        private readonly ProgramContext _context;
-        private readonly Pool _pool;
-
         private readonly string _blockchainVersion;
         private readonly int _blockchainChecksum;
 
         private readonly HttpClient _httpClient;
         private readonly Timer _downloadBlockTemplateTimer;
 
+        private bool _connected;
         private string? _currentBlockHash;
 
-        public XirophtDecentralizedNetwork(ProgramContext context, Pool pool)
-        {
-            _context = context;
-            _pool = pool;
+        protected override string AlgorithmName => "Xiropht Decentralized";
 
-            var coin = _pool.GetCoin();
+        public XirophtDecentralizedNetwork(ProgramContext context, Pool pool) : base(context, pool)
+        {
+            var coin = pool.GetCoin();
 
             if (coin.Equals("xiropht", StringComparison.OrdinalIgnoreCase))
             {
@@ -56,47 +48,49 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
                 throw new JsonException("The selected coin is not supported.");
             }
 
-            if (!IsValidWalletAddress(_pool.GetUsername())) throw new JsonException("Invalid wallet address for the specified pool.");
+            if (!IsValidWalletAddress(pool.GetUsername())) throw new JsonException("Invalid wallet address for the specified pool.");
 
             _httpClient = new HttpClient
             {
-                BaseAddress = new Uri(new UriBuilder(_pool.GetUrl()).ToString()),
-                DefaultRequestHeaders = { UserAgent = { ProductInfoHeaderValue.Parse(_pool.GetUserAgent()) } },
-                Timeout = TimeSpan.FromMilliseconds(_context.Options.GetMaxPingTime())
+                BaseAddress = new UriBuilder(pool.GetUrl()).Uri,
+                DefaultRequestHeaders = { UserAgent = { ProductInfoHeaderValue.Parse(pool.GetUserAgent()) } },
+                Timeout = TimeSpan.FromMilliseconds(context.Options.GetMaxPingTime())
             };
 
             _downloadBlockTemplateTimer = new Timer(DownloadBlockTemplateCallback, null, Timeout.Infinite, Timeout.Infinite);
         }
 
-        public void StartNetwork()
+        public override void StartNetwork()
         {
-            _downloadBlockTemplateTimer.Change(0, 1000);
-            Connected?.Invoke(_pool, null);
+            base.StartNetwork();
+
+            _downloadBlockTemplateTimer.Change(TimeSpan.FromSeconds(1), Timeout.InfiniteTimeSpan);
         }
 
-        public void StopNetwork()
+        public override void StopNetwork()
         {
-            _downloadBlockTemplateTimer.Change(0, Timeout.Infinite);
+            base.StopNetwork();
+
+            _downloadBlockTemplateTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            _httpClient.CancelPendingRequests();
         }
 
-        public async Task SubmitJobAsync(IJobTemplate jobTemplate, IJobResult jobResult)
+        public override async Task SubmitJobAsync(IJobTemplate jobTemplate, IJobResult jobResult)
         {
             if (jobTemplate is not BlockTemplate blockTemplate) return;
             if (jobResult is not MiningShare miningShare) return;
 
             try
             {
-                miningShare.MiningPowShareObject.WalletAddress = _pool.GetUsername();
-
                 var requestTime = DateTime.Now;
 
-                var json = JsonSerializer.Serialize(new SendMiningShare.Request(JsonSerializer.Serialize(miningShare, NetworkUtility.DefaultJsonSerializerOptions)), NetworkUtility.DefaultJsonSerializerOptions);
-                var response = await _httpClient.PostAsync(string.Empty, new StringContent(json));
+                var json = JsonSerializer.Serialize(new SendMiningShare.Request(JsonSerializer.Serialize(miningShare, DefaultJsonSerializerOptions)), DefaultJsonSerializerOptions);
+                var response = await _httpClient.PostAsync(string.Empty, new StringContent(json), CancellationToken);
 
-                var jsonResponse = JsonSerializer.Deserialize<SendMiningShare.Response>(await response.Content.ReadAsStreamAsync(), NetworkUtility.DefaultJsonSerializerOptions);
+                var jsonResponse = JsonSerializer.Deserialize<SendMiningShare.Response>(await response.Content.ReadAsStreamAsync(), DefaultJsonSerializerOptions);
                 if (jsonResponse == null) throw new JsonException();
 
-                var miningShareResponse = JsonSerializer.Deserialize<MiningShareResponse>(jsonResponse.PacketObjectSerialized);
+                var miningShareResponse = JsonSerializer.Deserialize<MiningShareResponse>(jsonResponse.PacketObjectSerialized, DefaultJsonSerializerOptions);
                 if (miningShareResponse == null) throw new JsonException();
 
                 var responseTime = DateTime.Now - requestTime;
@@ -104,67 +98,67 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
                 switch (miningShareResponse.MiningShareResult)
                 {
                     case MiningShareResult.EmptyShare:
-                        JobResult?.Invoke(_pool, false, "Empty share submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Empty share submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidWalletAddress:
-                        JobResult?.Invoke(_pool, false, "Invalid wallet address submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid wallet address submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidBlockHash:
-                        JobResult?.Invoke(_pool, false, "Invalid block hash submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid block hash submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidBlockHeight:
-                        JobResult?.Invoke(_pool, false, "Invalid block height submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid block height submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidNonceShare:
-                        JobResult?.Invoke(_pool, false, "Invalid nonce share submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid nonce share submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidShareFormat:
-                        JobResult?.Invoke(_pool, false, "Invalid share format submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid share format submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidShareDifficulty:
-                        JobResult?.Invoke(_pool, false, "Invalid share difficulty submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid share difficulty submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidShareEncryption:
-                        JobResult?.Invoke(_pool, false, "Invalid share encryption submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid share encryption submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidShareData:
-                        JobResult?.Invoke(_pool, false, "Invalid share data submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid share data submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidShareDataSize:
-                        JobResult?.Invoke(_pool, false, "Invalid share data size submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid share data size submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidShareCompatibility:
-                        JobResult?.Invoke(_pool, false, "Invalid share compatibility submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid share compatibility submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.InvalidTimestampShare:
-                        JobResult?.Invoke(_pool, false, "Invalid timestamp submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Invalid timestamp submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.LowDifficultyShare:
-                        JobResult?.Invoke(_pool, false, "Low difficulty share submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Low difficulty share submitted", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.BlockAlreadyFound:
-                        JobResult?.Invoke(_pool, false, "Block already found", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(false, "Block already found", blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.ValidShare:
-                        JobResult?.Invoke(_pool, true, string.Empty, blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(true, string.Empty, blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     case MiningShareResult.ValidUnlockBlockShare:
-                        JobResult?.Invoke(_pool, true, string.Empty, blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
+                        OnJobResult(true, string.Empty, blockTemplate.CurrentBlockDifficulty.ToString(), responseTime.TotalMilliseconds);
                         break;
 
                     default:
@@ -173,7 +167,8 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
             }
             catch (Exception exception)
             {
-                Disconnected?.Invoke(_pool, exception);
+                _connected = false;
+                OnDisconnected(exception);
             }
         }
 
@@ -194,27 +189,44 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
         {
             try
             {
-                var response = await _httpClient.GetStreamAsync("get_block_template", _context.ApplicationShutdownCancellationToken);
+                var requestTime = DateTime.Now;
 
-                var jsonResponse = JsonSerializer.Deserialize<GetBlockTemplate.Response>(response, NetworkUtility.DefaultJsonSerializerOptions);
+                var response = await _httpClient.GetStreamAsync("get_block_template", CancellationToken);
+
+                var jsonResponse = JsonSerializer.Deserialize<GetBlockTemplate.Response>(response, DefaultJsonSerializerOptions);
                 if (jsonResponse == null) throw new JsonException();
 
-                var blockTemplate = JsonSerializer.Deserialize<BlockTemplate>(jsonResponse.PacketObjectSerialized, NetworkUtility.DefaultJsonSerializerOptions);
+                var blockTemplate = JsonSerializer.Deserialize<BlockTemplate>(jsonResponse.PacketObjectSerialized, DefaultJsonSerializerOptions);
                 if (blockTemplate == null) throw new JsonException();
+
+                var responseTime = DateTime.Now - requestTime;
+                if (!CancellationToken.IsCancellationRequested) _downloadBlockTemplateTimer.Change((int) Math.Max((TimeSpan.FromSeconds(1) - responseTime).TotalMilliseconds, 0), Timeout.Infinite);
+
+                if (!_connected)
+                {
+                    OnConnected();
+                    _connected = true;
+                }
 
                 if (_currentBlockHash == blockTemplate.CurrentBlockHash) return;
                 _currentBlockHash = blockTemplate.CurrentBlockHash;
 
-                NewJob?.Invoke(_pool, blockTemplate, blockTemplate.CurrentBlockDifficulty.ToString(), blockTemplate.CurrentBlockHeight);
+                OnNewJob(blockTemplate, blockTemplate.CurrentBlockDifficulty.ToString(), (ulong) blockTemplate.CurrentBlockHeight);
             }
             catch (Exception exception)
             {
-                Disconnected?.Invoke(_pool, exception);
+                _connected = false;
+                OnDisconnected(exception);
+                if (!CancellationToken.IsCancellationRequested) _downloadBlockTemplateTimer.Change(1000, Timeout.Infinite);
             }
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
+            if (!disposing) return;
+
             _httpClient.Dispose();
             _downloadBlockTemplateTimer.Dispose();
         }

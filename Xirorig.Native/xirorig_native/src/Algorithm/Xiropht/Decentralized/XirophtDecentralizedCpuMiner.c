@@ -69,12 +69,12 @@ int32_t XirophtDecentralizedCpuMiner_DoNonceIvEasySquareMathMiningInstruction(
     const int64_t pocShareNonceMin,
     const int64_t pocShareNonceMax,
     const int64_t currentBlockHeight,
-    uint8_t* pocShareIv,
-    int32_t* pocShareIvSize,
-    uint8_t* pocShareWorkToDoBytes,
-    const uint8_t* currentBlockDifficulty,
+    uint8_t *pocShareIv,
+    int32_t *pocShareIvSize,
+    uint8_t *pocShareWorkToDoBytes,
+    const uint8_t *currentBlockDifficulty,
     const int32_t currentBlockDifficultyLength,
-    const uint8_t* previousFinalBlockTransactionHashKey,
+    const uint8_t *previousFinalBlockTransactionHashKey,
     const int32_t previousFinalBlockTransactionHashKeyLength
 )
 {
@@ -149,7 +149,7 @@ void XirophtDecentralizedCpuMiner_DoLz4CompressNonceIvMiningInstruction(uint8_t 
 {
     const int32_t compressMaxSize = LZ4_COMPRESSBOUND(*pocShareIvSize);
     uint8_t *output = pocShareIv + *pocShareIvSize;
-    const int32_t actualCompressSize = LZ4_compress_default(pocShareIv, output, *pocShareIvSize, compressMaxSize);
+    const int32_t actualCompressSize = LZ4_compress_default((const char*) pocShareIv, (char*) output, *pocShareIvSize, compressMaxSize);
 
     if (actualCompressSize >= *pocShareIvSize || actualCompressSize <= 0)
     {

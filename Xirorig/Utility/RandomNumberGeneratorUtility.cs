@@ -8,8 +8,6 @@ namespace Xirorig.Utility
     {
         public static unsafe int GetRandomBetween(int minimumValue, int maximumValue)
         {
-            if (maximumValue < minimumValue) throw new ArgumentException();
-
             var range = (uint) maximumValue - (uint) minimumValue;
             if (range == 0) return minimumValue;
 
@@ -25,7 +23,7 @@ namespace Xirorig.Utility
             do
             {
                 RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                result = maxValue & span[0];
+                result = maxValue & MemoryMarshal.GetReference(span);
             } while (result > range);
 
             return (int) result + minimumValue;
@@ -33,8 +31,6 @@ namespace Xirorig.Utility
 
         public static unsafe long GetRandomBetween(long minimumValue, long maximumValue)
         {
-            if (maximumValue < minimumValue) throw new ArgumentException();
-
             var range = (ulong) maximumValue - (ulong) minimumValue;
             if (range == 0) return minimumValue;
 
@@ -51,7 +47,7 @@ namespace Xirorig.Utility
             do
             {
                 RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                result = maxValue & span[0];
+                result = maxValue & MemoryMarshal.GetReference(span);
             } while (result > range);
 
             return (long) result + minimumValue;

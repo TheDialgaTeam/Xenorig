@@ -9,10 +9,10 @@ namespace Xirorig.Utility
     {
         private static class Native
         {
-            [DllImport("xirorig_native")]
+            [DllImport(Program.XirorigNativeLibrary)]
             public static extern int Sha2Utility_TryComputeSha256Hash(in byte source, int sourceLength, in byte destination, out int bytesWritten);
 
-            [DllImport("xirorig_native")]
+            [DllImport(Program.XirorigNativeLibrary)]
             public static extern int Sha2Utility_TryComputeSha512Hash(in byte source, int sourceLength, in byte destination, out int bytesWritten);
         }
 

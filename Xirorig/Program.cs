@@ -12,6 +12,8 @@ namespace Xirorig
 {
     internal static class Program
     {
+        public const string XirorigNativeLibrary = "xirorig_native";
+
         private static async Task Main(string[] args)
         {
             try

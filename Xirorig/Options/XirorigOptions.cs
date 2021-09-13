@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
-using Xirorig.Utility;
+using Xirorig.Network;
 
 namespace Xirorig.Options
 {
@@ -64,7 +64,7 @@ namespace Xirorig.Options
 
         public string GetUserAgent()
         {
-            return string.IsNullOrWhiteSpace(UserAgent) ? NetworkUtility.DefaultUserAgent : UserAgent;
+            return string.IsNullOrWhiteSpace(UserAgent) ? MinerNetwork.DefaultUserAgent : UserAgent;
         }
     }
 

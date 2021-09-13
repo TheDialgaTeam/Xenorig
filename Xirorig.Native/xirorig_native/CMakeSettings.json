@@ -37,7 +37,8 @@
           "value": "x64-mingw-static",
           "type": "STRING"
         }
-      ]
+      ],
+      "intelliSenseMode": "windows-msvc-x64"
     },
     {
       "name": "x86-windows",
@@ -76,7 +77,8 @@
           "value": "x86-mingw-static",
           "type": "STRING"
         }
-      ]
+      ],
+      "intelliSenseMode": "windows-msvc-x86"
     },
     {
       "name": "x64-linux",

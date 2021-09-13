@@ -31,33 +31,32 @@ namespace Xirorig
 
             var logger = _context.Logger;
 
-            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}{{ApplicationName:l}}/{{Version:l}}{AnsiEscapeCodeConstants.Reset} {{FrameworkVersion:l}}", false, "ABOUT", ApplicationUtility.Name, ApplicationUtility.Version, ApplicationUtility.FrameworkVersion);
-            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}}{AnsiEscapeCodeConstants.Reset} {{CpuInfo:l}} {AnsiEscapeCodeConstants.GreenForegroundColor}{{CpuInstructionSets:l}}{AnsiEscapeCodeConstants.Reset}", false, "CPU", CpuInformationUtility.ProcessorName, CpuInformationUtility.ProcessorInstructionSetsSupported);
-            logger.LogInformation($"   {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.GrayForegroundColor}L2:{AnsiEscapeCodeConstants.Reset}{{L2Cache:F1}} MB {AnsiEscapeCodeConstants.GrayForegroundColor}L3:{AnsiEscapeCodeConstants.Reset}{{L3Cache:F1}} MB {AnsiEscapeCodeConstants.CyanForegroundColor}{{Core}}{AnsiEscapeCodeConstants.Reset}C/{AnsiEscapeCodeConstants.CyanForegroundColor}{{Thread}}{AnsiEscapeCodeConstants.Reset}T", false, "", CpuInformationUtility.ProcessorL2Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorL3Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorCoreCount, CpuInformationUtility.ProcessorThreadCount);
-            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}}{AnsiEscapeCodeConstants.Reset} {{DonatePercentage}}%", false, "DONATE", _context.Options.GetDonatePercentage());
-            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}*{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.MagentaForegroundColor}h{AnsiEscapeCodeConstants.Reset}ashrate, {AnsiEscapeCodeConstants.MagentaForegroundColor}s{AnsiEscapeCodeConstants.Reset}tats, {AnsiEscapeCodeConstants.MagentaForegroundColor}j{AnsiEscapeCodeConstants.Reset}ob", false, "COMMANDS");
-
-            _consoleThread.Start();
+            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}* {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}} {AnsiEscapeCodeConstants.CyanForegroundColor}{{ApplicationName:l}}/{{Version:l}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{FrameworkVersion:l}}{AnsiEscapeCodeConstants.Reset}", false, "ABOUT", ApplicationUtility.Name, ApplicationUtility.Version, ApplicationUtility.FrameworkVersion);
+            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}* {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{CpuInfo:l}} {AnsiEscapeCodeConstants.GreenForegroundColor}{{CpuInstructionSets:l}}{AnsiEscapeCodeConstants.Reset}", false, "CPU", CpuInformationUtility.ProcessorName, CpuInformationUtility.ProcessorInstructionSetsSupported);
+            logger.LogInformation($"   {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}L2:{AnsiEscapeCodeConstants.CyanForegroundColor}{{L2Cache:F1}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}MB L3:{AnsiEscapeCodeConstants.CyanForegroundColor}{{L3Cache:F1}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}MB {AnsiEscapeCodeConstants.CyanForegroundColor}{{Core}}{AnsiEscapeCodeConstants.DarkGrayForegroundColor}C/{AnsiEscapeCodeConstants.CyanForegroundColor}{{Thread}}{AnsiEscapeCodeConstants.DarkGrayForegroundColor}T{AnsiEscapeCodeConstants.Reset}", false, "", CpuInformationUtility.ProcessorL2Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorL3Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorCoreCount, CpuInformationUtility.ProcessorThreadCount);
+            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}* {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{DonatePercentage}}%{AnsiEscapeCodeConstants.Reset}", false, "DONATE", _context.Options.GetDonatePercentage());
+            logger.LogInformation($" {AnsiEscapeCodeConstants.GreenForegroundColor}* {AnsiEscapeCodeConstants.WhiteForegroundColor}{{Category,-12:l}} {AnsiEscapeCodeConstants.MagentaForegroundColor}h{AnsiEscapeCodeConstants.DarkGrayForegroundColor}ashrate, {AnsiEscapeCodeConstants.MagentaForegroundColor}s{AnsiEscapeCodeConstants.DarkGrayForegroundColor}tats, {AnsiEscapeCodeConstants.MagentaForegroundColor}j{AnsiEscapeCodeConstants.DarkGrayForegroundColor}ob{AnsiEscapeCodeConstants.Reset}", false, "COMMANDS");
 
             try
             {
                 // Initialize Miner Instances
-                var minerInstances = _context.Options.GetMinerInstances();
+                var optionsMinerInstances = _context.Options.GetMinerInstances();
 
-                _minerInstances = new MinerInstance[minerInstances.Length];
-                _maxHashes = new double[minerInstances.Length];
+                _minerInstances = new MinerInstance[optionsMinerInstances.Length];
+                _maxHashes = new double[optionsMinerInstances.Length];
 
-                for (var i = 0; i < minerInstances.Length; i++)
+                for (var i = 0; i < optionsMinerInstances.Length; i++)
                 {
-                    _minerInstances[i] = new MinerInstance(_context, minerInstances[i], i);
+                    _minerInstances[i] = new MinerInstance(_context, i, optionsMinerInstances[i]);
                 }
 
-                for (var i = 0; i < minerInstances.Length; i++)
+                for (var i = 0; i < optionsMinerInstances.Length; i++)
                 {
                     _minerInstances[i].StartInstance();
                 }
 
                 _calculateTotalAverageHash.Change(TimeSpan.FromSeconds(_context.Options.GetPrintTime()), TimeSpan.FromSeconds(_context.Options.GetPrintTime()));
+                _consoleThread.Start();
             }
             catch (Exception exception)
             {

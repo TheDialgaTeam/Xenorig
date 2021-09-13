@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.X86;
 using System.Security.Cryptography;
 
 namespace Xirorig.Utility
@@ -11,7 +9,7 @@ namespace Xirorig.Utility
     {
         private static class Native
         {
-            [DllImport("xirorig_native")]
+            [DllImport(Program.XirorigNativeLibrary)]
             public static extern int Sha3Utility_TryComputeSha512Hash(in byte source, int sourceLength, in byte output, out int bytesWritten);
         }
 
@@ -303,7 +301,7 @@ namespace Xirorig.Utility
 
                 for (var i = 0; i < count; ++i)
                 {
-                    state[i] ^= Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(data[(i * 8)..]));
+                    state[i] ^= Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref MemoryMarshal.GetReference(data), i * 8));
                 }
 
                 KeccakPermutation();
@@ -317,7 +315,7 @@ namespace Xirorig.Utility
 
                 for (var i = 0; i < length; i++)
                 {
-                    Unsafe.As<byte, ulong>(ref dataQueue[i * 8]) = state[i];
+                    Unsafe.WriteUnaligned(ref dataQueue[i * 8], state[i]);
                 }
 
                 bitsInQueue = rate;
@@ -347,7 +345,7 @@ namespace Xirorig.Utility
                     var d3 = ((c3 << 1) | (c3 >> -1)) ^ c1;
                     var d4 = ((c4 << 1) | (c4 >> -1)) ^ c2;
                     var d0 = ((c0 << 1) | (c0 >> -1)) ^ c3;
-                    
+
                     a00 ^= d1;
                     a05 ^= d1;
                     a10 ^= d1;

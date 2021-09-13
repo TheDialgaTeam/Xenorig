@@ -9,16 +9,16 @@ namespace Xirorig.Utility
     {
         private static class Native
         {
-            [DllImport("xirorig_native")]
+            [DllImport(Program.XirorigNativeLibrary)]
             public static extern string CpuInformationUtility_GetProcessorName();
 
-            [DllImport("xirorig_native")]
+            [DllImport(Program.XirorigNativeLibrary)]
             public static extern ulong CpuInformationUtility_GetProcessorL2Cache();
 
-            [DllImport("xirorig_native")]
+            [DllImport(Program.XirorigNativeLibrary)]
             public static extern ulong CpuInformationUtility_GetProcessorL3Cache();
 
-            [DllImport("xirorig_native")]
+            [DllImport(Program.XirorigNativeLibrary)]
             public static extern ulong CpuInformationUtility_GetProcessorCoreCount();
         }
 
