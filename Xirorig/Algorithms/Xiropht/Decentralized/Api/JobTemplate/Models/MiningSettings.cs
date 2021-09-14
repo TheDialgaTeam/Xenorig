@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Xirorig.Algorithm.Xiropht.Decentralized.Api.JobTemplate.Models
+namespace Xirorig.Algorithms.Xiropht.Decentralized.Api.JobTemplate.Models
 {
     internal record MiningSettings(
         int PowRoundAesShare,

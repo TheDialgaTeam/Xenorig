@@ -1,4 +1,4 @@
-﻿namespace Xirorig.Algorithm.Xiropht.Decentralized.Api.JobTemplate.Models
+﻿namespace Xirorig.Algorithms.Xiropht.Decentralized.Api.JobTemplate.Models
 {
     internal enum MiningInstruction
     {

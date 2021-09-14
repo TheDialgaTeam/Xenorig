@@ -2,9 +2,9 @@
 using System.Numerics;
 using System.Text;
 using System.Text.Json.Serialization;
-using Xirorig.Network.Api.JobTemplate;
+using Xirorig.Miner.Network.Api.JobTemplate;
 
-namespace Xirorig.Algorithm.Xiropht.Decentralized.Api.JobTemplate.Models
+namespace Xirorig.Algorithms.Xiropht.Decentralized.Api.JobTemplate.Models
 {
     internal record BlockTemplate(
         long CurrentBlockHeight,

@@ -1,4 +1,4 @@
-﻿namespace Xirorig.Network.Api.JobTemplate
+﻿namespace Xirorig.Miner.Network.Api.JobTemplate
 {
     internal interface IJobTemplate
     {

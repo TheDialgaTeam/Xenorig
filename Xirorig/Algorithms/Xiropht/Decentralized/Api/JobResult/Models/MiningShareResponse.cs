@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Xirorig.Algorithm.Xiropht.Decentralized.Api.JobResult.Models
+namespace Xirorig.Algorithms.Xiropht.Decentralized.Api.JobResult.Models
 {
     internal class MiningShareResponse
     {

@@ -8,15 +8,14 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using LZ4;
-using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
-using Xirorig.Algorithm.Xiropht.Decentralized.Api.JobResult.Models;
-using Xirorig.Algorithm.Xiropht.Decentralized.Api.JobTemplate.Models;
-using Xirorig.Network.Api.JobTemplate;
+using Xirorig.Algorithms.Xiropht.Decentralized.Api.JobResult.Models;
+using Xirorig.Algorithms.Xiropht.Decentralized.Api.JobTemplate.Models;
+using Xirorig.Miner.Network.Api.JobTemplate;
 using Xirorig.Options;
 using Xirorig.Utilities;
 using CpuMiner = Xirorig.Miner.Backend.CpuMiner;
 
-namespace Xirorig.Algorithm.Xiropht.Decentralized
+namespace Xirorig.Algorithms.Xiropht.Decentralized
 {
     internal class XirophtDecentralizedCpuMiner : CpuMiner
     {
@@ -96,7 +95,7 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
         private byte[] _heapDataBuffer = Array.Empty<byte>();
 
-        public XirophtDecentralizedCpuMiner(int threadId, CpuMinerThreadConfiguration threadConfiguration, Pool pool, CancellationToken cancellationToken) : base(threadId, threadConfiguration, cancellationToken)
+        public XirophtDecentralizedCpuMiner(Pool pool, CpuMinerThreadConfiguration threadConfiguration, CancellationToken cancellationToken) : base(threadConfiguration, cancellationToken)
         {
             var coin = pool.GetCoin();
 
@@ -594,8 +593,6 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
             var miningPowShare = new MiningPowShare();
 
-            LogCurrentJob($"{AnsiEscapeCodeConstants.BlueForegroundColor}Thread: {{ThreadId}} | Job Difficulty: {{JobDifficulty:l}}{AnsiEscapeCodeConstants.Reset}", ThreadId, blockTemplate.CurrentBlockDifficulty.ToString());
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 var timestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
@@ -615,7 +612,6 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
                     if (miningPowShare.PoWaCShareDifficulty >= blockTemplate.CurrentBlockDifficulty)
                     {
-                        LogCurrentJob($"{AnsiEscapeCodeConstants.GreenForegroundColor}Thread: {{ThreadId}} | Block Found | Nonce: {{Nonce}} | Diff: {{ShareDifficulty:l}}{AnsiEscapeCodeConstants.Reset}", ThreadId, currentNonce, miningPowShare.PoWaCShareDifficulty.ToString());
                         SubmitJobResult(blockTemplate, new MiningShare(miningPowShare, timestamp));
                         break;
                     }

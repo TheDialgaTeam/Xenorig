@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Xirorig.Algorithm.Xiropht.Decentralized.Api.JobResult.Models
+namespace Xirorig.Algorithms.Xiropht.Decentralized.Api.JobResult.Models
 {
     internal class MiningPowShare
     {

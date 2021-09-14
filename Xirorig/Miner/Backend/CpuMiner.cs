@@ -2,137 +2,117 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Threading;
-using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
-using Xirorig.Algorithm.Xiropht.Decentralized;
-using Xirorig.Network.Api.JobResult;
-using Xirorig.Network.Api.JobTemplate;
+using Xirorig.Algorithms.Xiropht.Decentralized;
+using Xirorig.Miner.Network.Api.JobResult;
+using Xirorig.Miner.Network.Api.JobTemplate;
 using Xirorig.Options;
 
 namespace Xirorig.Miner.Backend
 {
-    internal delegate void CpuMinerJobLog(string message, bool includeDefaultTemplate, params object[] args);
-
     internal delegate void CpuMinerJobResultFound(IJobTemplate jobTemplate, IJobResult jobResult);
+
+    internal delegate void CpuMinerException(Exception exception);
 
     internal abstract class CpuMiner : IDisposable
     {
-        public event CpuMinerJobLog? JobLog;
+        private static class Native
+        {
+            [DllImport("kernel32", EntryPoint = "GetCurrentThreadId")]
+            public static extern int GetCurrentThreadId_Windows();
+
+            [DllImport("kernel32", EntryPoint = "OpenThread")]
+            public static extern IntPtr OpenThread_Windows(int desiredAccess, bool inheritHandle, int threadId);
+
+            [DllImport("kernel32", EntryPoint = "SetThreadAffinityMask")]
+            public static extern UIntPtr SetThreadAffinityMask_Windows(IntPtr hThread, in ulong dwThreadAffinityMask);
+
+            [DllImport("libc", EntryPoint = "sched_setaffinity")]
+            public static extern int SetThreadAffinityMask_Linux(int pid, int cpuSetSize, in ulong mask);
+        }
+
         public event CpuMinerJobResultFound? JobResultFound;
+        public event CpuMinerException? Error;
 
         private readonly CpuMinerThreadConfiguration _threadConfiguration;
-        private readonly Thread _thread;
+        private readonly CancellationToken _globalCancellationToken;
         private readonly BlockingCollection<IJobTemplate> _jobTemplateQueue = new();
-        private readonly CancellationTokenSource _cancellationTokenSource;
 
-        private CancellationTokenSource _jobCancellationTokenSource = new();
+        private Thread? _thread;
+        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _jobCancellationTokenSource;
 
-        private long _totalHashCalculatedIn10Seconds;
-        private long _totalHashCalculatedIn60Seconds;
-        private long _totalHashCalculatedIn15Minutes;
+        private long _totalHashCalculated;
 
-        public long TotalHashCalculatedIn10Seconds
+        public long TotalHashCalculated
         {
-            get => Environment.Is64BitProcess ? _totalHashCalculatedIn10Seconds : Interlocked.Read(ref _totalHashCalculatedIn10Seconds);
+            get => Environment.Is64BitProcess ? _totalHashCalculated : Interlocked.Read(ref _totalHashCalculated);
             set
             {
                 if (Environment.Is64BitProcess)
                 {
-                    _totalHashCalculatedIn10Seconds = value;
+                    _totalHashCalculated = value;
                 }
                 else
                 {
-                    Interlocked.Exchange(ref _totalHashCalculatedIn10Seconds, value);
+                    Interlocked.Exchange(ref _totalHashCalculated, value);
                 }
             }
         }
 
-        public long TotalHashCalculatedIn60Seconds
-        {
-            get => Environment.Is64BitProcess ? _totalHashCalculatedIn60Seconds : Interlocked.Read(ref _totalHashCalculatedIn60Seconds);
-            set
-            {
-                if (Environment.Is64BitProcess)
-                {
-                    _totalHashCalculatedIn60Seconds = value;
-                }
-                else
-                {
-                    Interlocked.Exchange(ref _totalHashCalculatedIn60Seconds, value);
-                }
-            }
-        }
+        private CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
-        public long TotalHashCalculatedIn15Minutes
-        {
-            get => Environment.Is64BitProcess ? _totalHashCalculatedIn15Minutes : Interlocked.Read(ref _totalHashCalculatedIn15Minutes);
-            set
-            {
-                if (Environment.Is64BitProcess)
-                {
-                    _totalHashCalculatedIn15Minutes = value;
-                }
-                else
-                {
-                    Interlocked.Exchange(ref _totalHashCalculatedIn15Minutes, value);
-                }
-            }
-        }
+        private CancellationToken JobCancellationToken => _jobCancellationTokenSource.Token;
 
-        protected int ThreadId { get; }
-
-        protected CpuMiner(int threadId, CpuMinerThreadConfiguration threadConfiguration, CancellationToken cancellationToken)
+        protected CpuMiner(CpuMinerThreadConfiguration threadConfiguration, CancellationToken cancellationToken)
         {
-            ThreadId = threadId;
             _threadConfiguration = threadConfiguration;
-            _thread = new Thread(ConfigureMiningThread) { IsBackground = true, Priority = threadConfiguration.GetThreadPriority() };
+            _globalCancellationToken = cancellationToken;
+
             _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _jobCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token);
         }
 
-        public static CpuMiner CreateCpuMiner(int threadId, CpuMinerThreadConfiguration threadConfiguration, CancellationToken cancellationToken, Pool pool)
+        public static CpuMiner CreateCpuMiner(Pool pool, CpuMinerThreadConfiguration threadConfiguration, CancellationToken cancellationToken)
         {
             var poolAlgorithm = pool.GetAlgorithm();
 
             if (poolAlgorithm.Equals("xiropht_decentralized", StringComparison.OrdinalIgnoreCase))
             {
-                return new XirophtDecentralizedCpuMiner(threadId, threadConfiguration, pool, cancellationToken);
+                return new XirophtDecentralizedCpuMiner(pool, threadConfiguration, cancellationToken);
             }
 
             throw new NotImplementedException($"{pool.Algorithm} is not implemented.");
         }
 
-        [DllImport("kernel32", EntryPoint = "GetCurrentThreadId")]
-        private static extern int GetCurrentThreadId_Windows();
-
-        [DllImport("kernel32", EntryPoint = "OpenThread")]
-        private static extern IntPtr OpenThread_Windows(int desiredAccess, bool inheritHandle, int threadId);
-
-        [DllImport("kernel32", EntryPoint = "SetThreadAffinityMask")]
-        private static extern UIntPtr SetThreadAffinityMask_Windows(IntPtr hThread, in ulong dwThreadAffinityMask);
-
-        [DllImport("libc", EntryPoint = "sched_setaffinity")]
-        private static extern int SetThreadAffinityMask_Linux(int pid, int cpuSetSize, in ulong mask);
-
         public void StartMining()
         {
+            if (_thread != null) return;
+
+            _thread = new Thread(ConfigureMiningThread) { IsBackground = true, Priority = _threadConfiguration.GetThreadPriority() };
             _thread.Start();
         }
 
         public void StopMining()
         {
-            _cancellationTokenSource.Cancel();
-            _jobTemplateQueue.CompleteAdding();
-            _thread.Join();
+            var initialValue = _cancellationTokenSource;
+            var value = CancellationTokenSource.CreateLinkedTokenSource(_globalCancellationToken);
+
+            if (Interlocked.CompareExchange(ref _cancellationTokenSource, value, initialValue) != initialValue)
+            {
+                value.Dispose();
+                return;
+            }
+
+            initialValue.Cancel();
+            initialValue.Dispose();
+
+            _thread = null;
         }
 
         public void UpdateBlockTemplate(IJobTemplate jobTemplate)
         {
-            _jobTemplateQueue.Add(jobTemplate);
+            _jobTemplateQueue.Add(jobTemplate, CancellationToken);
             _jobCancellationTokenSource.Cancel();
-        }
-
-        protected void LogCurrentJob(string message, params object[] args)
-        {
-            JobLog?.Invoke(message, true, args);
         }
 
         protected void SubmitJobResult(IJobTemplate jobTemplate, IJobResult jobResult)
@@ -142,22 +122,10 @@ namespace Xirorig.Miner.Backend
 
         protected void IncrementHashCalculated()
         {
-            Interlocked.Increment(ref _totalHashCalculatedIn10Seconds);
-            Interlocked.Increment(ref _totalHashCalculatedIn60Seconds);
-            Interlocked.Increment(ref _totalHashCalculatedIn15Minutes);
+            Interlocked.Increment(ref _totalHashCalculated);
         }
 
         protected abstract void ExecuteJob(IJobTemplate jobTemplate, CancellationToken cancellationToken);
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _jobTemplateQueue.Dispose();
-                _cancellationTokenSource.Dispose();
-                _jobCancellationTokenSource.Dispose();
-            }
-        }
 
         private void ConfigureMiningThread()
         {
@@ -171,18 +139,18 @@ namespace Xirorig.Miner.Backend
                 {
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        var threadPtr = OpenThread_Windows(96, false, GetCurrentThreadId_Windows());
-                        SetThreadAffinityMask_Windows(threadPtr, threadAffinity);
+                        var threadPtr = Native.OpenThread_Windows(96, false, Native.GetCurrentThreadId_Windows());
+                        Native.SetThreadAffinityMask_Windows(threadPtr, threadAffinity);
                     }
                     else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
-                        SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
+                        Native.SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
                     }
                 }
 
                 while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    var newJobTemplate = _jobTemplateQueue.Take(_cancellationTokenSource.Token);
+                    var newJobTemplate = _jobTemplateQueue.Take(CancellationToken);
 
                     while (_jobTemplateQueue.TryTake(out var jobTemplate))
                     {
@@ -190,19 +158,18 @@ namespace Xirorig.Miner.Backend
                     }
 
                     _jobCancellationTokenSource.Dispose();
-                    _jobCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token);
+                    _jobCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
 
-                    ExecuteJob(newJobTemplate, _jobCancellationTokenSource.Token);
+                    ExecuteJob(newJobTemplate, JobCancellationToken);
                 }
             }
-            
-            catch (Exception exception) when(exception is not (OperationCanceledException or InvalidOperationException))
-            {
-                LogCurrentJob($"{AnsiEscapeCodeConstants.RedForegroundColor}Error: Oops, this miner has caught an exception.{Environment.NewLine}{{exception}}{AnsiEscapeCodeConstants.Reset}", exception.ToString());
-            }
-            catch (Exception)
+            catch (OperationCanceledException)
             {
                 // ignored
+            }
+            catch (Exception exception)
+            {
+                Error?.Invoke(exception);
             }
             finally
             {
@@ -214,6 +181,15 @@ namespace Xirorig.Miner.Backend
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposing) return;
+
+            _jobTemplateQueue.Dispose();
+            _cancellationTokenSource.Dispose();
+            _jobCancellationTokenSource.Dispose();
         }
     }
 }

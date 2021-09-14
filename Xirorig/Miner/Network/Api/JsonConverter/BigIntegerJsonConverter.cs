@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Xirorig.Network.Api.JsonConverter
+namespace Xirorig.Miner.Network.Api.JsonConverter
 {
     internal class BigIntegerJsonConverter : JsonConverter<BigInteger>
     {

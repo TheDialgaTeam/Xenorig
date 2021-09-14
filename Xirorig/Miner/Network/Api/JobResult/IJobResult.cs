@@ -1,4 +1,4 @@
-﻿namespace Xirorig.Network.Api.JobResult
+﻿namespace Xirorig.Miner.Network.Api.JobResult
 {
     internal interface IJobResult
     {

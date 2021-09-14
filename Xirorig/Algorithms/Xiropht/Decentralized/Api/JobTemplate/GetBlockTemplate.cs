@@ -1,4 +1,4 @@
-﻿namespace Xirorig.Algorithm.Xiropht.Decentralized.Api.JobTemplate
+﻿namespace Xirorig.Algorithms.Xiropht.Decentralized.Api.JobTemplate
 {
     internal class GetBlockTemplate
     {
