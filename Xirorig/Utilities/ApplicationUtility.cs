@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.Versioning;
 
-namespace Xirorig.Utility
+namespace Xirorig.Utilities
 {
     internal static class ApplicationUtility
     {

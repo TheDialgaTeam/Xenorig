@@ -2,7 +2,7 @@
 using System.Numerics;
 using System.Text;
 
-namespace Xirorig.Utility
+namespace Xirorig.Utilities
 {
     internal static class Base58Utility
     {

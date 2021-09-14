@@ -13,7 +13,7 @@ using Xirorig.Algorithm.Xiropht.Decentralized.Api.JobResult.Models;
 using Xirorig.Algorithm.Xiropht.Decentralized.Api.JobTemplate.Models;
 using Xirorig.Network.Api.JobTemplate;
 using Xirorig.Options;
-using Xirorig.Utility;
+using Xirorig.Utilities;
 using CpuMiner = Xirorig.Miner.Backend.CpuMiner;
 
 namespace Xirorig.Algorithm.Xiropht.Decentralized
@@ -171,7 +171,6 @@ namespace Xirorig.Algorithm.Xiropht.Decentralized
 
             RandomNumberGenerator.Fill(pocRandomData.Slice(16, randomDataShareChecksum));
 
-            
             walletAddress[..walletAddressDataSize].CopyTo(pocRandomData.Slice(16 + randomDataShareChecksum, walletAddressDataSize));
 
             // block height

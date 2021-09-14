@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-namespace Xirorig.Utility
+namespace Xirorig.Utilities
 {
     internal static class Sha3Utility
     {

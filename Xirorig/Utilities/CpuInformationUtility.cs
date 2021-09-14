@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 
-namespace Xirorig.Utility
+namespace Xirorig.Utilities
 {
     internal static class CpuInformationUtility
     {

@@ -12,7 +12,7 @@ using Xirorig.Network;
 using Xirorig.Network.Api.JobResult;
 using Xirorig.Network.Api.JobTemplate;
 using Xirorig.Options;
-using Xirorig.Utility;
+using Xirorig.Utilities;
 
 namespace Xirorig.Algorithm.Xiropht.Decentralized
 {

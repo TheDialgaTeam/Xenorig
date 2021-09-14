@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
 using Xirorig.Miner;
-using Xirorig.Utility;
+using Xirorig.Utilities;
 
 namespace Xirorig
 {

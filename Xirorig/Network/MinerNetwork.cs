@@ -9,7 +9,7 @@ using Xirorig.Network.Api.JobResult;
 using Xirorig.Network.Api.JobTemplate;
 using Xirorig.Network.Api.JsonConverter;
 using Xirorig.Options;
-using Xirorig.Utility;
+using Xirorig.Utilities;
 
 namespace Xirorig.Network
 {
