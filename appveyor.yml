@@ -7,8 +7,6 @@ branches:
 skip_non_tags: true
 image: Visual Studio 2019
 clone_depth: 1
-init:
-- pwsh: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 dotnet_csproj:
   patch: true
   file: '**\Xirorig.csproj'
@@ -57,8 +55,8 @@ install:
     wsl sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 20
 cache:
 - '%LOCALAPPDATA%/vcpkg'
-- Xirorig.Native/xirorig_native/vcpkg/vcpkg
-- Xirorig.Native/xirorig_native/vcpkg/downloads
+- C:/projects/xirorig/Xirorig.Native/xirorig_native/vcpkg/vcpkg
+- C:/WSL/Ubuntu2004/rootfs/home/appveyor/.cache/vcpkg
 build_script:
 - pwsh: >-
     # Build Xirorig Native First
