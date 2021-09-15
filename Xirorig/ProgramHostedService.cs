@@ -1,4 +1,20 @@
-﻿using System;
+﻿// Xirorig
+// Copyright 2021 Yong Jian Ming
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -85,12 +101,13 @@ namespace Xirorig
             while (!cancellationToken.IsCancellationRequested)
             {
                 var keyPressed = Console.ReadKey(true);
+                var logger = _context.Logger;
 
                 switch (keyPressed.KeyChar)
                 {
                     case 'h':
                     {
-                        _context.Logger.LogInformation("{Dash:l}", true, "=".PadRight(75, '='));
+                        logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{Dash:l}}{AnsiEscapeCodeConstants.Reset}", true, "=".PadRight(75, '='));
 
                         for (var index = 0; index < _minerInstances.Length; index++)
                         {
@@ -105,18 +122,18 @@ namespace Xirorig
                                 average15MinutesSum += minerInstance.AverageHashCalculatedIn15Minutes[i];
                             }
 
-                            _context.Logger.LogInformation("MINER INSTANCE #{Index}", true, index + 1);
-                            _context.Logger.LogInformation("| THREAD | 10s H/s | 60s H/s | 15m H/s |", true);
+                            logger.LogInformation("MINER INSTANCE #{Index}", true, index + 1);
+                            logger.LogInformation("| THREAD | 10s H/s | 60s H/s | 15m H/s |", true);
 
                             for (var i = 0; i < threadCount; i++)
                             {
-                                _context.Logger.LogInformation("| {i,-6} | {j,-7:F1} | {k,-7:F1} | {l,-7:F1} |", true, i + 1, minerInstance.AverageHashCalculatedIn10Seconds[i], minerInstance.AverageHashCalculatedIn60Seconds[i], minerInstance.AverageHashCalculatedIn15Minutes[i]);
+                                logger.LogInformation("| {i,-6} | {j,-7:F1} | {k,-7:F1} | {l,-7:F1} |", true, i + 1, minerInstance.AverageHashCalculatedIn10Seconds[i], minerInstance.AverageHashCalculatedIn60Seconds[i], minerInstance.AverageHashCalculatedIn15Minutes[i]);
                             }
 
-                            _context.Logger.LogInformation($"{AnsiEscapeCodeConstants.WhiteForegroundColor}speed{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}10s/60s/15m{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}{{Average10SecondsSum:F1}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.BlueForegroundColor}{{Average60SecondsSum:F1}} {{Average15MinutesSum:F1}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}H/s{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.DarkGrayForegroundColor}max{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.CyanForegroundColor}{{MaxHash:F0}}{AnsiEscapeCodeConstants.Reset}", true, average10SecondsSum, average60SecondsSum, average15MinutesSum, _maxHashes[index]);
+                            logger.LogInformation($"{AnsiEscapeCodeConstants.WhiteForegroundColor}speed {AnsiEscapeCodeConstants.DarkGrayForegroundColor}10s/60s/15m {AnsiEscapeCodeConstants.CyanForegroundColor}{{Average10SecondsSum:F1}} {AnsiEscapeCodeConstants.BlueForegroundColor}{{Average60SecondsSum:F1}} {{Average15MinutesSum:F1}} {AnsiEscapeCodeConstants.CyanForegroundColor}H/s {AnsiEscapeCodeConstants.DarkGrayForegroundColor}max {AnsiEscapeCodeConstants.CyanForegroundColor}{{MaxHash:F1}}{AnsiEscapeCodeConstants.Reset}", true, average10SecondsSum, average60SecondsSum, average15MinutesSum, _maxHashes[index]);
                         }
 
-                        _context.Logger.LogInformation("{Dash:l}", true, "=".PadRight(75, '='));
+                        logger.LogInformation($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{Dash:l}}{AnsiEscapeCodeConstants.Reset}", true, "=".PadRight(75, '='));
                         break;
                     }
 
@@ -132,8 +149,6 @@ namespace Xirorig
         private void CalculateTotalAverageHash(object? state)
         {
             var logger = _context.Logger;
-
-            logger.LogInformation("{Dash:l}", true, "=".PadRight(75, '='));
 
             var minerInstances = _minerInstances;
             var minerInstancesLength = minerInstances.Length;
@@ -153,11 +168,8 @@ namespace Xirorig
 
                 _maxHashes[index] = Math.Max(Math.Max(Math.Max(_maxHashes[index], average10SecondsSum), average60SecondsSum), average15MinutesSum);
 
-                logger.LogInformation("MINER INSTANCE #{Index}", true, index + 1);
-                logger.LogInformation($"{AnsiEscapeCodeConstants.WhiteForegroundColor}speed {AnsiEscapeCodeConstants.DarkGrayForegroundColor}10s/60s/15m {AnsiEscapeCodeConstants.CyanForegroundColor}{{Average10SecondsSum:F1}} {AnsiEscapeCodeConstants.BlueForegroundColor}{{Average60SecondsSum:F1}} {{Average15MinutesSum:F1}} {AnsiEscapeCodeConstants.CyanForegroundColor}H/s {AnsiEscapeCodeConstants.DarkGrayForegroundColor}max {AnsiEscapeCodeConstants.CyanForegroundColor}{{MaxHash:F1}}{AnsiEscapeCodeConstants.Reset}", true, average10SecondsSum, average60SecondsSum, average15MinutesSum, _maxHashes[index]);
+                logger.LogInformation($"{AnsiEscapeCodeConstants.DarkBlueBackgroundColor}MINER #{{Index}}{AnsiEscapeCodeConstants.Reset} {AnsiEscapeCodeConstants.WhiteForegroundColor}speed {AnsiEscapeCodeConstants.DarkGrayForegroundColor}10s/60s/15m {AnsiEscapeCodeConstants.CyanForegroundColor}{{Average10SecondsSum:F1}} {AnsiEscapeCodeConstants.BlueForegroundColor}{{Average60SecondsSum:F1}} {{Average15MinutesSum:F1}} {AnsiEscapeCodeConstants.CyanForegroundColor}H/s {AnsiEscapeCodeConstants.DarkGrayForegroundColor}max {AnsiEscapeCodeConstants.CyanForegroundColor}{{MaxHash:F1}}{AnsiEscapeCodeConstants.Reset}", true, index + 1, average10SecondsSum, average60SecondsSum, average15MinutesSum, _maxHashes[index]);
             }
-
-            logger.LogInformation("{Dash:l}", true, "=".PadRight(75, '='));
         }
 
         public void Dispose()
