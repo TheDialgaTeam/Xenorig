@@ -9,8 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheDialgaTeam.Core.Logger", "TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger\TheDialgaTeam.Core.Logger.csproj", "{C2C30938-568F-4EA6-ADE8-C74178B514B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xirorig.Benchmark", "Xirorig.Benchmark\Xirorig.Benchmark.csproj", "{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_windows|ARM32 = Debug_windows|ARM32
@@ -92,38 +90,6 @@ Global
 		{C2C30938-568F-4EA6-ADE8-C74178B514B7}.Release_windows|x64.Build.0 = Release|x64
 		{C2C30938-568F-4EA6-ADE8-C74178B514B7}.Release_windows|x86.ActiveCfg = Release|x86
 		{C2C30938-568F-4EA6-ADE8-C74178B514B7}.Release_windows|x86.Build.0 = Release|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|ARM32.ActiveCfg = Debug_windows|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|ARM32.Build.0 = Debug_windows|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|ARM64.ActiveCfg = Debug_windows|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|ARM64.Build.0 = Debug_windows|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|x64.ActiveCfg = Debug_windows|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|x64.Build.0 = Debug_windows|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|x86.ActiveCfg = Debug_windows|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Debug_windows|x86.Build.0 = Debug_windows|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|ARM32.ActiveCfg = Release_linux|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|ARM32.Build.0 = Release_linux|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|ARM64.ActiveCfg = Release_linux|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|ARM64.Build.0 = Release_linux|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|x64.ActiveCfg = Release_linux|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|x64.Build.0 = Release_linux|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|x86.ActiveCfg = Release_linux|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_linux|x86.Build.0 = Release_linux|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|ARM32.ActiveCfg = Release_osx|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|ARM32.Build.0 = Release_osx|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|ARM64.ActiveCfg = Release_osx|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|ARM64.Build.0 = Release_osx|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|x64.ActiveCfg = Release_osx|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|x64.Build.0 = Release_osx|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|x86.ActiveCfg = Release_osx|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_osx|x86.Build.0 = Release_osx|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|ARM32.ActiveCfg = Release_windows|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|ARM32.Build.0 = Release_windows|ARM32
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|ARM64.ActiveCfg = Release_windows|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|ARM64.Build.0 = Release_windows|ARM64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|x64.ActiveCfg = Release_windows|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|x64.Build.0 = Release_windows|x64
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|x86.ActiveCfg = Release_windows|x86
-		{DDFCAF5D-5FE9-4AA9-8622-627FB35D8544}.Release_windows|x86.Build.0 = Release_windows|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
