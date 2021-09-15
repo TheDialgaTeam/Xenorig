@@ -7,8 +7,6 @@ branches:
 skip_non_tags: true
 image: Visual Studio 2019
 clone_depth: 1
-init:
-- pwsh: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 dotnet_csproj:
   patch: true
   file: '**\Xirorig.csproj'
@@ -55,7 +53,9 @@ install:
 
 
     wsl sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 20
-cache: '%LOCALAPPDATA%/vcpkg'
+cache:
+- '%LOCALAPPDATA%/vcpkg'
+- Xirorig.Native/xirorig_native/vcpkg/vcpkg
 build_script:
 - pwsh: >-
     # Build Xirorig Native First
@@ -91,36 +91,72 @@ build_script:
 
     dotnet publish -p:PublishProfile=x64-windows.pubxml -p:Platform=x64 -c Release_windows
 
+
     dotnet publish -p:PublishProfile=x86-windows.pubxml -p:Platform=x86 -c Release_windows
+
 
     dotnet publish -p:PublishProfile=arm-windows.pubxml -p:Platform=ARM32 -c Release_windows
 
+
     dotnet publish -p:PublishProfile=arm64-windows.pubxml -p:Platform=ARM64 -c Release_windows
+
 
     dotnet publish -p:PublishProfile=x64-linux.pubxml -p:Platform=x64 -c Release_linux
 
+
     dotnet publish -p:PublishProfile=arm-linux.pubxml -p:Platform=ARM32 -c Release_linux
+
 
     dotnet publish -p:PublishProfile=arm64-linux.pubxml -p:Platform=ARM64 -c Release_linux
 
+
     dotnet publish -p:PublishProfile=x64-osx.pubxml -p:Platform=x64 -c Release_osx
+
+
+    7z a Xirorig/publish/x64-windows.zip Xirorig/publish/x64-windows -mx=9
+
+    7z a Xirorig/publish/x86-windows.zip Xirorig/publish/x86-windows -mx=9
+
+    7z a Xirorig/publish/arm-windows.zip Xirorig/publish/arm-windows -mx=9
+
+    7z a Xirorig/publish/arm64-windows.zip Xirorig/publish/arm64-windows -mx=9
+
+
+    7z a Xirorig/publish/x64-linux.tar Xirorig/publish/x64-linux
+
+    7z a Xirorig/publish/x64-linux.tar.gz Xirorig/publish/x64-linux.tar -mx=9
+
+
+    7z a Xirorig/publish/arm-linux.tar Xirorig/publish/arm-linux
+
+    7z a Xirorig/publish/arm-linux.tar.gz Xirorig/publish/arm-linux.tar -mx=9
+
+
+    7z a Xirorig/publish/arm64-linux.tar Xirorig/publish/arm64-linux
+
+    7z a Xirorig/publish/arm64-linux.tar.gz Xirorig/publish/arm64-linux.tar -mx=9
+
+
+    7z a Xirorig/publish/x64-osx.tar Xirorig/publish/x64-osx
+
+    7z a Xirorig/publish/x64-osx.tar.gz Xirorig/publish/x64-osx.tar -mx=9
 test: off
 artifacts:
-- path: Xirorig/publish/x64-windows
+- path: Xirorig/publish/x64-windows.zip
   name: x64-windows
-- path: Xirorig/publish/x86-windows
+- path: Xirorig/publish/x86-windows.zip
   name: x86-windows
-- path: Xirorig/publish/arm-windows
+- path: Xirorig/publish/arm-windows.zip
   name: arm-windows
-- path: Xirorig/publish/arm64-windows
+- path: Xirorig/publish/arm64-windows.zip
   name: arm64-windows
-- path: Xirorig/publish/x64-linux
+- path: Xirorig/publish/x64-linux.tar.gz
   name: x64-linux
-- path: Xirorig/publish/arm-linux
+- path: Xirorig/publish/arm-linux.tar.gz
   name: arm-linux
-- path: Xirorig/publish/arm64-linux
+- path: Xirorig/publish/arm64-linux.tar.gz
   name: arm64-linux
-- path: Xirorig/publish/x64-osx
+- path: Xirorig/publish/x64-osx.tar.gz
   name: x64-osx
 deploy:
 - provider: GitHub

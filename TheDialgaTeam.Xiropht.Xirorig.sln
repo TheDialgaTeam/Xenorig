@@ -31,7 +31,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|ARM32.ActiveCfg = Debug_windows|ARM32
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|ARM32.Build.0 = Debug_windows|ARM32
-		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|ARM64.ActiveCfg = Debug_windows|x86
+		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|ARM64.ActiveCfg = Debug_windows|ARM64
+        {4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|ARM64.Build.0 = Debug_windows|ARM64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|x64.ActiveCfg = Debug_windows|x64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|x64.Build.0 = Debug_windows|x64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Debug_windows|x86.ActiveCfg = Debug_windows|x86
@@ -39,6 +40,7 @@ Global
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_linux|ARM32.ActiveCfg = Release_linux|ARM32
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_linux|ARM32.Build.0 = Release_linux|ARM32
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_linux|ARM64.ActiveCfg = Release_linux|ARM64
+        {4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_linux|ARM64.Build.0 = Release_linux|ARM64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_linux|x64.ActiveCfg = Release_linux|x64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_linux|x64.Build.0 = Release_linux|x64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_linux|x86.ActiveCfg = Release_linux|x86
@@ -54,6 +56,7 @@ Global
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_windows|ARM32.ActiveCfg = Release_windows|ARM32
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_windows|ARM32.Build.0 = Release_windows|ARM32
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_windows|ARM64.ActiveCfg = Release_windows|ARM64
+        {4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_windows|ARM64.Build.0 = Release_windows|ARM64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_windows|x64.ActiveCfg = Release_windows|x64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_windows|x64.Build.0 = Release_windows|x64
 		{4E7381EB-BB0C-460F-B3A9-985D20282293}.Release_windows|x86.ActiveCfg = Release_windows|x86
