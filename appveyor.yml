@@ -103,19 +103,21 @@ build_script:
 
     # Build Xirorig
 
-    dotnet publish -p:PublishProfile=x64-windows.pubxml -c Release_windows
+    dotnet publish -p:PublishProfile=x64-windows.pubxml -p:Platform=x64 -c Release_windows
 
-    dotnet publish -p:PublishProfile=x86-windows.pubxml -c Release_windows
+    dotnet publish -p:PublishProfile=x86-windows.pubxml -p:Platform=x86 -c Release_windows
 
-    dotnet publish -p:PublishProfile=arm-windows.pubxml -c Release_windows
+    dotnet publish -p:PublishProfile=arm-windows.pubxml -p:Platform=ARM32 -c Release_windows
 
-    dotnet publish -p:PublishProfile=arm64-windows.pubxml -c Release_windows
+    dotnet publish -p:PublishProfile=arm64-windows.pubxml -p:Platform=ARM64 -c Release_windows
 
-    dotnet publish -p:PublishProfile=x64-linux.pubxml -c Release_linux
+    dotnet publish -p:PublishProfile=x64-linux.pubxml -p:Platform=x64 -c Release_linux
 
-    dotnet publish -p:PublishProfile=arm-linux.pubxml -c Release_linux
+    dotnet publish -p:PublishProfile=arm-linux.pubxml -p:Platform=ARM32 -c Release_linux
 
-    dotnet publish -p:PublishProfile=arm64-linux.pubxml -c Release_linux
+    dotnet publish -p:PublishProfile=arm64-linux.pubxml -p:Platform=ARM64 -c Release_linux
+
+    dotnet publish -p:PublishProfile=x64-osx.pubxml -p:Platform=x64 -c Release_osx
 test: off
 artifacts:
 - path: Xirorig/publish/x64-windows
@@ -132,12 +134,14 @@ artifacts:
   name: arm-linux
 - path: Xirorig/publish/arm64-linux
   name: arm64-linux
+- path: Xirorig/publish/x64-osx
+  name: x64-osx
 deploy:
 - provider: GitHub
   tag: v$(appveyor_build_version)
   release: Xirorig v$(appveyor_build_version)
   auth_token:
     secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
-  artifact: x64-windows, x86-windows, arm-windows, arm64-windows, x64-linux, arm-linux, arm64-linux
+  artifact: x64-windows, x86-windows, arm-windows, arm64-windows, x64-linux, arm-linux, arm64-linux, x64-osx
   draft: true
   prerelease: false
