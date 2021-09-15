@@ -37,8 +37,6 @@ install:
 
     wsl sudo apt update -y
 
-    wsl sudo apt upgrade -y
-
     wsl sudo apt install cmake ninja-build gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
 build_script:
 - pwsh: >-
@@ -112,3 +110,8 @@ deploy:
   artifact: x64-windows, x86-windows, arm-windows, arm64-windows, x64-linux, arm-linux, arm64-linux
   draft: true
   prerelease: false
+on_finish:
+- pwsh: >-
+    $blockRdp = $true;
+
+    iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
