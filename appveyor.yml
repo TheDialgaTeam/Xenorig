@@ -1,0 +1,109 @@
+version: 1.0.0.{build}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - xirorig_future
+skip_non_tags: true
+image: Visual Studio 2019
+clone_depth: 1
+dotnet_csproj:
+  patch: true
+  file: '**\Xirorig.csproj'
+  version: '{version}'
+  version_prefix: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+install:
+- pwsh: >-
+    git submodule update --init --recursive
+
+
+    # Install latest .NET 6
+
+    choco install dotnet-sdk --pre
+
+
+    # Update MSYS2
+
+    C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syuu"
+
+    C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syuu"
+
+
+    # Update and Install WSL toolchain
+
+    wsl sudo apt update -y && sudo apt upgrade -y && sudo apt install cmake ninja-build gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
+build_script:
+- pwsh: >-
+    # Build Xirorig Native First
+
+
+    $env:CHERE_INVOKING = 'yes'
+
+    $env:MSYSTEM = 'MINGW64'
+
+    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-windows -DVCPKG_TARGET_TRIPLET=x64-mingw-static -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-windows install"
+
+
+    $env:MSYSTEM = 'MINGW32'
+
+    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x86-windows -DVCPKG_TARGET_TRIPLET=x86-mingw-static -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows install"
+
+
+    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-linux -DVCPKG_TARGET_TRIPLET=x64-linux -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux && ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux install
+
+
+    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-linux -DVCPKG_TARGET_TRIPLET=arm-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm.cmake -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux && ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux install
+
+
+    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-linux -DVCPKG_TARGET_TRIPLET=arm64-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm64.cmake -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux && ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux install
+
+
+    # Build Xirorig
+
+    dotnet publish -p:PublishProfile=x64-windows.pubxml -c Release_windows
+
+    dotnet publish -p:PublishProfile=x86-windows.pubxml -c Release_windows
+
+    dotnet publish -p:PublishProfile=arm-windows.pubxml -c Release_windows
+
+    dotnet publish -p:PublishProfile=arm64-windows.pubxml -c Release_windows
+
+    dotnet publish -p:PublishProfile=x64-linux.pubxml -c Release_linux
+
+    dotnet publish -p:PublishProfile=arm-linux.pubxml -c Release_linux
+
+    dotnet publish -p:PublishProfile=arm64-linux.pubxml -c Release_linux
+test: off
+artifacts:
+- path: Xirorig/publish/x64-windows
+  name: x64-windows
+- path: Xirorig/publish/x86-windows
+  name: x86-windows
+- path: Xirorig/publish/arm-windows
+  name: arm-windows
+- path: Xirorig/publish/arm64-windows
+  name: arm64-windows
+- path: Xirorig/publish/x64-linux
+  name: x64-linux
+- path: Xirorig/publish/arm-linux
+  name: arm-linux
+- path: Xirorig/publish/arm64-linux
+  name: arm64-linux
+deploy:
+- provider: GitHub
+  tag: v$(appveyor_build_version)
+  release: Xirorig v$(appveyor_build_version)
+  auth_token:
+    secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
+  artifact: x64-windows, x86-windows, arm-windows, arm64-windows, x64-linux, arm-linux, arm64-linux
+  draft: true
+  prerelease: false
+on_finish:
+- pwsh: >-
+    $blockRdp = $true;
+
+    iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
