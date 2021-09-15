@@ -26,6 +26,20 @@ install:
     choco install dotnet-sdk --pre
 
 
+    # Run for the first time
+
+    C:\msys64\usr\bin\bash -lc ' '
+
+
+    # Update MSYS2
+
+    C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -Syuu'
+
+    C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -Syuu'
+
+    C:\msys64\usr\bin\bash -lc 'pacman -S mingw-w64-cross-clang-toolchain --noconfirm'
+
+
     # Update and Install WSL toolchain
 
     wsl sudo apt-get update -y
@@ -71,6 +85,14 @@ build_script:
     $env:MSYSTEM = 'MINGW32'
 
     C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x86-windows -DVCPKG_TARGET_TRIPLET=x86-mingw-static -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows install"
+
+
+    $env:MSYSTEM = 'MINGW64'
+
+    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-mingw-static -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/windows-arm.cmake -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows install"
+
+
+    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-mingw-static -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/windows-arm64.cmake -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows install"
 
 
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-linux" -DVCPKG_TARGET_TRIPLET=x64-linux -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux"
