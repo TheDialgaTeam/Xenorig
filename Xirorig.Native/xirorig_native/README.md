@@ -71,11 +71,11 @@ Select Windows 10 SDK (10.0.1xxxx.0) <br />
 The final build location might differ from my instructions, just find the `xirorig_native.dll` inside the build directory and you should be good.
 
 #### For advanced users
+This project can be build using any toolchain you prefer. GCC/Mingw toolchain is preferred for performance reason. <br />
+You can also set `CMAKE_TOOLCHAIN_FILE` to empty if you prefer not to use vcpkg for dependency management.
+
 CMake Variable required:
 You need to set `VCPKG_TARGET_TRIPLET` with `x64-windows-static` or `x86-windows-static` or `x64-mingw-static` or `x86-mingw-static`.
-
-### For Linux
-
 
 ## Donations
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`
