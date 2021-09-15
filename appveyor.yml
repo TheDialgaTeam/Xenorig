@@ -7,6 +7,8 @@ branches:
 skip_non_tags: true
 image: Visual Studio 2019
 clone_depth: 1
+init:
+- pwsh: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 dotnet_csproj:
   patch: true
   file: '**\Xirorig.csproj'
@@ -145,5 +147,3 @@ deploy:
   artifact: x64-windows, x86-windows, arm-windows, arm64-windows, x64-linux, arm-linux, arm64-linux, x64-osx
   draft: true
   prerelease: false
-on_finish:
-- pwsh: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
