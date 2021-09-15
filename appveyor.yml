@@ -35,7 +35,11 @@ install:
 
     # Update and Install WSL toolchain
 
-    wsl sudo apt update -y && sudo apt upgrade -y && sudo apt install cmake ninja-build gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
+    wsl sudo apt update -y
+
+    wsl sudo apt upgrade -y
+
+    wsl sudo apt install cmake ninja-build gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
 build_script:
 - pwsh: >-
     # Build Xirorig Native First
@@ -53,13 +57,19 @@ build_script:
     C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x86-windows -DVCPKG_TARGET_TRIPLET=x86-mingw-static -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows install"
 
 
-    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-linux -DVCPKG_TARGET_TRIPLET=x64-linux -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux && ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux install
+    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-linux -DVCPKG_TARGET_TRIPLET=x64-linux -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux
+
+    wsl ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux install
 
 
-    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-linux -DVCPKG_TARGET_TRIPLET=arm-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm.cmake -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux && ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux install
+    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-linux -DVCPKG_TARGET_TRIPLET=arm-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm.cmake -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux
+
+    wsl ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux install
 
 
-    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-linux -DVCPKG_TARGET_TRIPLET=arm64-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm64.cmake -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux && ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux install
+    wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-linux -DVCPKG_TARGET_TRIPLET=arm64-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm64.cmake -S /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native -B /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux
+
+    wsl ninja -C /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux install
 
 
     # Build Xirorig
