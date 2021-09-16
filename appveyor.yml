@@ -58,14 +58,11 @@ install:
     Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "${env:LOCALAPPDATA}\vcpkg" -Recurse -Force
 
 
-    If(!(Test-Path C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg))
+    wsl mkdir ~/.cache
 
-    {
-        New-Item -ItemType Directory -Force -Path C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg
-    }
+    wsl mkdir ~/.cache/vcpkg
 
-
-    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg" -Recurse -Force
+    wsl cp -r /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/vcpkg_cache/linux/* ~/.cache/vcpkg/
 
 
     # Install latest .NET 6
@@ -103,7 +100,6 @@ install:
 cache:
 - '%LOCALAPPDATA%/vcpkg'
 - C:/projects/xirorig/Xirorig.Native/xirorig_native/vcpkg/vcpkg
-- C:/WSL/Ubuntu2004/rootfs/home/appveyor/.cache/vcpkg
 build_script:
 - pwsh: >-
     # Build Xirorig Native First
@@ -140,10 +136,7 @@ build_script:
     git push -u origin ${env:branch}
 
 
-    cmake -G "Visual Studio 16 2019" -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows
-
-
-    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat" && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows/INSTALL.vcxproj'
+    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat" && cmake -G "Visual Studio 16 2019" -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows/INSTALL.vcxproj'
 
 
     Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Recurse -Force
@@ -156,10 +149,7 @@ build_script:
     git push -u origin ${env:branch}
 
 
-    cmake -G "Visual Studio 16 2019" -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows
-
-
-    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat" && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows/INSTALL.vcxproj'
+    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat" && cmake -G "Visual Studio 16 2019" -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows/INSTALL.vcxproj'
 
 
     Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Recurse -Force
@@ -177,7 +167,7 @@ build_script:
     wsl ninja -C "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux" install
 
 
-    Copy-Item "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux" -Recurse -Force
+    wsl cp -r ~/.cache/vcpkg/* /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/vcpkg_cache/linux/
 
 
     git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*
@@ -192,7 +182,7 @@ build_script:
     wsl ninja -C "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux" install
 
 
-    Copy-Item "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux" -Recurse -Force
+    wsl cp -r ~/.cache/vcpkg/* /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/vcpkg_cache/linux/
 
 
     git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*
@@ -207,7 +197,7 @@ build_script:
     wsl ninja -C "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux" install
 
 
-    Copy-Item "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux" -Recurse -Force
+    wsl cp -r ~/.cache/vcpkg/* /mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/vcpkg_cache/linux/
 
 
     git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*
