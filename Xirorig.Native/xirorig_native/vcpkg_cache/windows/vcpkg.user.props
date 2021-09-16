@@ -1,4 +1,0 @@
-
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Condition="Exists('C:\Tools\vcpkg\scripts\buildsystems\msbuild\vcpkg.props') and '$(VCPkgLocalAppDataDisabled)' == ''" Project="C:\Tools\vcpkg\scripts\buildsystems\msbuild\vcpkg.props" />
-</Project>
