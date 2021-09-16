@@ -5,7 +5,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     $env:CHERE_INVOKING = 'yes'
     $env:MSYSTEM = 'MINGW64'
 
-    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/install/x64-windows -DVCPKG_TARGET_TRIPLET=x64-mingw-static -S ${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT} -B ${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows && ninja -C ${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows install"
+    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/install/x64-windows -DVCPKG_TARGET_TRIPLET=x64-mingw-static -S $(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT} -B $(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows && ninja -C $(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows install"
 
     # Build Xirorig Native x86
     $env:MSYSTEM = 'MINGW32'
