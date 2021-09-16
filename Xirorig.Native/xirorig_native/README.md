@@ -61,14 +61,17 @@ Minimum Requirements:
 - [Visual Studio 2019](https://visualstudio.microsoft.com/downloads)
 Install Desktop Development with C++ workload. <br />
 Select MSVC v14x - VS 2019 C++ x68/x86 build tools. <br />
+Select MSVC v14x - VS 2019 C++ ARM build tools. (Optional - if targeting ARM devices) <br />
+Select MSVC v14x - VS 2019 C++ ARM64 build tools. (Optional - if targeting ARM64 devices) <br />
 Select Windows 10 SDK (10.0.1xxxx.0) <br />
 
 1. Clone the git repository.
 2. Open CMake GUI.
 3. Select Source at `Xirorig/Xirorig.Native/xirorig_native`
 4. Select Build at `Xirorig/Xirorig.Native/xirorig_native/build` (Create a folder if required)
-5. Add a new Entry: `VCPKG_TARGET_TRIPLET` as `STRING` with `x64-windows-static` or `x86-windows-static`.
-6. Click Configure. (Generator: Visual Studio 16 2019)
+5. Add a new Entry: `VCPKG_TARGET_TRIPLET` as `STRING` with `x64-windows-static` or `x86-windows-static` or `arm-windows-static` or `arm64-windows-static`.
+6. Add a new Entry (ONLY FOR ARM32 and ARM64 targets): `EXCLUDE_CPU_INFO_DEPENDENCY` as `BOOL` with `true`.
+7. Click Configure and select appropriate generator. (Generator: Visual Studio 16 2019)
 7. Wait and Click Generate.
 8. Click Open Project.
 9. Build the project. (Build > Build All)
