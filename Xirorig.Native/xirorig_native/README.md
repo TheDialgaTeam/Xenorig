@@ -20,6 +20,12 @@ Select MSVC v14x - VS 2019 C++ ARM build tools. (Optional - if targeting ARM dev
 Select MSVC v14x - VS 2019 C++ ARM64 build tools. (Optional - if targeting ARM64 devices) <br />
 Select Windows 10 SDK (10.0.1xxxx.0)
 - [MSYS2](https://www.msys2.org/) (Optional - if you prefer GCC/Mingw toolchain)
+Run MSYS2 MSYS and enter the following command in order:
+```bash
+pacman -Syu
+pacman -Syu
+pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-i686-toolchain
+```
 
 1. Clone the git repository.
 2. Open CMake Project in Visual Studio (File > Open > CMake)
@@ -76,6 +82,47 @@ You can also set `CMAKE_TOOLCHAIN_FILE` to empty if you prefer not to use vcpkg 
 
 CMake Variable required:
 You need to set `VCPKG_TARGET_TRIPLET` with `x64-windows-static` or `x86-windows-static` or `x64-mingw-static` or `x86-mingw-static`.
+
+### For Linux
+
+#### Ubuntu
+Run the following command in sequence:
+```bash
+sudo apt-get update -y
+sudo apt-get install git curl zip unzip tar cmake ninja-build build-essential pkg-config gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
+
+# Optional - if you want to select gcc 10
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 10
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 20
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 10
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 20
+
+sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 20
+sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 20
+
+sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 20
+sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 20
+
+# Clone this repository
+git clone https://github.com/TheDialgaTeam/Xirorig.git Xirorig
+git submodule update --init --recursive
+
+cd Xirorig
+
+# Build for x64-linux
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PWD}/Xirorig.Native/xirorig_native/out/install/x64-linux" -DVCPKG_TARGET_TRIPLET=x64-linux -S "${PWD}/Xirorig.Native/xirorig_native" -B "${PWD}/Xirorig.Native/xirorig_native/out/build/x64-linux"
+ninja -C "${PWD}/Xirorig.Native/xirorig_native/out/build/x64-linux" install
+
+# Build for ARM32-linux
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PWD}/Xirorig.Native/xirorig_native/out/install/ARM32-linux" -DVCPKG_TARGET_TRIPLET=arm-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="${PWD}/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm.cmake" -S "${PWD}/Xirorig.Native/xirorig_native" -B "${PWD}/Xirorig.Native/xirorig_native/out/build/ARM32-linux"
+ninja -C "${PWD}/Xirorig.Native/xirorig_native/out/build/ARM32-linux" install
+
+# Build for ARM64-linux
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PWD}/Xirorig.Native/xirorig_native/out/install/ARM64-linux" -DVCPKG_TARGET_TRIPLET=arm64-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="${PWD}/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm64.cmake" -S "${PWD}/Xirorig.Native/xirorig_native" -B "${PWD}/Xirorig.Native/xirorig_native/out/build/ARM64-linux"
+ninja -C "${PWD}/Xirorig.Native/xirorig_native/out/build/ARM64-linux" install
+
+# All output is at Xirorig.Native/xirorig_native/out/build/<Arch>-linux
+```
 
 ## Donations
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`

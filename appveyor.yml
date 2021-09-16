@@ -5,10 +5,8 @@ branches:
   only:
   - xirorig_future
 skip_non_tags: true
-image: Visual Studio 2019 Preview
+image: Visual Studio 2019
 clone_depth: 1
-init:
-- pwsh: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 dotnet_csproj:
   patch: true
   file: '**\Xirorig.csproj'
@@ -23,6 +21,14 @@ environment:
 install:
 - pwsh: >-
     git submodule update --init --recursive
+
+
+    # Initialize Cache because build time is too short to handle it
+
+    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "$env:LOCALAPPDATA\vcpkg"
+
+
+    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg"
 
 
     # Install latest .NET 6
@@ -77,12 +83,34 @@ build_script:
     C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x86-windows -DVCPKG_TARGET_TRIPLET=x86-mingw-static -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows install"
 
 
-    # $env:MSYSTEM = 'MINGW64'
-
-    # C:\msys64\usr\bin\bash -lc 'export PATH="/opt/armv7-w64-mingw32/bin:$PATH"; cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-mingw-static -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/windows-arm.cmake -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows install'
+    cmake -G "Visual Studio 16 2019" -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows
 
 
-    # C:\msys64\usr\bin\bash -lc "export PATH="/opt/aarch64-w64-mingw32/bin:$PATH";cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-mingw-static -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/windows-arm64.cmake -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows install"
+    cmd
+
+
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat"
+
+
+    msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows/INSTALL.vcxproj
+
+
+    exit
+
+
+    cmake -G "Visual Studio 16 2019" -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows
+
+
+    cmd
+
+
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
+
+
+    msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows/INSTALL.vcxproj
+
+
+    exit
 
 
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-linux" -DVCPKG_TARGET_TRIPLET=x64-linux -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux"
