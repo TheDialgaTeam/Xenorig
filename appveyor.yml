@@ -18,11 +18,11 @@ init:
     git config --global user.name "${env:USER_NAME}"
 clone_script:
 - pwsh: >-
-    git clone -q --depth=1 --branch=${env.branch} https://github.com/TheDialgaTeam/Xirorig.git C:\projects\xirorig
+    git clone -q --depth=1 --branch=${env:branch} https://github.com/TheDialgaTeam/Xirorig.git C:\projects\xirorig
 
     cd C:\projects\xirorig
 
-    git checkout ${env.branch}
+    git checkout ${env:branch}
 
     git submodule update --init --recursive
 dotnet_csproj:
@@ -107,7 +107,7 @@ build_script:
 
     git commit -m "[ci skip] vcpkg cache update"
 
-    git push -u origin ${env.branch}
+    git push -u origin ${env:branch}
 
 
     $env:MSYSTEM = 'MINGW32'
@@ -122,7 +122,7 @@ build_script:
 
     git commit -m "[ci skip] vcpkg cache update"
 
-    git push -u origin ${env.branch}
+    git push -u origin ${env:branch}
 
 
     cmake -G "Visual Studio 16 2019" -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows
@@ -138,7 +138,7 @@ build_script:
 
     git commit -m "[ci skip] vcpkg cache update"
 
-    git push -u origin ${env.branch}
+    git push -u origin ${env:branch}
 
 
     cmake -G "Visual Studio 16 2019" -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows
@@ -154,7 +154,7 @@ build_script:
 
     git commit -m "[ci skip] vcpkg cache update"
 
-    git push -u origin ${env.branch}
+    git push -u origin ${env:branch}
 
 
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-linux" -DVCPKG_TARGET_TRIPLET=x64-linux -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux"
@@ -169,7 +169,7 @@ build_script:
 
     git commit -m "[ci skip] vcpkg cache update"
 
-    git push -u origin ${env.branch}
+    git push -u origin ${env:branch}
 
 
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-linux" -DVCPKG_TARGET_TRIPLET=arm-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm.cmake" -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux"
@@ -184,7 +184,7 @@ build_script:
 
     git commit -m "[ci skip] vcpkg cache update"
 
-    git push -u origin ${env.branch}
+    git push -u origin ${env:branch}
 
 
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-linux" -DVCPKG_TARGET_TRIPLET=arm64-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm64.cmake" -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux"
@@ -199,7 +199,7 @@ build_script:
 
     git commit -m "[ci skip] vcpkg cache update"
 
-    git push -u origin ${env.branch}
+    git push -u origin ${env:branch}
 
 
     # Build Xirorig
