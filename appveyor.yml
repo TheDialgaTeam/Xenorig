@@ -55,7 +55,7 @@ install:
     }
 
 
-    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "${env:LOCALAPPDATA}\vcpkg" -Force
+    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "${env:LOCALAPPDATA}\vcpkg" -Recurse -Force
 
 
     If(!(Test-Path C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg))
@@ -65,7 +65,7 @@ install:
     }
 
 
-    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg" -Force
+    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg" -Recurse -Force
 
 
     # Install latest .NET 6
