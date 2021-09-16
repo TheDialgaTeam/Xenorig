@@ -47,7 +47,22 @@ install:
 - pwsh: >-
     # Initialize Cache because build time is too short to handle it
 
+
+    If(!(Test-Path ${env:LOCALAPPDATA}\vcpkg))
+
+    {
+        New-Item -ItemType Directory -Force -Path ${env:LOCALAPPDATA}\vcpkg
+    }
+
+
     Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "${env:LOCALAPPDATA}\vcpkg" -Force
+
+
+    If(!(Test-Path C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg))
+
+    {
+        New-Item -ItemType Directory -Force -Path C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg
+    }
 
 
     Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg" -Force
