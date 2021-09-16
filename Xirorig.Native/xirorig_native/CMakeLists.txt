@@ -33,7 +33,7 @@ endif()
 find_package(OpenSSL REQUIRED)
 find_package(lz4 CONFIG REQUIRED)
 
-if (!${EXCLUDE_CPU_INFO_DEPENDENCY})
+if (NOT ${EXCLUDE_CPU_INFO_DEPENDENCY})
 	set(XIRORIG_NATIVE_SOURCE_FILES src/Utility/CpuInformationUtility.c ${XIRORIG_NATIVE_SOURCE_FILES})
 	set(XIRORIG_NATIVE_PUBLIC_HEADER include/Utility/CpuInformationUtility.h ${XIRORIG_NATIVE_PUBLIC_HEADER})
 	set(XIRORIG_NATIVE_TARGET_LINK_LIBRARIES unofficial::cpuinfo::clog unofficial::cpuinfo::cpuinfo ${XIRORIG_NATIVE_TARGET_LINK_LIBRARIES})
