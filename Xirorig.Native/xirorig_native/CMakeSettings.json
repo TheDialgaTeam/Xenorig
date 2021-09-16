@@ -15,7 +15,6 @@
           "MINGW64_ROOT": "C:/msys64/mingw64",
           "BIN_ROOT": "${env.MINGW64_ROOT}/bin",
           "FLAVOR": "x86_64-w64-mingw32",
-          "TOOLSET_VERSION": "10.3.0",
           "PATH": "${env.MINGW64_ROOT}/bin;${env.MINGW64_ROOT}/../usr/local/bin;${env.MINGW64_ROOT}/../usr/bin;${env.MINGW64_ROOT}/../bin;${env.PATH}",
           "INCLUDE": "${env.MINGW64_ROOT}/${env.FLAVOR}/include;${env.INCLUDE}",
           "environment": "mingw_x64"
@@ -55,7 +54,6 @@
           "MINGW32_ROOT": "C:/msys64/mingw32",
           "BIN_ROOT": "${env.MINGW32_ROOT}/bin",
           "FLAVOR": "i686-w64-mingw32",
-          "TOOLSET_VERSION": "10.3.0",
           "PATH": "${env.MINGW32_ROOT}/bin;${env.MINGW32_ROOT}/../usr/local/bin;${env.MINGW32_ROOT}/../usr/bin;${env.MINGW32_ROOT}/../bin;${env.PATH}",
           "INCLUDE": "${env.MINGW32_ROOT}/${env.FLAVOR}/include;${env.INCLUDE}",
           "environment": "mingw_x86"
