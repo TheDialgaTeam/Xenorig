@@ -25,10 +25,10 @@ install:
 
     # Initialize Cache because build time is too short to handle it
 
-    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "$env:LOCALAPPDATA\vcpkg"
+    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "$env:LOCALAPPDATA\vcpkg" -Force
 
 
-    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg"
+    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg" -Force
 
 
     # Install latest .NET 6
