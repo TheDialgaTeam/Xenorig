@@ -7,6 +7,24 @@ branches:
 skip_non_tags: true
 image: Visual Studio 2019
 clone_depth: 1
+init:
+- pwsh: >-
+    git config --global credential.helper store
+
+    Set-Content -Path "$HOME\.git-credentials" -Value "https://$($env:access_token):x-oauth-basic@github.com`n" -NoNewline
+
+    git config --global user.email "${env:USER_EMAIL}"
+
+    git config --global user.name "${env:USER_NAME}"
+clone_script:
+- pwsh: >-
+    git clone -q --depth=1 --branch=${env.branch} https://github.com/TheDialgaTeam/Xirorig.git C:\projects\xirorig
+
+    cd C:\projects\xirorig
+
+    git checkout ${env.branch}
+
+    git submodule update --init --recursive
 dotnet_csproj:
   patch: true
   file: '**\Xirorig.csproj'
@@ -18,14 +36,18 @@ dotnet_csproj:
   informational_version: '{version}'
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  access_token:
+    secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
+  USER_EMAIL:
+    secure: bnLdl4lsS0uZ9SFoM9NBmgywfSlAl8W3GPoWSACdUXY=
+  USER_NAME:
+    secure: yqG96HTavsjSOHw/FNBQ+w==
+  branch: xirorig_future
 install:
 - pwsh: >-
-    git submodule update --init --recursive
-
-
     # Initialize Cache because build time is too short to handle it
 
-    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "$env:LOCALAPPDATA\vcpkg" -Force
+    Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*" -Destination "${env:LOCALAPPDATA}\vcpkg" -Force
 
 
     Copy-Item "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*" -Destination "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg" -Force
@@ -78,39 +100,61 @@ build_script:
     C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-windows -DVCPKG_TARGET_TRIPLET=x64-mingw-static -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-windows install"
 
 
+    Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Force
+
+
+    git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*
+
+    git commit -m "[ci skip] vcpkg cache update"
+
+    git push -u origin ${env.branch}
+
+
     $env:MSYSTEM = 'MINGW32'
 
     C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x86-windows -DVCPKG_TARGET_TRIPLET=x86-mingw-static -S /c/projects/xirorig/Xirorig.Native/xirorig_native -B /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows && ninja -C /c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x86-windows install"
 
 
+    Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Force
+
+
+    git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*
+
+    git commit -m "[ci skip] vcpkg cache update"
+
+    git push -u origin ${env.branch}
+
+
     cmake -G "Visual Studio 16 2019" -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows
 
 
-    cmd
+    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat" && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows/INSTALL.vcxproj'
 
 
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat"
+    Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Force
 
 
-    msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows/INSTALL.vcxproj
+    git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*
 
+    git commit -m "[ci skip] vcpkg cache update"
 
-    exit
+    git push -u origin ${env.branch}
 
 
     cmake -G "Visual Studio 16 2019" -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows
 
 
-    cmd
+    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat" && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows/INSTALL.vcxproj'
 
 
-    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
+    Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Force
 
 
-    msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows/INSTALL.vcxproj
+    git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows\*
 
+    git commit -m "[ci skip] vcpkg cache update"
 
-    exit
+    git push -u origin ${env.branch}
 
 
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/x64-linux" -DVCPKG_TARGET_TRIPLET=x64-linux -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux"
@@ -118,14 +162,44 @@ build_script:
     wsl ninja -C "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/x64-linux" install
 
 
+    Copy-Item "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux" -Force
+
+
+    git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*
+
+    git commit -m "[ci skip] vcpkg cache update"
+
+    git push -u origin ${env.branch}
+
+
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-linux" -DVCPKG_TARGET_TRIPLET=arm-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm.cmake" -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux"
 
     wsl ninja -C "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-linux" install
 
 
+    Copy-Item "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux" -Force
+
+
+    git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*
+
+    git commit -m "[ci skip] vcpkg cache update"
+
+    git push -u origin ${env.branch}
+
+
     wsl cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-linux" -DVCPKG_TARGET_TRIPLET=arm64-linux -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/cmake/raspberrypi-arm64.cmake" -S "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native" -B "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux"
 
     wsl ninja -C "/mnt/c/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-linux" install
+
+
+    Copy-Item "C:\WSL\Ubuntu2004\rootfs\home\appveyor\.cache\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux" -Force
+
+
+    git add C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\linux\*
+
+    git commit -m "[ci skip] vcpkg cache update"
+
+    git push -u origin ${env.branch}
 
 
     # Build Xirorig
