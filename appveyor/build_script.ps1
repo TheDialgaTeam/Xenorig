@@ -6,11 +6,11 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     $env:MSYSTEM = 'MINGW64'
 
     $PROJECT_ROOT = ${env:APPVEYOR_BUILD_FOLDER}
-    $PROJECT_ROOT.Replace('\', '/')
+    $PROJECT_ROOT = $PROJECT_ROOT.Replace('\', '/')
 
     $MSYS_PROJECT_ROOT = ${env:APPVEYOR_BUILD_FOLDER}
-    $MSYS_PROJECT_ROOT.Replace('C:\', '/C/')
-    $MSYS_PROJECT_ROOT.Replace('\', '/')
+    $MSYS_PROJECT_ROOT = $MSYS_PROJECT_ROOT.Replace('C:\', '/C/')
+    $MSYS_PROJECT_ROOT = $MSYS_PROJECT_ROOT.Replace('\', '/')
 
     C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/install/x64-windows -DVCPKG_TARGET_TRIPLET=x64-mingw-static -S $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT} -B $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows && ninja -C $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows install"
 
