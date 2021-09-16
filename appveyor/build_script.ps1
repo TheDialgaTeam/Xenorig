@@ -5,18 +5,25 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     $env:CHERE_INVOKING = 'yes'
     $env:MSYSTEM = 'MINGW64'
 
-    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/install/x64-windows -DVCPKG_TARGET_TRIPLET=x64-mingw-static -S $(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT} -B $(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows && ninja -C $(${env:APPVEYOR_BUILD_FOLDER}).Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows install"
+    $PROJECT_ROOT = ${env:APPVEYOR_BUILD_FOLDER}
+    $PROJECT_ROOT.Replace('\', '/')
+
+    $MSYS_PROJECT_ROOT = ${env:APPVEYOR_BUILD_FOLDER}
+    $MSYS_PROJECT_ROOT.Replace('C:\', '/C/')
+    $MSYS_PROJECT_ROOT.Replace('\', '/')
+
+    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/install/x64-windows -DVCPKG_TARGET_TRIPLET=x64-mingw-static -S $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT} -B $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows && ninja -C $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/x64-windows install"
 
     # Build Xirorig Native x86
     $env:MSYSTEM = 'MINGW32'
 
-    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/install/x86-windows -DVCPKG_TARGET_TRIPLET=x86-mingw-static -S ${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT} -B ${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x86-windows && ninja -C ${env:APPVEYOR_BUILD_FOLDER}.Replace('C:\', '/C/').Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/x86-windows install"
+    C:\msys64\usr\bin\bash -lc "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/install/x86-windows -DVCPKG_TARGET_TRIPLET=x86-mingw-static -S $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT} -B $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/x86-windows && ninja -C $MSYS_PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/x86-windows install"
 
     # Build Xirorig Native ARM32
-    cmd /c "call 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat' && cmake -G 'Visual Studio 16 2019' -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S ${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT} -B ${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM32-windows && msbuild.exe ${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM32-windows/INSTALL.vcxproj -p:Configuration=Release"
+    cmd /c "call 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat' && cmake -G 'Visual Studio 16 2019' -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S $PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT} -B $PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM32-windows && msbuild.exe $PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM32-windows/INSTALL.vcxproj -p:Configuration=Release"
 
     # Build Xirorig Native ARM64
-    cmd /c "call 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat' && cmake -G 'Visual Studio 16 2019' -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S ${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT} -B ${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM64-windows && msbuild.exe ${env:APPVEYOR_BUILD_FOLDER}.Replace('\', '/')/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM64-windows/INSTALL.vcxproj -p:Configuration=Release"
+    cmd /c "call 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat' && cmake -G 'Visual Studio 16 2019' -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S $PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT} -B $PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM64-windows && msbuild.exe $PROJECT_ROOT/${env:XIRORIG_NATIVE_ROOT}/out/build/ARM64-windows/INSTALL.vcxproj -p:Configuration=Release"
 
     Set-Location "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out/install"
 
