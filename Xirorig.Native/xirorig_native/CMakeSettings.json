@@ -79,6 +79,52 @@
       "intelliSenseMode": "windows-msvc-x86"
     },
     {
+      "name": "ARM32-windows",
+      "generator": "Visual Studio 16 2019 ARM",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_arm_x64" ],
+      "variables": [
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "arm-windows-static",
+          "type": "STRING"
+        },
+        {
+          "name": "EXCLUDE_CPU_INFO_DEPENDENCY",
+          "value": "true",
+          "type": "BOOL"
+        }
+      ]
+    },
+    {
+      "name": "ARM64-windows",
+      "generator": "Visual Studio 16 2019 ARM64",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_arm64_x64" ],
+      "variables": [
+        {
+          "name": "VCPKG_TARGET_TRIPLET",
+          "value": "arm64-windows-static",
+          "type": "STRING"
+        },
+        {
+          "name": "EXCLUDE_CPU_INFO_DEPENDENCY",
+          "value": "true",
+          "type": "BOOL"
+        }
+      ]
+    },
+    {
       "name": "x64-linux",
       "generator": "Ninja",
       "configurationType": "Release",
