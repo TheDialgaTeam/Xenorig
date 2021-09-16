@@ -136,7 +136,7 @@ build_script:
     git push -u origin ${env:branch}
 
 
-    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat" && cmake -G "Visual Studio 16 2019" -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows/INSTALL.vcxproj'
+    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat" && cmake -G "Visual Studio 16 2019" -A ARM -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM32-windows -DVCPKG_TARGET_TRIPLET=arm-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM32-windows/INSTALL.vcxproj -p:Configuration=Release'
 
 
     Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Recurse -Force
@@ -149,7 +149,7 @@ build_script:
     git push -u origin ${env:branch}
 
 
-    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat" && cmake -G "Visual Studio 16 2019" -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows/INSTALL.vcxproj'
+    cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat" && cmake -G "Visual Studio 16 2019" -A ARM64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=C:/projects/xirorig/Xirorig.Native/xirorig_native/out/install/ARM64-windows -DVCPKG_TARGET_TRIPLET=arm64-windows-static -DEXCLUDE_CPU_INFO_DEPENDENCY=true -S C:/projects/xirorig/Xirorig.Native/xirorig_native -B C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows && msbuild.exe C:/projects/xirorig/Xirorig.Native/xirorig_native/out/build/ARM64-windows/INSTALL.vcxproj -p:Configuration=Release'
 
 
     Copy-Item "${env:LOCALAPPDATA}\vcpkg\*" -Destination "C:\projects\xirorig\Xirorig.Native\xirorig_native\vcpkg_cache\windows" -Recurse -Force
