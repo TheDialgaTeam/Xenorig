@@ -53,6 +53,9 @@
 		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+        <None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\xirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\xirorig_native.dll')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0" Link="libxirorig_native.so" Condition="$(Configuration.Contains('linux')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
