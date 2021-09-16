@@ -233,33 +233,36 @@ build_script:
     dotnet publish -p:PublishProfile=x64-osx.pubxml -p:Platform=x64 -c Release_osx
 
 
-    7z a Xirorig/publish/x64-windows.zip Xirorig/publish/x64-windows -mx=9
-
-    7z a Xirorig/publish/x86-windows.zip Xirorig/publish/x86-windows -mx=9
-
-    7z a Xirorig/publish/arm-windows.zip Xirorig/publish/arm-windows -mx=9
-
-    7z a Xirorig/publish/arm64-windows.zip Xirorig/publish/arm64-windows -mx=9
+    cd Xirorig/publish
 
 
-    7z a Xirorig/publish/x64-linux.tar Xirorig/publish/x64-linux
+    7z a x64-windows.zip x64-windows -mx=9
 
-    7z a Xirorig/publish/x64-linux.tar.gz Xirorig/publish/x64-linux.tar -mx=9
+    7z a x86-windows.zip x86-windows -mx=9
 
+    7z a arm-windows.zip arm-windows -mx=9
 
-    7z a Xirorig/publish/arm-linux.tar Xirorig/publish/arm-linux
-
-    7z a Xirorig/publish/arm-linux.tar.gz Xirorig/publish/arm-linux.tar -mx=9
-
-
-    7z a Xirorig/publish/arm64-linux.tar Xirorig/publish/arm64-linux
-
-    7z a Xirorig/publish/arm64-linux.tar.gz Xirorig/publish/arm64-linux.tar -mx=9
+    7z a arm64-windows.zip arm64-windows -mx=9
 
 
-    7z a Xirorig/publish/x64-osx.tar Xirorig/publish/x64-osx
+    7z a x64-linux.tar x64-linux
 
-    7z a Xirorig/publish/x64-osx.tar.gz Xirorig/publish/x64-osx.tar -mx=9
+    7z a x64-linux.tar.gz x64-linux.tar -mx=9
+
+
+    7z a arm-linux.tar arm-linux
+
+    7z a arm-linux.tar.gz arm-linux.tar -mx=9
+
+
+    7z a arm64-linux.tar arm64-linux
+
+    7z a arm64-linux.tar.gz arm64-linux.tar -mx=9
+
+
+    7z a x64-osx.tar x64-osx
+
+    7z a x64-osx.tar.gz x64-osx.tar -mx=9
 test: off
 artifacts:
 - path: Xirorig/publish/x64-windows.zip
