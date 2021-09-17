@@ -81,7 +81,6 @@ for:
     
     cache:
     - '%LOCALAPPDATA%/vcpkg'
-    - '%APPVEYOR_BUILD_FOLDER%/%XIRORIG_NATIVE_ROOT%/vcpkg/vcpkg.exe'
 
     artifacts:
     - path: Xirorig.Native/xirorig_native/out/install/Xirorig_Native_windows.zip
@@ -94,7 +93,6 @@ for:
 
     cache:
     - '$HOME/.cache/vcpkg'
-    - '$APPVEYOR_BUILD_FOLDER/$XIRORIG_NATIVE_ROOT/vcpkg/vcpkg'
 
     artifacts:
     - path: Xirorig.Native/xirorig_native/out/install/Xirorig_Native_linux.zip
@@ -107,7 +105,6 @@ for:
 
     cache:
     - '$HOME/.cache/vcpkg'
-    - '$APPVEYOR_BUILD_FOLDER/$XIRORIG_NATIVE_ROOT/vcpkg/vcpkg'
 
     artifacts:
     - path: Xirorig.Native/xirorig_native/out/install/Xirorig_Native_osx.zip
