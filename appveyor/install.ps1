@@ -121,7 +121,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     New-Item "${env:APPVEYOR_BUILD_FOLDER}\${env:XIRORIG_NATIVE_ROOT}\${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Windows"
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Windows" -Path ${env:APPVEYOR_PROJECT_SLUG}
     7z x "${env:APPVEYOR_BUILD_FOLDER}\${env:XIRORIG_NATIVE_ROOT}\${env:XIRORIG_NATIVE_OUTPUT_ROOT}\${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Linux") {
     # Install dependencies
@@ -137,7 +137,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux"
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux" -Path ${env:APPVEYOR_PROJECT_SLUG}
     7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig MacOS") {
     # Install dotnet enviroment
@@ -149,6 +149,6 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS"
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS" -Path ${env:APPVEYOR_PROJECT_SLUG}
     7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 }
