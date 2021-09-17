@@ -53,10 +53,10 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Windows") {
     $dotnet = "${env:APPVEYOR_BUILD_FOLDER}\..\dotnet\dotnet"
 
-    "$dotnet publish -p:PublishProfile=x64-windows.pubxml -p:Platform=x64 -c Release_windows"
-    "$dotnet publish -p:PublishProfile=x86-windows.pubxml -p:Platform=x86 -c Release_windows"
-    "$dotnet publish -p:PublishProfile=arm-windows.pubxml -p:Platform=ARM32 -c Release_windows"
-    "$dotnet publish -p:PublishProfile=arm64-windows.pubxml -p:Platform=ARM64 -c Release_windows"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=x64-windows.pubxml -p:Platform=x64 -c Release_windows"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=x86-windows.pubxml -p:Platform=x86 -c Release_windows"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=arm-windows.pubxml -p:Platform=ARM32 -c Release_windows"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=arm64-windows.pubxml -p:Platform=ARM64 -c Release_windows"
 
     Set-Location "${env:APPVEYOR_BUILD_FOLDER}\Xirorig\publish"
 
@@ -67,9 +67,9 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Linux") {
     $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet/dotnet"
 
-    "$dotnet publish -p:PublishProfile=x64-linux.pubxml -p:Platform=x64 -c Release_linux"
-    "$dotnet publish -p:PublishProfile=arm-linux.pubxml -p:Platform=ARM32 -c Release_linux"
-    "$dotnet publish -p:PublishProfile=arm64-linux.pubxml -p:Platform=ARM64 -c Release_linux"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=x64-linux.pubxml -p:Platform=x64 -c Release_linux"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=arm-linux.pubxml -p:Platform=ARM32 -c Release_linux"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=arm64-linux.pubxml -p:Platform=ARM64 -c Release_linux"
 
     Set-Location "${env:APPVEYOR_BUILD_FOLDER}/Xirorig/publish"
 
@@ -84,7 +84,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig MacOS") {
     $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet/dotnet"
 
-    "$dotnet publish -p:PublishProfile=x64-osx.pubxml -p:Platform=x64 -c Release_osx"
+    Invoke-Expression "$dotnet publish -p:PublishProfile=x64-osx.pubxml -p:Platform=x64 -c Release_osx"
 
     Set-Location "${env:APPVEYOR_BUILD_FOLDER}/Xirorig/publish"
 
