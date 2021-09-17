@@ -57,10 +57,10 @@ matrix:
   fast_finish: true
 
 clone_script:
-- pwsh: git clone --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
+- pwsh: git clone -q --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
 - pwsh: Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
-- pwsh: git checkout -f "${env:APPVEYOR_REPO_COMMIT}"
-- pwsh: git submodule update --init --recursive
+- pwsh: git checkout -qf "${env:APPVEYOR_REPO_COMMIT}"
+- pwsh: git submodule -q update --init --recursive
 
 install:
 - pwsh: appveyor/install.ps1
