@@ -141,7 +141,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         # Install dotnet enviroment
         Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "${env:APPVEYOR_BUILD_FOLDER}/../dotnet-install.sh"
         Set-Location "${env:APPVEYOR_BUILD_FOLDER}/.."
-        ./dotnet-install.sh -Channel ${env:DOTNET_VERSION} -Quality ${env:DOTNET_RELEASE_STATUS} -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
+        Invoke-Expression ./dotnet-install.sh -Channel ${env:DOTNET_VERSION} -Quality ${env:DOTNET_RELEASE_STATUS} -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
 
         # Create Directories
         New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_INSTALL_ROOT}" -ItemType Directory -Force
@@ -159,7 +159,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         # Install dotnet enviroment
         Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "${env:APPVEYOR_BUILD_FOLDER}/../dotnet-install.sh"
         Set-Location "${env:APPVEYOR_BUILD_FOLDER}/.."
-        ./dotnet-install.sh -Channel ${env:DOTNET_VERSION} -Quality ${env:DOTNET_RELEASE_STATUS} -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
+        Invoke-Expression ./dotnet-install.sh -Channel ${env:DOTNET_VERSION} -Quality ${env:DOTNET_RELEASE_STATUS} -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
 
         # Create Directories
         New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_INSTALL_ROOT}" -ItemType Directory -Force
