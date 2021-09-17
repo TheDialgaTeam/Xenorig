@@ -189,6 +189,24 @@ for:
     matrix:
       only:
         - job_name: Deploy Xirorig
+        
+    artifacts:
+    - path: Xirorig/publish/x64-windows.zip
+      name: x64-windows
+    - path: Xirorig/publish/x86-windows.zip
+      name: x86-windows
+    - path: Xirorig/publish/arm-windows.zip
+      name: arm-windows
+    - path: Xirorig/publish/arm64-windows.zip
+      name: arm64-windows
+    - path: Xirorig/publish/x64-linux.tar.gz
+      name: x64-linux
+    - path: Xirorig/publish/arm-linux.tar.gz
+      name: arm-linux
+    - path: Xirorig/publish/arm64-linux.tar.gz
+      name: arm64-linux
+    - path: Xirorig/publish/x64-osx.tar.gz
+      name: x64-osx
     
     deploy:
     - provider: GitHub
@@ -196,6 +214,6 @@ for:
       release: Xirorig v$(appveyor_build_version)
       auth_token:
         secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
-      artifact: %APPVEYOR_BUILD_FOLDER%/Xirorig/publish/*.zip, %APPVEYOR_BUILD_FOLDER%/Xirorig/publish/*.tar.gz
+      artifact: x64-windows, x86-windows, arm-windows, arm64-windows, x64-linux, arm-linux, arm64-linux, x64-osx
       draft: true
       prerelease: false
