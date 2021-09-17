@@ -196,6 +196,6 @@ for:
       release: Xirorig v$(appveyor_build_version)
       auth_token:
         secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
-      artifact: Xirorig/publish/*.zip, Xirorig/publish/*.tar.gz
+      artifact: %APPVEYOR_BUILD_FOLDER%/Xirorig/publish/*.zip, %APPVEYOR_BUILD_FOLDER%/Xirorig/publish/*.tar.gz
       draft: true
       prerelease: false
