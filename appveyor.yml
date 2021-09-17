@@ -66,24 +66,19 @@ environment:
 matrix:
   fast_finish: true
 
+clone_script:
+- pwsh: git clone -q --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
+- pwsh: Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
+- pwsh: git checkout -qf "${env:APPVEYOR_REPO_COMMIT}"
+- pwsh: git submodule -q update --init --recursive
+
 install:
 - pwsh: appveyor/install.ps1
 
+build_script:
+- pwsh: appveyor/build_script.ps1
+
 for:
-  -
-    matrix:
-      exclude:
-        - job_name: Deploy Xirorig
-    
-    clone_script:
-    - pwsh: git clone -q --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
-    - pwsh: Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
-    - pwsh: git checkout -qf "${env:APPVEYOR_REPO_COMMIT}"
-    - pwsh: git submodule -q update --init --recursive
-
-    build_script:
-    - pwsh: appveyor/build_script.ps1
-
   -
     matrix:
       only:
@@ -126,7 +121,7 @@ for:
   -
     matrix:
       only:
-        - job_group: Build Xirorig
+        - job_name: Build Xirorig Windows
 
     dotnet_csproj:
       patch: true
@@ -137,11 +132,6 @@ for:
       assembly_version: '{version}'
       file_version: '{version}'
       informational_version: '{version}'
-
-  -
-    matrix:
-      only:
-        - job_name: Build Xirorig Windows
 
     artifacts:
     - path: Xirorig/publish/x64-windows.zip
@@ -158,6 +148,16 @@ for:
       only:
         - job_name: Build Xirorig Linux
 
+    dotnet_csproj:
+      patch: true
+      file: '**\Xirorig.csproj'
+      version: '{version}'
+      version_prefix: '{version}'
+      package_version: '{version}'
+      assembly_version: '{version}'
+      file_version: '{version}'
+      informational_version: '{version}'
+
     artifacts:
     - path: Xirorig/publish/x64-linux.tar.gz
       name: x64-linux
@@ -170,6 +170,16 @@ for:
     matrix:
       only:
         - job_name: Build Xirorig MacOS
+
+    dotnet_csproj:
+      patch: true
+      file: '**\Xirorig.csproj'
+      version: '{version}'
+      version_prefix: '{version}'
+      package_version: '{version}'
+      assembly_version: '{version}'
+      file_version: '{version}'
+      informational_version: '{version}'
 
     artifacts:
     - path: Xirorig/publish/x64-osx.tar.gz
