@@ -125,7 +125,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         New-Item "$xirorigNativeInstallRoot" -ItemType Directory -Force
 
         # Download Xirorig Native Files
-        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}"" "${env:APPVEYOR_PROJECT_NAME}"" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native Windows"
+        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native Windows"
         7z x "$xirorigNativeInstallRoot\${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
         break
     }
