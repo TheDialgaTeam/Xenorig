@@ -20,6 +20,9 @@ environment:
   DOTNET_VERSION: "6.0"
   DOTNET_RELEASE_STATUS: GA
 
+  XIRORIG_ROOT: Xirorig
+  XIRORIG_PUBLISH_ROOT: publish
+
   XIRORIG_NATIVE_ROOT: Xirorig.Native/xirorig_native
   XIRORIG_NATIVE_OUTPUT_ROOT: out
   XIRORIG_NATIVE_BUILD_ROOT: build
@@ -39,36 +42,48 @@ environment:
     XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_osx.zip
 
   - job_name: Build Xirorig Windows
+    job_group: Build Xirorig
     job_depends_on: Build Xirorig_Native Windows
     appveyor_build_worker_image: Visual Studio 2019
     XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_windows.zip
 
   - job_name: Build Xirorig Linux
+    job_group: Build Xirorig
     job_depends_on: Build Xirorig_Native Linux
     appveyor_build_worker_image: Ubuntu2004
     XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_linux.zip
 
   - job_name: Build Xirorig MacOS
+    job_group: Build Xirorig
     job_depends_on: Build Xirorig_Native MacOS
     appveyor_build_worker_image: macos
     XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_osx.zip
 
+  - job_name: Deploy Xirorig
+    job_depends_on: Build Xirorig
+    appveyor_build_worker_image: Visual Studio 2019
+
 matrix:
   fast_finish: true
-
-clone_script:
-- pwsh: git clone -q --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
-- pwsh: Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
-- pwsh: git checkout -qf "${env:APPVEYOR_REPO_COMMIT}"
-- pwsh: git submodule -q update --init --recursive
 
 install:
 - pwsh: appveyor/install.ps1
 
-build_script:
-- pwsh: appveyor/build_script.ps1
-
 for:
+  -
+    matrix:
+      exclude:
+        - job_name: Deploy Xirorig
+    
+    clone_script:
+    - pwsh: git clone -q --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
+    - pwsh: Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
+    - pwsh: git checkout -qf "${env:APPVEYOR_REPO_COMMIT}"
+    - pwsh: git submodule -q update --init --recursive
+
+    build_script:
+    - pwsh: appveyor/build_script.ps1
+
   -
     matrix:
       only:
@@ -111,7 +126,7 @@ for:
   -
     matrix:
       only:
-        - job_name: Build Xirorig Windows
+        - job_group: Build Xirorig
 
     dotnet_csproj:
       patch: true
@@ -122,6 +137,11 @@ for:
       assembly_version: '{version}'
       file_version: '{version}'
       informational_version: '{version}'
+
+  -
+    matrix:
+      only:
+        - job_name: Build Xirorig Windows
 
     artifacts:
     - path: Xirorig/publish/x64-windows.zip
@@ -133,30 +153,10 @@ for:
     - path: Xirorig/publish/arm64-windows.zip
       name: arm64-windows
 
-    deploy:
-    - provider: GitHub
-      tag: v$(appveyor_build_version)
-      release: Xirorig v$(appveyor_build_version)
-      auth_token:
-        secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
-      artifact: x64-windows, x86-windows, arm-windows, arm64-windows
-      draft: true
-      prerelease: false
-
   -
     matrix:
       only:
         - job_name: Build Xirorig Linux
-
-    dotnet_csproj:
-      patch: true
-      file: '**\Xirorig.csproj'
-      version: '{version}'
-      version_prefix: '{version}'
-      package_version: '{version}'
-      assembly_version: '{version}'
-      file_version: '{version}'
-      informational_version: '{version}'
 
     artifacts:
     - path: Xirorig/publish/x64-linux.tar.gz
@@ -166,41 +166,26 @@ for:
     - path: Xirorig/publish/arm64-linux.tar.gz
       name: arm64-linux
 
-    deploy:
-    - provider: GitHub
-      tag: v$(appveyor_build_version)
-      release: Xirorig v$(appveyor_build_version)
-      auth_token:
-        secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
-      artifact: x64-linux, arm-linux, arm64-linux
-      draft: true
-      prerelease: false
-
   -
     matrix:
       only:
         - job_name: Build Xirorig MacOS
 
-    dotnet_csproj:
-      patch: true
-      file: '**\Xirorig.csproj'
-      version: '{version}'
-      version_prefix: '{version}'
-      package_version: '{version}'
-      assembly_version: '{version}'
-      file_version: '{version}'
-      informational_version: '{version}'
-
     artifacts:
     - path: Xirorig/publish/x64-osx.tar.gz
       name: x64-osx
 
+  -
+    matrix:
+      only:
+        - job_name: Deploy Xirorig
+    
     deploy:
     - provider: GitHub
       tag: v$(appveyor_build_version)
       release: Xirorig v$(appveyor_build_version)
       auth_token:
         secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
-      artifact: x64-osx
+      artifact: Xirorig/publish/*.zip, Xirorig/publish/*.tar.gz
       draft: true
       prerelease: false
