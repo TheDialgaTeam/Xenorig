@@ -42,8 +42,7 @@ function Get-AppVeyorArtifacts
     $projectURI = "$apiUrl/projects/$account/$project"
     if ($Branch) {$projectURI = $projectURI + "/branch/$Branch"}
 
-    $projectObject = Invoke-RestMethod -Method Get -Uri $projectURI `
-                                       -Headers $headers @proxyArgs
+    $projectObject = Invoke-RestMethod -Method Get -Uri $projectURI -Headers $headers @proxyArgs
 
     if (-not $projectObject.build.jobs) {throw "No jobs found for this project or the project and/or account name was incorrectly specified"}
 
@@ -59,13 +58,12 @@ function Get-AppVeyorArtifacts
     }
 
     $artifacts = Invoke-RestMethod -Method Get -Uri "$apiUrl/buildjobs/$jobId/artifacts" -Headers $headers @proxyArgs
-    $artifacts | Where-Object { $psCmdlet.ShouldProcess($_.fileName) } | ForEach-Object 
-    {
+    $artifacts | Where-Object { $psCmdlet.ShouldProcess($_.fileName) } | ForEach-Object {
         $type = $_.type
 
-        $localArtifactPath = $_.fileName -split '/' | ForEach-Object { [Uri]::UnescapeDataString($_) }
+        $localArtifactPath = $_.fileName -split '/' | % { [Uri]::UnescapeDataString($_) }
         if ($flat.IsPresent) {
-            $localArtifactPath = ($localArtifactPath | Select-Object -Last 1)
+            $localArtifactPath = ($localArtifactPath | select -Last 1)
         } else {
             $localArtifactPath = $localArtifactPath -join [IO.Path]::DirectorySeparatorChar
         }
@@ -127,7 +125,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         New-Item "$xirorigNativeInstallRoot" -ItemType Directory -Force
 
         # Download Xirorig Native Files
-        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native Windows" -Path "${env:APPVEYOR_BUILD_FOLDER}"
+        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}"" "${env:APPVEYOR_PROJECT_NAME}"" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native Windows"
         7z x "$xirorigNativeInstallRoot\${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
         break
     }
@@ -144,7 +142,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         New-Item "$xirorigNativeInstallRoot" -ItemType Directory -Force
 
         # Download Xirorig Native Files
-        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native Linux" -Path "${env:APPVEYOR_BUILD_FOLDER}"
+        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native Linux"
         7z x "$xirorigNativeInstallRoot/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
         break
     }
@@ -161,7 +159,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         New-Item "$xirorigNativeInstallRoot" -ItemType Directory -Force
 
         # Download Xirorig Native Files
-        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native MacOS" -Path "${env:APPVEYOR_BUILD_FOLDER}"
+        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig_Native MacOS" 
         7z x "$xirorigNativeInstallRoot/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
         break
     }
@@ -172,9 +170,9 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_ROOT}/${env:XIRORIG_PUBLISH_ROOT}" -ItemType Directory -Force
 
         # Download Xirorig Native Files
-        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig Windows" -Path "${env:APPVEYOR_BUILD_FOLDER}"
-        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig Linux" -Path "${env:APPVEYOR_BUILD_FOLDER}"
-        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig MacOS" -Path "${env:APPVEYOR_BUILD_FOLDER}"
+        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig Windows" 
+        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig Linux" 
+        Get-AppVeyorArtifacts "${env:APPVEYOR_ACCOUNT_NAME}" "${env:APPVEYOR_PROJECT_NAME}" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}" -Token "${env:APPVEYOR_TOKEN_KEY}" -JobName "Build Xirorig MacOS" 
         break
     }
 }
