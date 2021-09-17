@@ -115,4 +115,9 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         Invoke-Expression "7z a x64-osx.tar.gz x64-osx.tar -mx=9"
         break
     }
+
+    "Deploy Xirorig"
+    {
+        break;
+    }
 }
