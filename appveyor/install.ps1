@@ -131,6 +131,8 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         # Download Xirorig Native Files
         Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Windows" -Path ${env:APPVEYOR_BUILD_FOLDER}
         7z x "${env:APPVEYOR_BUILD_FOLDER}\${env:XIRORIG_NATIVE_ROOT}\${env:XIRORIG_NATIVE_OUTPUT_ROOT}\${env:XIRORIG_NATIVE_INSTALL_ROOT}\${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
+        
+        Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
         break
     }
 
@@ -147,6 +149,8 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         # Download Xirorig Native Files
         Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux" -Path ${env:APPVEYOR_BUILD_FOLDER}
         7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_INSTALL_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
+        
+        Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
         break
     }
 
@@ -163,6 +167,8 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
         # Download Xirorig Native Files
         Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS" -Path ${env:APPVEYOR_BUILD_FOLDER}
         7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_INSTALL_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
+        
+        Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
         break
     }
 }
