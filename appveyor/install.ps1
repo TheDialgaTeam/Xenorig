@@ -118,7 +118,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     ./dotnet-install.ps1 -Channel 6.0 -Quality GA -InstallDir "${env:APPVEYOR_BUILD_FOLDER}\..\dotnet"
 
     # Create Directories
-    New-Item "${env:APPVEYOR_BUILD_FOLDER}\${env:XIRORIG_NATIVE_ROOT}\${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
+    New-Item "${env:APPVEYOR_BUILD_FOLDER}\${env:XIRORIG_NATIVE_ROOT}\${env:XIRORIG_NATIVE_OUTPUT_ROOT}\${env:XIRORIG_NATIVE_INSTALL_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
     Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Windows" -Path ${env:APPVEYOR_BUILD_FOLDER}
@@ -134,10 +134,10 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     ./dotnet-install.sh -Channel 6.0 -Quality GA -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
 
     # Create Directories
-    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
+    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_INSTALL_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux" -Path ${env:APPVEYOR_PROJECT_SLUG}
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux" -Path ${env:APPVEYOR_BUILD_FOLDER}
     7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig MacOS") {
     # Install dotnet enviroment
@@ -146,9 +146,9 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     ./dotnet-install.sh -Channel 6.0 -Quality GA -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
 
     # Create Directories
-    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
+    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_INSTALL_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS" -Path ${env:APPVEYOR_PROJECT_SLUG}
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS" -Path ${env:APPVEYOR_BUILD_FOLDER}
     7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 }
