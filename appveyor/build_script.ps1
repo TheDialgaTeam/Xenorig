@@ -51,7 +51,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
 
     7z a ${env:XIRORIG_NATIVE_ARTIFACT_NAME} * 
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Windows") {
-    $dotnet = "${env:APPVEYOR_BUILD_FOLDER}\..\dotnet"
+    $dotnet = "${env:APPVEYOR_BUILD_FOLDER}\..\dotnet\dotnet"
 
     "$dotnet publish -p:PublishProfile=x64-windows.pubxml -p:Platform=x64 -c Release_windows"
     "$dotnet publish -p:PublishProfile=x86-windows.pubxml -p:Platform=x86 -c Release_windows"
@@ -65,7 +65,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     7z a arm-windows.zip arm-windows -mx=9
     7z a arm64-windows.zip arm64-windows -mx=9
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Linux") {
-    $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
+    $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet/dotnet"
 
     "$dotnet publish -p:PublishProfile=x64-linux.pubxml -p:Platform=x64 -c Release_linux"
     "$dotnet publish -p:PublishProfile=arm-linux.pubxml -p:Platform=ARM32 -c Release_linux"
@@ -82,7 +82,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     7z a arm64-linux.tar arm64-linux
     7z a arm64-linux.tar.gz arm64-linux.tar -mx=9
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig MacOS") {
-    $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
+    $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet/dotnet"
 
     "$dotnet publish -p:PublishProfile=x64-osx.pubxml -p:Platform=x64 -c Release_osx"
 
