@@ -59,7 +59,8 @@ matrix:
   fast_finish: true
 
 clone_script:
-- pwsh: appveyor/clone_script.ps1
+- pwsh: git clone -q --depth=1 --recursive --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
+- pwsh: git checkout -qf "${env:APPVEYOR_REPO_COMMIT}"
 
 install:
 - pwsh: appveyor/install.ps1
