@@ -57,9 +57,9 @@ matrix:
   fast_finish: true
 
 clone_script:
-- pwsh: git clone -q --depth=1 --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
+- pwsh: git clone --depth=1 --branch="${env:APPVEYOR_REPO_BRANCH}" "https://github.com/${env:APPVEYOR_REPO_NAME}.git" "${env:APPVEYOR_BUILD_FOLDER}"
 - pwsh: Set-Location "${env:APPVEYOR_BUILD_FOLDER}"
-- pwsh: git checkout -qf "${env:APPVEYOR_REPO_COMMIT}"
+- pwsh: git checkout -f "${env:APPVEYOR_REPO_COMMIT}"
 - pwsh: git submodule update --init --recursive
 
 install:
