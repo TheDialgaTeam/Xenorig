@@ -66,7 +66,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
 
     "Build Xirorig Windows"
     {
-        $dotnet = "${env:APPVEYOR_BUILD_FOLDER}\..\dotnet\dotnet"
+        $dotnet = "${env:APPVEYOR_BUILD_FOLDER}\dotnet\dotnet"
 
         Invoke-Expression "$dotnet publish -p:PublishProfile=x64-windows.pubxml -p:Platform=x64 -c Release_windows"
         Invoke-Expression "$dotnet publish -p:PublishProfile=x86-windows.pubxml -p:Platform=x86 -c Release_windows"
@@ -84,7 +84,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
 
     "Build Xirorig Linux"
     {
-        $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet/dotnet"
+        $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/dotnet/dotnet"
 
         Invoke-Expression "$dotnet publish -p:PublishProfile=x64-linux.pubxml -p:Platform=x64 -c Release_linux"
         Invoke-Expression "$dotnet publish -p:PublishProfile=arm-linux.pubxml -p:Platform=ARM32 -c Release_linux"
@@ -105,7 +105,7 @@ switch -Exact (${env:APPVEYOR_JOB_NAME})
 
     "Build Xirorig MacOS"
     {
-        $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/../dotnet/dotnet"
+        $dotnet = "${env:APPVEYOR_BUILD_FOLDER}/dotnet/dotnet"
 
         Invoke-Expression "$dotnet publish -p:PublishProfile=x64-osx.pubxml -p:Platform=x64 -c Release_osx"
 
