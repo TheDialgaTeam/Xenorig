@@ -59,6 +59,9 @@
 		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0" Link="libxirorig_native.so" Condition="$(Configuration.Contains('linux')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+        <None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-osx\lib\libxirorig_native.dylib" Link="libxirorig_native.dylib" Condition="$(Configuration.Contains('osx')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-osx\lib\libxirorig_native.dylib')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>

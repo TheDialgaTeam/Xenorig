@@ -123,6 +123,16 @@ for:
     - path: Xirorig/publish/arm64-windows.zip
       name: arm64-windows
 
+    deploy:
+    - provider: GitHub
+      tag: v$(appveyor_build_version)
+      release: Xirorig v$(appveyor_build_version)
+      auth_token:
+        secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
+      artifact: x64-windows, x86-windows, arm-windows, arm64-windows
+      draft: true
+      prerelease: false
+
   -
     matrix:
       only:
@@ -136,6 +146,16 @@ for:
     - path: Xirorig/publish/arm64-linux.tar.gz
       name: arm64-linux
 
+    deploy:
+    - provider: GitHub
+      tag: v$(appveyor_build_version)
+      release: Xirorig v$(appveyor_build_version)
+      auth_token:
+        secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
+      artifact: x64-linux, arm-linux, arm64-linux
+      draft: true
+      prerelease: false
+
   -
     matrix:
       only:
@@ -145,12 +165,12 @@ for:
     - path: Xirorig/publish/x64-osx.tar.gz
       name: x64-osx
 
-deploy:
-- provider: GitHub
-  tag: v$(appveyor_build_version)
-  release: Xirorig v$(appveyor_build_version)
-  auth_token:
-    secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
-  artifact: x64-windows, x86-windows, arm-windows, arm64-windows, x64-linux, arm-linux, arm64-linux, x64-osx
-  draft: true
-  prerelease: false
+    deploy:
+    - provider: GitHub
+      tag: v$(appveyor_build_version)
+      release: Xirorig v$(appveyor_build_version)
+      auth_token:
+        secure: QwdWFtcb2ZSH9auLO0gQIhxsWRB88rHRvImJCrtJG/l/9bM2MCiVMGv0X4ivdFX3
+      artifact: x64-osx
+      draft: true
+      prerelease: false

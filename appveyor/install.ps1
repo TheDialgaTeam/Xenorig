@@ -104,11 +104,8 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     sudo apt-get update -y
     sudo apt-get install curl zip unzip tar p7zip-full cmake ninja-build build-essential pkg-config gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
 
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 10
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 20
-
-    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 10
-    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 20
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 999
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 999
 
     sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 20
     sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 20
@@ -119,7 +116,6 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     # Install dependencies
     brew update
     brew install ninja
-    brew install p7zip
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Windows") {
     # Install dotnet enviroment
     Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "${env:APPVEYOR_BUILD_FOLDER}/../dotnet-install.ps1"
@@ -130,7 +126,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Windows" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out"
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Windows"
     7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out/${env:XIRORIG_NATIVE_WINDOWS_ARTIFACT_NAME}"
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Linux") {
     # Install dependencies
@@ -146,7 +142,7 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out"
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux"
     7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out/${env:XIRORIG_NATIVE_LINUX_ARTIFACT_NAME}"
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig MacOS") {
     # Install dependencies
@@ -162,6 +158,6 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out" -ItemType Directory -Force
 
     # Download Xirorig Native Files
-    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS" -DownloadDirectory "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out"
+    Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS"
     7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out/${env:XIRORIG_NATIVE_MACOS_ARTIFACT_NAME}"
 }
