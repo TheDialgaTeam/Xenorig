@@ -29,35 +29,40 @@ environment:
   APPVEYOR_TOKEN_KEY:
     secure: 4mjknPTlxavQwOJz2inXWUTSHXpsCB8Vjbt3nUuRAM8=
 
-  XIRORIG_NATIVE_WINDOWS_ARTIFACT_NAME: Xirorig_Native_windows.zip
-  XIRORIG_NATIVE_LINUX_ARTIFACT_NAME: Xirorig_Native_linux.zip
-  XIRORIG_NATIVE_MACOS_ARTIFACT_NAME: Xirorig_Native_osx.zip
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
   XIRORIG_NATIVE_ROOT: Xirorig.Native/xirorig_native
-
-  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  XIRORIG_NATIVE_OUTPUT_ROOT: out
+  XIRORIG_NATIVE_BUILD_ROOT: build
+  XIRORIG_NATIVE_INSTALL_ROOT: install
 
   matrix:
   - job_name: Build Xirorig_Native Windows
     appveyor_build_worker_image: Visual Studio 2019
+    XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_windows.zip
 
   - job_name: Build Xirorig_Native Linux
     appveyor_build_worker_image: Ubuntu2004
+    XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_linux.zip
 
   - job_name: Build Xirorig_Native MacOS
     appveyor_build_worker_image: macos
+    XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_osx.zip
 
   - job_name: Build Xirorig Windows
     job_depends_on: Build Xirorig_Native Windows
     appveyor_build_worker_image: Visual Studio 2019
+    XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_windows.zip
 
   - job_name: Build Xirorig Linux
     job_depends_on: Build Xirorig_Native Linux
     appveyor_build_worker_image: Ubuntu2004
+    XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_linux.zip
 
   - job_name: Build Xirorig MacOS
     job_depends_on: Build Xirorig_Native MacOS
     appveyor_build_worker_image: macos
+    XIRORIG_NATIVE_ARTIFACT_NAME: Xirorig_Native_osx.zip
 
 matrix:
   fast_finish: true

@@ -1,8 +1,3 @@
-# APPVEYOR_TOKEN_KEY
-# XIRORIG_NATIVE_WINDOWS_ARTIFACT_NAME
-# XIRORIG_NATIVE_LINUX_ARTIFACT_NAME
-# XIRORIG_NATIVE_MACOS_ARTIFACT_NAME
-
 function Get-AppVeyorArtifacts
 {
     [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Low')]
@@ -107,27 +102,27 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 999
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 999
 
-    sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 20
-    sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 20
+    sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
+    sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
 
-    sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 20
-    sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 20
+    sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 999
+    sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native MacOS") {
     # Install dependencies
     brew update
     brew install ninja
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Windows") {
     # Install dotnet enviroment
-    Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "${env:APPVEYOR_BUILD_FOLDER}/../dotnet-install.ps1"
-    Set-Location ..
-    ./dotnet-install.ps1 -Channel 6.0 -Quality GA -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
+    Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "${env:APPVEYOR_BUILD_FOLDER}\..\dotnet-install.ps1"
+    Set-Location "${env:APPVEYOR_BUILD_FOLDER}\.."
+    ./dotnet-install.ps1 -Channel 6.0 -Quality GA -InstallDir "${env:APPVEYOR_BUILD_FOLDER}\..\dotnet"
 
     # Create Directories
-    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out" -ItemType Directory -Force
+    New-Item "${env:APPVEYOR_BUILD_FOLDER}\${env:XIRORIG_NATIVE_ROOT}\${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
     Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Windows"
-    7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out/${env:XIRORIG_NATIVE_WINDOWS_ARTIFACT_NAME}"
+    7z x "${env:APPVEYOR_BUILD_FOLDER}\${env:XIRORIG_NATIVE_ROOT}\${env:XIRORIG_NATIVE_OUTPUT_ROOT}\${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig Linux") {
     # Install dependencies
     sudo apt-get update -y
@@ -135,29 +130,25 @@ if (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig_Native Windows") {
 
     # Install dotnet enviroment
     Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "${env:APPVEYOR_BUILD_FOLDER}/../dotnet-install.sh"
-    Set-Location ..
+    Set-Location "${env:APPVEYOR_BUILD_FOLDER}/.."
     ./dotnet-install.sh -Channel 6.0 -Quality GA -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
 
     # Create Directories
-    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out" -ItemType Directory -Force
+    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
     Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native Linux"
-    7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out/${env:XIRORIG_NATIVE_LINUX_ARTIFACT_NAME}"
+    7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 } elseif (${env:APPVEYOR_JOB_NAME} -eq "Build Xirorig MacOS") {
-    # Install dependencies
-    brew update
-    brew install p7zip
-
     # Install dotnet enviroment
     Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "${env:APPVEYOR_BUILD_FOLDER}/../dotnet-install.sh"
-    Set-Location ..
+    Set-Location "${env:APPVEYOR_BUILD_FOLDER}/.."
     ./dotnet-install.sh -Channel 6.0 -Quality GA -InstallDir "${env:APPVEYOR_BUILD_FOLDER}/../dotnet"
 
     # Create Directories
-    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out" -ItemType Directory -Force
+    New-Item "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}" -ItemType Directory -Force
 
     # Download Xirorig Native Files
     Get-AppVeyorArtifacts ${env:APPVEYOR_ACCOUNT_NAME} ${env:APPVEYOR_PROJECT_NAME} -Token ${env:APPVEYOR_TOKEN_KEY} -JobName "Build Xirorig_Native MacOS"
-    7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/out/${env:XIRORIG_NATIVE_MACOS_ARTIFACT_NAME}"
+    7z x "${env:APPVEYOR_BUILD_FOLDER}/${env:XIRORIG_NATIVE_ROOT}/${env:XIRORIG_NATIVE_OUTPUT_ROOT}/${env:XIRORIG_NATIVE_ARTIFACT_NAME}"
 }
