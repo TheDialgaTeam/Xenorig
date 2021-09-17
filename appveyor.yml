@@ -11,25 +11,16 @@ skip_branch_with_pr: true
 pull_requests:
   do_not_increment_build_number: true
 
-clone_depth: 1
-
 test: off
-
-dotnet_csproj:
-  patch: true
-  file: '**\Xirorig.csproj'
-  version: '{version}'
-  version_prefix: '{version}'
-  package_version: '{version}'
-  assembly_version: '{version}'
-  file_version: '{version}'
-  informational_version: '{version}'
 
 environment:
   APPVEYOR_TOKEN_KEY:
     secure: 4mjknPTlxavQwOJz2inXWUTSHXpsCB8Vjbt3nUuRAM8=
 
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
+
+  DOTNET_VERSION: "6.0"
+  DOTNET_RELEASE_STATUS: GA
 
   XIRORIG_NATIVE_ROOT: Xirorig.Native/xirorig_native
   XIRORIG_NATIVE_OUTPUT_ROOT: out
@@ -67,6 +58,9 @@ environment:
 matrix:
   fast_finish: true
 
+clone_script:
+- pwsh: appveyor/clone_script.ps1
+
 install:
 - pwsh: appveyor/install.ps1
 
@@ -81,6 +75,7 @@ for:
     
     cache:
     - '%LOCALAPPDATA%/vcpkg'
+    - '%APPVEYOR_BUILD_FOLDER%/%XIRORIG_NATIVE_ROOT%/vcpkg/vcpkg.exe'
 
     artifacts:
     - path: Xirorig.Native/xirorig_native/out/install/Xirorig_Native_windows.zip
@@ -93,6 +88,7 @@ for:
 
     cache:
     - '$HOME/.cache/vcpkg'
+    - '%APPVEYOR_BUILD_FOLDER%/%XIRORIG_NATIVE_ROOT%/vcpkg/vcpkg'
 
     artifacts:
     - path: Xirorig.Native/xirorig_native/out/install/Xirorig_Native_linux.zip
@@ -105,6 +101,7 @@ for:
 
     cache:
     - '$HOME/.cache/vcpkg'
+    - '%APPVEYOR_BUILD_FOLDER%/%XIRORIG_NATIVE_ROOT%/vcpkg/vcpkg'
 
     artifacts:
     - path: Xirorig.Native/xirorig_native/out/install/Xirorig_Native_osx.zip
@@ -114,6 +111,16 @@ for:
     matrix:
       only:
         - job_name: Build Xirorig Windows
+
+    dotnet_csproj:
+      patch: true
+      file: '**\Xirorig.csproj'
+      version: '{version}'
+      version_prefix: '{version}'
+      package_version: '{version}'
+      assembly_version: '{version}'
+      file_version: '{version}'
+      informational_version: '{version}'
 
     artifacts:
     - path: Xirorig/publish/x64-windows.zip
@@ -140,6 +147,16 @@ for:
       only:
         - job_name: Build Xirorig Linux
 
+    dotnet_csproj:
+      patch: true
+      file: '**\Xirorig.csproj'
+      version: '{version}'
+      version_prefix: '{version}'
+      package_version: '{version}'
+      assembly_version: '{version}'
+      file_version: '{version}'
+      informational_version: '{version}'
+
     artifacts:
     - path: Xirorig/publish/x64-linux.tar.gz
       name: x64-linux
@@ -162,6 +179,16 @@ for:
     matrix:
       only:
         - job_name: Build Xirorig MacOS
+
+    dotnet_csproj:
+      patch: true
+      file: '**\Xirorig.csproj'
+      version: '{version}'
+      version_prefix: '{version}'
+      package_version: '{version}'
+      assembly_version: '{version}'
+      file_version: '{version}'
+      informational_version: '{version}'
 
     artifacts:
     - path: Xirorig/publish/x64-osx.tar.gz
