@@ -110,7 +110,7 @@ jobs:
         run: |
           $cmake_generator = 'Visual Studio 16 2019'
           $cmake_generator_platform = 'ARM'
-          $cmake_generator_toolset = 'v142 host=x64'
+          $cmake_generator_toolset = 'v142,host=x64'
 
           $cmake_build_type = 'Release'
           $cmake_target_triplet = 'arm-windows-static'
@@ -133,7 +133,7 @@ jobs:
         run: |
           $cmake_generator = 'Visual Studio 16 2019'
           $cmake_generator_platform = 'ARM64'
-          $cmake_generator_toolset = 'v142 host=x64'
+          $cmake_generator_toolset = 'v142,host=x64'
 
           $cmake_build_type = 'Release'
           $cmake_target_triplet = 'arm64-windows-static'
