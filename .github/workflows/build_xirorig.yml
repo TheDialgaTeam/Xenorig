@@ -166,6 +166,9 @@ jobs:
   build_xirorig_native_linux:
     name: Build Xirorig Native (linux)
     runs-on: ubuntu-latest
+    env:
+      CC: gcc-10
+      CXX: g++-10
 
     steps:
       # Init
@@ -190,9 +193,6 @@ jobs:
       # Build
       - name: Build Xirorig Native (x64)
         shell: pwsh
-        env:
-          CC: gcc-10
-          CXX: g++-10
         run: |
           $cmake_generator = 'Ninja'
 
@@ -255,6 +255,9 @@ jobs:
   build_xirorig_native_osx:
     name: Build Xirorig Native (osx)
     runs-on: macos-latest
+    env:
+      CC: gcc-10
+      CXX: g++-10
 
     steps:
       # Init
@@ -305,3 +308,31 @@ jobs:
         with:
           name: vcpkg-logs-${{ runner.os }}
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/buildtrees/**/*.log
+
+  build_xirorig_windows:
+    name: Build Xirorig (windows)
+    runs-on: windows-latest
+    needs: [ build_xirorig_native_windows ]
+  
+    steps:
+      # Init
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Create Xirorig Native (windows) artifact directory
+        shell: pwsh
+        run: |
+          $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
+          New-Item "$xirorig_native_install_root" -ItemType Directory -Force
+      
+      - name: Download Xirorig Native (windows) artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: xirorig_native_windows
+          path: ${{ github.workspace }}/${{ XIRORIG_NATIVE_INSTALL_ROOT }}
+
+      - name: Display structure of downloaded files
+        shell: pwsh
+        run: cd "${env:GITHUB_WORKSPACE}/${env:XIRORIG_NATIVE_INSTALL_ROOT}}" && ls -R

@@ -5,26 +5,20 @@ set(EXCLUDE_CPU_INFO_DEPENDENCY false CACHE BOOL "Exclude cpu info dependency")
 
 project(xirorig_native VERSION 1.0.0 DESCRIPTION "Xirorig Native Library")
 
-set(
-	XIRORIG_NATIVE_SOURCE_FILES
-		src/Algorithm/Xiropht/Decentralized/XirophtDecentralizedCpuMiner.c
-		src/Utility/Sha3Utility.c
-		src/Utility/Sha2Utility.c
-)
+set(XIRORIG_NATIVE_SOURCE_FILES
+	src/Algorithm/Xiropht/Decentralized/XirophtDecentralizedCpuMiner.c
+	src/Utility/Sha3Utility.c
+	src/Utility/Sha2Utility.c)
 
-set(
-	XIRORIG_NATIVE_PUBLIC_HEADER
-		${PROJECT_BINARY_DIR}/${PROJECT_NAME}_export.h
-		include/Algorithm/Xiropht/Decentralized/XirophtDecentralizedCpuMiner.h
-		include/Utility/Sha2Utility.h
-		include/Utility/Sha3Utility.h
-)
+set(XIRORIG_NATIVE_PUBLIC_HEADER
+	${PROJECT_BINARY_DIR}/${PROJECT_NAME}_export.h
+	include/Algorithm/Xiropht/Decentralized/XirophtDecentralizedCpuMiner.h
+	include/Utility/Sha2Utility.h
+	include/Utility/Sha3Utility.h)
 
-set(
-	XIRORIG_NATIVE_TARGET_LINK_LIBRARIES
-		OpenSSL::SSL OpenSSL::Crypto
-		lz4::lz4
-)
+set(XIRORIG_NATIVE_TARGET_LINK_LIBRARIES
+	OpenSSL::SSL OpenSSL::Crypto
+	lz4::lz4)
 
 if (MSVC)
 	set(XIRORIG_NATIVE_TARGET_LINK_LIBRARIES advapi32.lib crypt32.lib ${XIRORIG_NATIVE_TARGET_LINK_LIBRARIES})
@@ -33,7 +27,12 @@ endif()
 find_package(OpenSSL REQUIRED)
 find_package(lz4 CONFIG REQUIRED)
 
-if (NOT (${VCPKG_TARGET_TRIPLET} STREQUAL "arm-windows-static" OR ${VCPKG_TARGET_TRIPLET} STREQUAL "arm64-windows-static") OR NOT EXCLUDE_CPU_INFO_DEPENDENCY)
+set(EXCLUDE_CPU_INFO_WHEN_VCPKG_TARGET_TRIPLET_IN "arm-windows" "arm-windows-static" "arm64-windows" "arm64-windows-static")
+
+if (
+	(DEFINED VCPKG_TARGET_TRIPLET AND NOT (VCPKG_TARGET_TRIPLET IN_LIST EXCLUDE_CPU_INFO_WHEN_VCPKG_TARGET_TRIPLET_IN)) OR
+	(NOT DEFINED VCPKG_TARGET_TRIPLET AND NOT ${EXCLUDE_CPU_INFO_DEPENDENCY})
+)
 	set(XIRORIG_NATIVE_SOURCE_FILES src/Utility/CpuInformationUtility.c ${XIRORIG_NATIVE_SOURCE_FILES})
 	set(XIRORIG_NATIVE_PUBLIC_HEADER include/Utility/CpuInformationUtility.h ${XIRORIG_NATIVE_PUBLIC_HEADER})
 	set(XIRORIG_NATIVE_TARGET_LINK_LIBRARIES unofficial::cpuinfo::clog unofficial::cpuinfo::cpuinfo ${XIRORIG_NATIVE_TARGET_LINK_LIBRARIES})
