@@ -55,7 +55,7 @@ jobs:
 
       # Build
       - name: Build Xirorig Native (x64)
-        shell: powershell
+        shell: pwsh
         run: |
           $env:MSYSTEM = 'MINGW64'
 
@@ -80,7 +80,7 @@ jobs:
           msys2 -c "ninja -C `"$cmake_build_root`" install"
 
       - name: Build Xirorig Native (x86)
-        shell: powershell
+        shell: pwsh
         run: |
           $env:MSYSTEM = 'MINGW32'
 
@@ -105,7 +105,7 @@ jobs:
           msys2 -c "ninja -C `"$cmake_build_root`" install"
 
       - name: Build Xirorig Native (ARM32)
-        shell: powershell
+        shell: pwsh
         run: |
           $cmake_generator = 'Visual Studio 16 2019'
           $cmake_generator_platform = 'ARM'
@@ -128,7 +128,7 @@ jobs:
           cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm.bat`" && cmake -G `"$cmake_generator`" -A `"$cmake_generator_platform`" -T `"$cmake_generator_toolset`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && msbuild.exe `"$msbuild_install_root`" -p:Configuration=`"$cmake_build_type`""
 
       - name: Build Xirorig Native (ARM64)
-        shell: powershell
+        shell: pwsh
         run: |
           $cmake_generator = 'Visual Studio 16 2019'
           $cmake_generator_platform = 'ARM64'
