@@ -290,3 +290,21 @@ jobs:
         with:
           name: xirorig_native_osx
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
+
+  test:
+    name: Testing
+    runs-on: macos-latest
+
+    steps:
+      - name: Test
+        id: test
+        shell: pwsh
+        run: |
+          echo "::set-output name=vcpkg_cache::$HOME/.cache/vcpkg"
+
+      - name: Output
+        env:
+          TEST: ${{ steps.test.output.vcpkg_cache }}
+        shell: pwsh
+        run: |
+          echo "${env:TEST}"
