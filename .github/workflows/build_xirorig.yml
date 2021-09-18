@@ -24,6 +24,8 @@ env:
   TEMP_DIRECTORY: 'temp'
   DOTNET_PATH: 'temp/dotnet'
 
+  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite
+
 jobs:
   build_xirorig_native_windows:
     name: Build Xirorig Native (windows)
@@ -41,6 +43,17 @@ jobs:
         with:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
+
+      - name: Setup NuGet Credentials
+        shell: 'bash'
+        run: >
+          `./vcpkg/vcpkg fetch nuget | tail -n 1`
+          sources add
+          -source "https://nuget.pkg.github.com/TheDialgaTeam/index.json"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "TheDialgaTeam"
+          -password "${{ secrets.GITHUB_TOKEN }}"
 
       # Install
       - name: Setup msys2 environemnt
@@ -183,6 +196,17 @@ jobs:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
 
+      - name: Setup NuGet Credentials
+        shell: 'bash'
+        run: >
+          `./vcpkg/vcpkg fetch nuget | tail -n 1`
+          sources add
+          -source "https://nuget.pkg.github.com/TheDialgaTeam/index.json"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "TheDialgaTeam"
+          -password "${{ secrets.GITHUB_TOKEN }}"
+
       # Install
       - name: Install Dependency
         shell: pwsh
@@ -280,6 +304,17 @@ jobs:
         with:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
+
+      - name: Setup NuGet Credentials
+        shell: 'bash'
+        run: >
+          `./vcpkg/vcpkg fetch nuget | tail -n 1`
+          sources add
+          -source "https://nuget.pkg.github.com/TheDialgaTeam/index.json"
+          -storepasswordincleartext
+          -name "GitHub"
+          -username "TheDialgaTeam"
+          -password "${{ secrets.GITHUB_TOKEN }}"
 
       # Install
       - name: Install ninja
