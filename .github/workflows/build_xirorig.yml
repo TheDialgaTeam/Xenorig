@@ -177,6 +177,71 @@ jobs:
             ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg
           key: ${{ runner.os }}-vcpkg
 
+      # Install
+      - name: Install Dependency
+        shell: pwsh
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install curl zip unzip tar cmake ninja-build build-essential pkg-config gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
+      
+      # Build
+      - name: Build Xirorig Native (x64)
+        shell: pwsh
+        env:
+          CC: gcc-10
+          CXX: g++-10
+        run: |
+          $cmake_generator = 'Ninja'
+
+          $cmake_build_type = 'Release'
+          $cmake_target_triplet = 'x64-linux'
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'linux-x64'
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'linux-x64'
+
+          cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+          ninja -C "$cmake_build_root" install
+
+      - name: Build Xirorig Native (ARM32)
+        shell: pwsh
+        run: |
+          $cmake_generator = 'Ninja'
+
+          $cmake_build_type = 'Release'
+          $cmake_target_triplet = 'arm-linux'
+          $cmake_toolchain_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'cmake' 'raspberrypi-arm.cmake'
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'linux-ARM32'
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'linux-ARM32'
+
+          cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+          ninja -C "$cmake_build_root" install
+
+      - name: Build Xirorig Native (ARM64)
+        shell: pwsh
+        run: |
+          $cmake_generator = 'Ninja'
+
+          $cmake_build_type = 'Release'
+          $cmake_target_triplet = 'arm64-linux'
+          $cmake_toolchain_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'cmake' 'raspberrypi-arm.cmake'
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'linux-ARM64'
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'linux-ARM64'
+
+          cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+          ninja -C "$cmake_build_root" install
+
+      # Upload Artifacts
+      - name: Upload Xirorig Native artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: xirorig_native_linux
+          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
+
   build_xirorig_native_osx:
     name: Build Xirorig Native (osx)
     runs-on: macos-latest
