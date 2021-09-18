@@ -12,6 +12,7 @@ on:
   workflow_dispatch:
 
 env:
+  XIRORIG_CSPROJ_FILE: Xirorig/Xirorig.csproj
   XIRORIG_PUBLISH_ROOT: Xirorig/publish
 
   XIRORIG_NATIVE_SOURCE_ROOT: Xirorig.Native/xirorig_native
@@ -48,7 +49,7 @@ jobs:
         shell: 'pwsh'
         run: |
           $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg.exe'
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | select-object -last 1
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
 
           Invoke-Expression "$nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
 
@@ -197,7 +198,7 @@ jobs:
         shell: 'pwsh'
         run: |
           $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | select-object -last 1
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
 
           Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
 
@@ -303,7 +304,7 @@ jobs:
         shell: 'pwsh'
         run: |
           $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | select-object -last 1
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
 
           Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
 
@@ -381,6 +382,26 @@ jobs:
           Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "$dotnet_install_script_file_path"
           Invoke-Expression "$dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
 
+      # Before Build
+      - name: Get version number
+        id: version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ github.ref }}
+        shell: pwsh
+        run: |
+          $version = (${env:VERSION} -split "/" | Select-Object -last 1).Replace('v', '')
+          Write-Output "::set-output name=version::$version"
+
+      - name: Patch Xirorig csproj
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: pwsh
+        run: |
+          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
+          (Get-Content "$csproj_file") -replace '^(\s*<Version>).+?(<\/Version>\s*)$' "`$1${env:VERSION}`$2" | Set-Content "$csproj_file"
+
       # Build
       - name: Build Xirorig
         shell: pwsh
@@ -447,6 +468,26 @@ jobs:
 
           Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
           /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
+
+      # Before Build
+      - name: Get version number
+        id: version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ github.ref }}
+        shell: pwsh
+        run: |
+          $version = (${env:VERSION} -split "/" | Select-Object -last 1).Replace('v', '')
+          Write-Output "::set-output name=version::$version"
+
+      - name: Patch Xirorig csproj
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: pwsh
+        run: |
+          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
+          (Get-Content "$csproj_file") -replace '^(\s*<Version>).+?(<\/Version>\s*)$' "`$1${env:VERSION}`$2" | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
@@ -517,6 +558,26 @@ jobs:
 
           Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
           /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
+
+      # Before Build
+      - name: Get version number
+        id: version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ github.ref }}
+        shell: pwsh
+        run: |
+          $version = (${env:VERSION} -split "/" | Select-Object -last 1).Replace('v', '')
+          Write-Output "::set-output name=version::$version"
+
+      - name: Patch Xirorig csproj
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: pwsh
+        run: |
+          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
+          (Get-Content "$csproj_file") -replace '^(\s*<Version>).+?(<\/Version>\s*)$' "`$1${env:VERSION}`$2" | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
