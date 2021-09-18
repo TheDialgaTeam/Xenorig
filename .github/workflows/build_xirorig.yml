@@ -33,13 +33,11 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Restore vcpkg cache
-        uses: actions/cache@v2
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v7
         with:
-          path: |
-            %LOCALAPPDATA%/vcpkg
-            ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg.exe
-          key: ${{ runner.os }}-vcpkg
+          setupOnly: true
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
 
       # Install
       - name: Setup msys2 environemnt
@@ -158,6 +156,13 @@ jobs:
           name: xirorig_native_windows
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
 
+      - name: Upload vcpkg build logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: vcpkg-logs-${{ runner.os }}
+          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/buildtrees/**/*.log
+
   build_xirorig_native_linux:
     name: Build Xirorig Native (linux)
     runs-on: ubuntu-latest
@@ -169,20 +174,18 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Restore vcpkg cache
-        uses: actions/cache@v2
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v7
         with:
-          path: |
-            $HOME/.cache/vcpkg
-            ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg
-          key: ${{ runner.os }}-vcpkg
+          setupOnly: true
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
 
       # Install
       - name: Install Dependency
         shell: pwsh
         run: |
           sudo apt-get update -y
-          sudo apt-get install curl zip unzip tar cmake ninja-build build-essential pkg-config gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
+          sudo apt-get install curl zip unzip tar p7zip-full cmake ninja-build build-essential pkg-config gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
       
       # Build
       - name: Build Xirorig Native (x64)
@@ -242,6 +245,13 @@ jobs:
           name: xirorig_native_linux
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
 
+      - name: Upload vcpkg build logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: vcpkg-logs-${{ runner.os }}
+          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/buildtrees/**/*.log
+
   build_xirorig_native_osx:
     name: Build Xirorig Native (osx)
     runs-on: macos-latest
@@ -253,13 +263,11 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Restore vcpkg cache
-        uses: actions/cache@v2
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v7
         with:
-          path: |
-            $HOME/.cache/vcpkg
-            ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg
-          key: ${{ runner.os }}-vcpkg
+          setupOnly: true
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
 
       # Install
       - name: Install ninja
@@ -291,20 +299,9 @@ jobs:
           name: xirorig_native_osx
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
 
-  test:
-    name: Testing
-    runs-on: macos-latest
-
-    steps:
-      - name: Test
-        id: test
-        shell: pwsh
-        run: |
-          echo "::set-output name=vcpkg_cache::$HOME/.cache/vcpkg"
-
-      - name: Output
-        env:
-          TEST: ${{ steps.test.outputs.vcpkg_cache }}
-        shell: pwsh
-        run: |
-          echo "${env:TEST}"
+      - name: Upload vcpkg build logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: vcpkg-logs-${{ runner.os }}
+          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/buildtrees/**/*.log
