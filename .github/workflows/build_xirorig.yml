@@ -25,7 +25,7 @@ env:
   TEMP_DIRECTORY: 'temp'
   DOTNET_PATH: 'temp/dotnet'
 
-  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite
+  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;files,${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed,readwrite;default,readwrite
 
 jobs:
   build_xirorig_native_windows:
@@ -44,6 +44,7 @@ jobs:
         with:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
+          additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
 
       - name: Setup NuGet Credentials
         shell: 'pwsh'
@@ -193,6 +194,7 @@ jobs:
         with:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
+          additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
 
       - name: Setup NuGet Credentials
         shell: 'pwsh'
@@ -299,6 +301,7 @@ jobs:
         with:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
+          additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
 
       - name: Setup NuGet Credentials
         shell: 'pwsh'
