@@ -341,7 +341,7 @@ jobs:
 
       - name: Display structure of downloaded files
         shell: pwsh
-        run: cd "${env:GITHUB_WORKSPACE}/${env:XIRORIG_NATIVE_INSTALL_ROOT}}" && ls -R
+        run: cd "${env:GITHUB_WORKSPACE}/${env:XIRORIG_NATIVE_INSTALL_ROOT}" && ls -R
 
   build_xirorig_linux:
     name: Build Xirorig (linux)
@@ -369,7 +369,7 @@ jobs:
 
       - name: Display structure of downloaded files
         shell: pwsh
-        run: cd "${env:GITHUB_WORKSPACE}/${env:XIRORIG_NATIVE_INSTALL_ROOT}}" && ls -R
+        run: cd "${env:GITHUB_WORKSPACE}/${env:XIRORIG_NATIVE_INSTALL_ROOT}" && ls -R
 
   build_xirorig_osx:
     name: Build Xirorig (osx)
@@ -397,4 +397,4 @@ jobs:
 
       - name: Display structure of downloaded files
         shell: pwsh
-        run: cd "${env:GITHUB_WORKSPACE}/${env:XIRORIG_NATIVE_INSTALL_ROOT}}" && ls -R
+        run: cd "${env:GITHUB_WORKSPACE}/${env:XIRORIG_NATIVE_INSTALL_ROOT}" && ls -R
