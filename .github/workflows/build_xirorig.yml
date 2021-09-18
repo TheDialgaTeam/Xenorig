@@ -45,15 +45,12 @@ jobs:
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
 
       - name: Setup NuGet Credentials
-        shell: 'bash'
-        run: >
-          `./vcpkg/vcpkg fetch nuget | tail -n 1`
-          sources add
-          -source "https://nuget.pkg.github.com/TheDialgaTeam/index.json"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "TheDialgaTeam"
-          -password "${{ secrets.GITHUB_TOKEN }}"
+        shell: 'pwsh'
+        run: |
+          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg.exe'
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | select-object -last 1
+
+          Invoke-Expression "$nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
 
       # Install
       - name: Setup msys2 environemnt
@@ -197,15 +194,12 @@ jobs:
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
 
       - name: Setup NuGet Credentials
-        shell: 'bash'
-        run: >
-          `./vcpkg/vcpkg fetch nuget | tail -n 1`
-          sources add
-          -source "https://nuget.pkg.github.com/TheDialgaTeam/index.json"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "TheDialgaTeam"
-          -password "${{ secrets.GITHUB_TOKEN }}"
+        shell: 'pwsh'
+        run: |
+          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | select-object -last 1
+
+          Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
 
       # Install
       - name: Install Dependency
@@ -306,15 +300,12 @@ jobs:
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
 
       - name: Setup NuGet Credentials
-        shell: 'bash'
-        run: >
-          `./vcpkg/vcpkg fetch nuget | tail -n 1`
-          sources add
-          -source "https://nuget.pkg.github.com/TheDialgaTeam/index.json"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "TheDialgaTeam"
-          -password "${{ secrets.GITHUB_TOKEN }}"
+        shell: 'pwsh'
+        run: |
+          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg.exe'
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | select-object -last 1
+
+          Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
 
       # Install
       - name: Install ninja
