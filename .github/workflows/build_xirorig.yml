@@ -304,7 +304,7 @@ jobs:
 
       - name: Output
         env:
-          TEST: ${{ steps.test.output.vcpkg_cache }}
+          TEST: ${{ steps.test.outputs.vcpkg_cache }}
         shell: pwsh
         run: |
           echo "${env:TEST}"
