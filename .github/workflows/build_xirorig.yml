@@ -39,7 +39,7 @@ jobs:
           path: |
             %LOCALAPPDATA%/vcpkg
             ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg.exe
-          keys: ${{ runner.os }}-vcpkg
+          key: ${{ runner.os }}-vcpkg
 
       # Install
       - name: Setup msys2 environemnt
