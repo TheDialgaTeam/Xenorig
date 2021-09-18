@@ -166,9 +166,6 @@ jobs:
   build_xirorig_native_linux:
     name: Build Xirorig Native (linux)
     runs-on: ubuntu-latest
-    env:
-      CC: gcc-10
-      CXX: g++-10
 
     steps:
       # Init
@@ -192,6 +189,9 @@ jobs:
       
       # Build
       - name: Build Xirorig Native (x64)
+        env:
+          CC: gcc-10
+          CXX: g++-10
         shell: pwsh
         run: |
           $cmake_generator = 'Ninja'
@@ -207,6 +207,9 @@ jobs:
           ninja -C "$cmake_build_root" install
 
       - name: Build Xirorig Native (ARM32)
+        env:
+          CC: arm-linux-gnueabihf-gcc-10
+          CXX: arm-linux-gnueabihf-g++-10
         shell: pwsh
         run: |
           $cmake_generator = 'Ninja'
@@ -223,6 +226,9 @@ jobs:
           ninja -C "$cmake_build_root" install
 
       - name: Build Xirorig Native (ARM64)
+        env:
+          CC: aarch64-linux-gnu-gcc-10
+          CXX: aarch64-linux-gnu-g++-10
         shell: pwsh
         run: |
           $cmake_generator = 'Ninja'
