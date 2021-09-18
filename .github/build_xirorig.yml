@@ -1,0 +1,158 @@
+name: Build and Deploy Xirorig
+
+on:
+  push:
+    branches:
+    - xirorig_future
+
+  pull_request:
+    branches:
+    - xirorig_future
+
+  workflow_dispatch:
+
+env:
+  XIRORIG_PUBLISH_ROOT: Xirorig/publish
+
+  XIRORIG_NATIVE_SOURCE_ROOT: Xirorig.Native/xirorig_native
+  XIRORIG_NATIVE_BUILD_ROOT: Xirorig.Native/xirorig_native/out/build
+  XIRORIG_NATIVE_INSTALL_ROOT: Xirorig.Native/xirorig_native/out/install
+
+  DOTNET_VERSION: '6.0'
+  DOTNET_RELEASE_STATUS: GA
+
+jobs:
+  build_xirorig_native_windows:
+    name: Build Xirorig Native (windows)
+    runs-on: windows-latest
+
+    steps:
+      # Init
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Download vcpkg cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            %LOCALAPPDATA%/vcpkg
+            ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg.exe
+          keys: ${{ runner.os }}-vcpkg
+
+      # Install
+      - name: Setup msys2 environemnt
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-ninja
+            mingw-w64-i686-toolchain
+            mingw-w64-i686-ninja
+
+      # Build
+      - name: Build Xirorig Native (x64)
+        shell: powershell
+        run: |
+          $env:MSYSTEM = 'MINGW64'
+
+          $cmake_generator = 'Ninja'
+
+          $cmake_build_type = 'Release'
+          $cmake_target_triplet = 'x64-mingw-static'
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_source_root = $cmake_source_root.Replace('C:\', '/C/')
+          $cmake_source_root = $cmake_source_root.Replace('\', '/')
+
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-x64'
+          $cmake_build_root = $cmake_build_root.Replace('C:\', '/C/')
+          $cmake_build_root = $cmake_build_root.Replace('\', '/')
+
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-x64'
+          $cmake_install_prefix = $cmake_install_prefix.Replace('C:\', '/C/')
+          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
+
+          msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
+          msys2 -c "ninja -C `"$cmake_build_root`" install"
+
+      - name: Build Xirorig Native (x86)
+        shell: powershell
+        run: |
+          $env:MSYSTEM = 'MINGW32'
+
+          $cmake_generator = 'Ninja'
+
+          $cmake_build_type = 'Release'
+          $cmake_target_triplet = 'x86-mingw-static'
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_source_root = $cmake_source_root.Replace('C:\', '/C/')
+          $cmake_source_root = $cmake_source_root.Replace('\', '/')
+
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-x86'
+          $cmake_build_root = $cmake_build_root.Replace('C:\', '/C/')
+          $cmake_build_root = $cmake_build_root.Replace('\', '/')
+
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-x86'
+          $cmake_install_prefix = $cmake_install_prefix.Replace('C:\', '/C/')
+          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
+
+          msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
+          msys2 -c "ninja -C `"$cmake_build_root`" install"
+
+      - name: Build Xirorig Native (ARM32)
+        shell: powershell
+        run: |
+          $cmake_generator = 'Visual Studio 16 2019'
+          $cmake_generator_platform = 'ARM'
+          $cmake_generator_toolset = 'v142 host=x64'
+
+          $cmake_build_type = 'Release'
+          $cmake_target_triplet = 'arm-windows-static'
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_source_root = $cmake_source_root.Replace('\', '/')
+
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-ARM32'
+          $cmake_build_root = $cmake_build_root.Replace('\', '/')
+
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-ARM32'
+          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
+
+          $msbuild_install_root = Join-Path "$cmake_build_root" 'INSTALL.vcxproj'
+
+          cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm.bat`" && cmake -G `"$cmake_generator`" -A `"$cmake_generator_platform`" -T `"$cmake_generator_toolset`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && msbuild.exe `"$msbuild_install_root`" -p:Configuration=`"$cmake_build_type`""
+
+      - name: Build Xirorig Native (ARM64)
+        shell: powershell
+        run: |
+          $cmake_generator = 'Visual Studio 16 2019'
+          $cmake_generator_platform = 'ARM64'
+          $cmake_generator_toolset = 'v142 host=x64'
+
+          $cmake_build_type = 'Release'
+          $cmake_target_triplet = 'arm64-windows-static'
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_source_root = $cmake_source_root.Replace('\', '/')
+
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-ARM64'
+          $cmake_build_root = $cmake_build_root.Replace('\', '/')
+
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-ARM64'
+          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
+
+          $msbuild_install_root = Join-Path "$cmake_build_root" 'INSTALL.vcxproj'
+
+          cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat`" && cmake -G `"$cmake_generator`" -A `"$cmake_generator_platform`" -T `"$cmake_generator_toolset`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && msbuild.exe `"$msbuild_install_root`" -p:Configuration=`"$cmake_build_type`""
+
+      # Upload Artifacts
+      - name: Upload Xirorig Native artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: xirorig_native_windows
+          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
