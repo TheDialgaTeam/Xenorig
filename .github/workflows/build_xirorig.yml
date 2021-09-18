@@ -11,8 +11,6 @@ on:
 
   workflow_dispatch:
 
-concurrency: build_xirorig
-
 env:
   XIRORIG_PUBLISH_ROOT: Xirorig/publish
 
