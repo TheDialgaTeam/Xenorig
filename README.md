@@ -1,7 +1,7 @@
 # Xirorig
 ***This miner is inspired by [XMRig](https://github.com/xmrig/xmrig) and thus the similarity in UI design. The codes are 100% original.***
 
-[![Build status](https://ci.appveyor.com/api/projects/status/bub2nmai1dhy9aah?svg=true)](https://ci.appveyor.com/project/jianmingyong/xirorig)
+[![Build and Deploy Xirorig](https://github.com/TheDialgaTeam/Xirorig/actions/workflows/build_xirorig.yml/badge.svg?branch=xirorig_future)](https://github.com/TheDialgaTeam/Xirorig/actions/workflows/build_xirorig.yml)
 
 Xirorig is a high performance Xiropht (XIRO) miner, with official support for Windows, Linux, and MacOS. Originally based on [SeguraChain-Solo-Miner](https://github.com/SamSegura/segurachain) with heavy optimizations/rewrites.
 
