@@ -302,7 +302,7 @@ jobs:
       - name: Setup NuGet Credentials
         shell: 'pwsh'
         run: |
-          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg.exe'
+          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
           $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | select-object -last 1
 
           Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
