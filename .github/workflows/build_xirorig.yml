@@ -518,3 +518,39 @@ jobs:
         with:
           name: xirorig_osx
           path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.tar.gz
+
+  deploy_xirorig:
+    name: Deploy Xirorig
+    runs-on: ubuntu-latest
+    needs: [ build_xirorig_windows, build_xirorig_linux, build_xirorig_osx ]
+
+    steps:
+      # Init
+      - name: Create Xirorig artifact directory
+        shell: pwsh
+        run: |
+          $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
+          New-Item "$xirorig_native_install_root" -ItemType Directory -Force
+
+      - name: Download Xirorig artifact (windows)
+        uses: actions/download-artifact@v2
+        with:
+          name: xirorig_windows
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      - name: Download Xirorig artifact (linux)
+        uses: actions/download-artifact@v2
+        with:
+          name: xirorig_linux
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      - name: Download Xirorig artifact (osx)
+        uses: actions/download-artifact@v2
+        with:
+          name: xirorig_osx
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      # Deploy
+      - name: Deploy Xirorig
+        shell: pwsh
+        run: echo "Dummy Template"
