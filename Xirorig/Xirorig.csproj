@@ -50,16 +50,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\libxirorig_native.dll')">
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\windows-$(Platform)\bin\libxirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\windows-$(Platform)\bin\libxirorig_native.dll')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-        <None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\xirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-windows\bin\xirorig_native.dll')">
+        <None Include="..\Xirorig.Native\xirorig_native\out\install\windows-$(Platform)\bin\xirorig_native.dll" Link="xirorig_native.dll" Condition="$(Configuration.Contains('windows')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\windows-$(Platform)\bin\xirorig_native.dll')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0" Link="libxirorig_native.so" Condition="$(Configuration.Contains('linux')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-linux\lib\libxirorig_native.so.1.0.0')">
+		<None Include="..\Xirorig.Native\xirorig_native\out\install\linux-$(Platform)\lib\libxirorig_native.so.1.0.0" Link="libxirorig_native.so" Condition="$(Configuration.Contains('linux')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\linux-$(Platform)\lib\libxirorig_native.so.1.0.0')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-        <None Include="..\Xirorig.Native\xirorig_native\out\install\$(Platform)-osx\lib\libxirorig_native.dylib" Link="libxirorig_native.dylib" Condition="$(Configuration.Contains('osx')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\$(Platform)-osx\lib\libxirorig_native.dylib')">
+        <None Include="..\Xirorig.Native\xirorig_native\out\install\osx-$(Platform)\lib\libxirorig_native.dylib.1.0.0" Link="libxirorig_native.dylib" Condition="$(Configuration.Contains('osx')) AND Exists('..\Xirorig.Native\xirorig_native\out\install\osx-$(Platform)\lib\libxirorig_native.dylib.1.0.0')">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
