@@ -331,7 +331,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: xirorig_native_windows
-          path: ${{ github.workspace }}/${{ XIRORIG_NATIVE_INSTALL_ROOT }}
+          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
 
       - name: Display structure of downloaded files
         shell: pwsh
