@@ -359,7 +359,7 @@ jobs:
       - name: Build Xirorig
         shell: pwsh
         run: |
-          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
+          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
 
           Invoke-Expression "$dotnet publish -p:PublishProfile=windows-x64.pubxml -p:Platform=x64 -c Release_windows"
           Invoke-Expression "$dotnet publish -p:PublishProfile=windows-x86.pubxml -p:Platform=x86 -c Release_windows"
@@ -426,7 +426,7 @@ jobs:
       - name: Build Xirorig
         shell: pwsh
         run: |
-          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
+          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
 
           Invoke-Expression "$dotnet publish -p:PublishProfile=linux-x64.pubxml -p:Platform=x64 -c Release_linux"
           Invoke-Expression "$dotnet publish -p:PublishProfile=linux-arm.pubxml -p:Platform=ARM32 -c Release_linux"
@@ -496,7 +496,7 @@ jobs:
       - name: Build Xirorig
         shell: pwsh
         run: |
-          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
+          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
 
           Invoke-Expression "$dotnet publish -p:PublishProfile=osx-x64.pubxml -p:Platform=x64 -c Release_osx"
 
