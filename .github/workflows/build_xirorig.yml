@@ -358,19 +358,14 @@ jobs:
           Invoke-Expression "$dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
 
       # Before Build
-      - id: version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
-          Write-Output "::set-output name=version::$version"
-
       - name: Patch Xirorig csproj
         if: startsWith(github.ref, 'refs/tags/')
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>${env:VERSION}</Version>`$2") | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
@@ -434,19 +429,14 @@ jobs:
           /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
 
       # Before Build
-      - id: version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
-          Write-Output "::set-output name=version::$version"
-
       - name: Patch Xirorig csproj
         if: startsWith(github.ref, 'refs/tags/')
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>${env:VERSION}</Version>`$2") | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
@@ -513,19 +503,14 @@ jobs:
           /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
 
       # Before Build
-      - id: version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
-          Write-Output "::set-output name=version::$version"
-
       - name: Patch Xirorig csproj
         if: startsWith(github.ref, 'refs/tags/')
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>${env:VERSION}</Version>`$2") | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
