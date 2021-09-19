@@ -3,7 +3,9 @@ name: Build and Deploy Xirorig
 on:
   push:
     branches:
-    - xirorig_future
+      - xirorig_future
+    tags:
+      - v1.*
 
   pull_request:
     branches:
@@ -25,7 +27,15 @@ env:
   TEMP_DIRECTORY: 'temp'
   DOTNET_PATH: 'temp/dotnet'
 
-  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;files,${{ github.workspace }}/Xirorig.Native/xirorig_native/vcpkg/vcpkg_installed,readwrite;default,readwrite
+  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;files,${{ github.workspace }}/Xirorig.Native/xirorig_native/vcpkg/vcpkg_installed,readwrite
+
+defaults:
+  run:
+    shell: pwsh
+
+concurrency: 
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   build_xirorig_native_windows:
@@ -47,7 +57,6 @@ jobs:
           additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
 
       - name: Setup NuGet Credentials
-        shell: 'pwsh'
         run: |
           $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg.exe'
           $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
@@ -69,7 +78,6 @@ jobs:
 
       # Build
       - name: Build Xirorig Native (x64)
-        shell: pwsh
         run: |
           $env:MSYSTEM = 'MINGW64'
 
@@ -94,7 +102,6 @@ jobs:
           msys2 -c "ninja -C `"$cmake_build_root`" install"
 
       - name: Build Xirorig Native (x86)
-        shell: pwsh
         run: |
           $env:MSYSTEM = 'MINGW32'
 
@@ -119,7 +126,6 @@ jobs:
           msys2 -c "ninja -C `"$cmake_build_root`" install"
 
       - name: Build Xirorig Native (ARM32)
-        shell: pwsh
         run: |
           $cmake_generator = 'Visual Studio 16 2019'
           $cmake_generator_platform = 'ARM'
@@ -142,7 +148,6 @@ jobs:
           cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm.bat`" && cmake -G `"$cmake_generator`" -A `"$cmake_generator_platform`" -T `"$cmake_generator_toolset`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && msbuild.exe `"$msbuild_install_root`" -p:Configuration=`"$cmake_build_type`""
 
       - name: Build Xirorig Native (ARM64)
-        shell: pwsh
         run: |
           $cmake_generator = 'Visual Studio 16 2019'
           $cmake_generator_platform = 'ARM64'
@@ -171,13 +176,6 @@ jobs:
           name: xirorig_native_windows
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
 
-      - name: Upload vcpkg build logs
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: vcpkg-logs-${{ runner.os }}
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/buildtrees/**/*.log
-
   build_xirorig_native_linux:
     name: Build Xirorig Native (linux)
     runs-on: ubuntu-latest
@@ -197,7 +195,6 @@ jobs:
           additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
 
       - name: Setup NuGet Credentials
-        shell: 'pwsh'
         run: |
           $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
           $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
@@ -206,7 +203,6 @@ jobs:
 
       # Install
       - name: Install Dependency
-        shell: pwsh
         run: |
           sudo apt-get update -y
           sudo apt-get install curl zip unzip tar p7zip-full cmake ninja-build build-essential pkg-config gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
@@ -222,7 +218,6 @@ jobs:
         env:
           CC: gcc-10
           CXX: g++-10
-        shell: pwsh
         run: |
           $cmake_generator = 'Ninja'
 
@@ -237,7 +232,6 @@ jobs:
           ninja -C "$cmake_build_root" install
 
       - name: Build Xirorig Native (ARM32)
-        shell: pwsh
         run: |
           $cmake_generator = 'Ninja'
 
@@ -253,7 +247,6 @@ jobs:
           ninja -C "$cmake_build_root" install
 
       - name: Build Xirorig Native (ARM64)
-        shell: pwsh
         run: |
           $cmake_generator = 'Ninja'
 
@@ -274,13 +267,6 @@ jobs:
         with:
           name: xirorig_native_linux
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
-
-      - name: Upload vcpkg build logs
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: vcpkg-logs-${{ runner.os }}
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/buildtrees/**/*.log
 
   build_xirorig_native_osx:
     name: Build Xirorig Native (osx)
@@ -304,7 +290,6 @@ jobs:
           additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
 
       - name: Setup NuGet Credentials
-        shell: 'pwsh'
         run: |
           $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
           $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
@@ -313,14 +298,12 @@ jobs:
 
       # Install
       - name: Install ninja
-        shell: pwsh
         run: |
           brew update
           brew install ninja
 
       # Build
       - name: Build Xirorig Native (x64)
-        shell: pwsh
         run: |
           $cmake_generator = 'Ninja'
 
@@ -341,13 +324,6 @@ jobs:
           name: xirorig_native_osx
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
 
-      - name: Upload vcpkg build logs
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: vcpkg-logs-${{ runner.os }}
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/buildtrees/**/*.log
-
   build_xirorig_windows:
     name: Build Xirorig (windows)
     runs-on: windows-latest
@@ -361,10 +337,9 @@ jobs:
           submodules: 'recursive'
 
       - name: Create Xirorig Native artifact directory
-        shell: pwsh
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
-          New-Item "$xirorig_native_install_root" -ItemType "Directory" -Force
+          New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
       
       - name: Download Xirorig Native artifact
         uses: actions/download-artifact@v2
@@ -374,40 +349,31 @@ jobs:
 
       # Install
       - name: Install target dotnet
-        shell: pwsh
         run: |
           $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
           $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.ps1'
           $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
 
-          New-Item "$temp_directory" -ItemType "Directory" -Force
-
           Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "$dotnet_install_script_file_path"
           Invoke-Expression "$dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
 
       # Before Build
-      - name: Get version number
-        id: version
+      - id: version
         if: startsWith(github.ref, 'refs/tags/')
-        env:
-          VERSION: ${{ github.ref }}
-        shell: pwsh
         run: |
-          $version = (${env:VERSION} -split "/" | Select-Object -last 1).Replace('v', '')
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
           Write-Output "::set-output name=version::$version"
 
       - name: Patch Xirorig csproj
         if: startsWith(github.ref, 'refs/tags/')
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        shell: pwsh
         run: |
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          (Get-Content "$csproj_file") -replace '^(\s*<Version>).+?(<\/Version>\s*)$' "`$1${env:VERSION}`$2" | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>${env:VERSION}</Version>`$2") | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
-        shell: pwsh
         run: |
           $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
 
@@ -418,7 +384,6 @@ jobs:
 
       # Package
       - name: Package Xirorig
-        shell: pwsh
         run: |
           $xirorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
           Set-Location "$xirorig_publish_root"
@@ -448,10 +413,9 @@ jobs:
           submodules: 'recursive'
 
       - name: Create Xirorig Native artifact directory
-        shell: pwsh
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
-          New-Item "$xirorig_native_install_root" -ItemType Directory -Force
+          New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
       
       - name: Download Xirorig Native artifact
         uses: actions/download-artifact@v2
@@ -461,40 +425,31 @@ jobs:
 
       # Install
       - name: Install target dotnet
-        shell: pwsh
         run: |
           $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
           $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.sh'
           $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
 
-          New-Item "$temp_directory" -ItemType "Directory" -Force
-
           Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
           /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
 
       # Before Build
-      - name: Get version number
-        id: version
+      - id: version
         if: startsWith(github.ref, 'refs/tags/')
-        env:
-          VERSION: ${{ github.ref }}
-        shell: pwsh
         run: |
-          $version = (${env:VERSION} -split "/" | Select-Object -last 1).Replace('v', '')
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
           Write-Output "::set-output name=version::$version"
 
       - name: Patch Xirorig csproj
         if: startsWith(github.ref, 'refs/tags/')
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        shell: pwsh
         run: |
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          (Get-Content "$csproj_file") -replace '^(\s*<Version>).+?(<\/Version>\s*)$' "`$1${env:VERSION}`$2" | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>${env:VERSION}</Version>`$2") | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
-        shell: pwsh
         run: |
           $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
 
@@ -504,7 +459,6 @@ jobs:
 
       # Package
       - name: Package Xirorig
-        shell: pwsh
         run: |
           $xirorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
           Set-Location "$xirorig_publish_root"
@@ -538,10 +492,9 @@ jobs:
           submodules: 'recursive'
 
       - name: Create Xirorig Native artifact directory
-        shell: pwsh
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
-          New-Item "$xirorig_native_install_root" -ItemType Directory -Force
+          New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
       
       - name: Download Xirorig Native artifact
         uses: actions/download-artifact@v2
@@ -551,40 +504,31 @@ jobs:
 
        # Install
       - name: Install target dotnet
-        shell: pwsh
         run: |
           $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
           $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.sh'
           $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
 
-          New-Item "$temp_directory" -ItemType "Directory" -Force
-
           Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
           /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
 
       # Before Build
-      - name: Get version number
-        id: version
+      - id: version
         if: startsWith(github.ref, 'refs/tags/')
-        env:
-          VERSION: ${{ github.ref }}
-        shell: pwsh
         run: |
-          $version = (${env:VERSION} -split "/" | Select-Object -last 1).Replace('v', '')
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
           Write-Output "::set-output name=version::$version"
 
       - name: Patch Xirorig csproj
         if: startsWith(github.ref, 'refs/tags/')
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        shell: pwsh
         run: |
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          (Get-Content "$csproj_file") -replace '^(\s*<Version>).+?(<\/Version>\s*)$' "`$1${env:VERSION}`$2" | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>${env:VERSION}</Version>`$2") | Set-Content "$csproj_file"
 
       # Build
       - name: Build Xirorig
-        shell: pwsh
         run: |
           $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
 
@@ -592,7 +536,6 @@ jobs:
 
       # Package
       - name: Package Xirorig
-        shell: pwsh
         run: |
           $xirorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
           Set-Location "$xirorig_publish_root"
@@ -616,10 +559,9 @@ jobs:
     steps:
       # Init
       - name: Create Xirorig artifact directory
-        shell: pwsh
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
-          New-Item "$xirorig_native_install_root" -ItemType Directory -Force
+          New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
 
       - name: Download Xirorig artifact (windows)
         uses: actions/download-artifact@v2
@@ -641,18 +583,15 @@ jobs:
 
       # Deploy
       - name: Get version number
-        id: version
-        env:
-          VERSION: ${{ github.ref }}
-        shell: pwsh
+        id: get_version
         run: |
-          $version = ${env:VERSION} -split "/" | select-object -last 1
+          $version = "${env:GITHUB_REF}" -split '/' | Select-Object -Last 1
           Write-Output "::set-output name=version::$version"
 
       - name: Deploy Xirorig
         uses: softprops/action-gh-release@v1
         with:
-          name: Xirorig ${{ steps.version.outputs.version }}
+          name: Xirorig ${{ steps.get_version.outputs.version }}
           body_path: ${{ github.workspace }}/RELEASE_TEMPLATE.md
           files: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*
           draft: true
