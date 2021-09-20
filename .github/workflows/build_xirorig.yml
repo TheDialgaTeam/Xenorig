@@ -27,6 +27,7 @@ env:
 
   TEMP_DIRECTORY: temp
   DOTNET_PATH: temp/dotnet
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;files,${{ github.workspace }}/Xirorig.Native/xirorig_native/vcpkg/vcpkg_installed,readwrite
 
@@ -479,7 +480,8 @@ jobs:
           XIRORIG_CONFIGURATION: ${{ matrix.xirorig.configuration }}
         run: |
           $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
-          Invoke-Expression "$dotnet publish -p:PublishProfile=`"${env:XIRORIG_ARCH}.pubxml`" -p:Platform=`"${env:XIRORIG_PLATFORM}`" -c `"${env:XIRORIG_CONFIGURATION}`""
+          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}" "${env:XIRORIG_OUTPUT_FOLDER}"
+          Invoke-Expression "$dotnet publish -c ${env:XIRORIG_CONFIGURATION} -o `"$output`" --runtime ${env:XIRORIG_ARCH} --self-contained -p:Platform=${env:XIRORIG_PLATFORM} -p:PublishReadyToRun=true"
 
       # Package
       - name: Package Xirorig

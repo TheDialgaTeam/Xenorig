@@ -19,6 +19,9 @@
 		<RepositoryUrl>https://github.com/TheDialgaTeam/Xirorig</RepositoryUrl>
 
 		<DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
+
+		<RuntimeIdentifiers>win-x64;win-x86;win-arm;win-arm64;linux-x64;linux-arm;linux-arm64;osx-x64</RuntimeIdentifiers>
+		<PublishSingleFile>true</PublishSingleFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.StartsWith('Debug'))">
