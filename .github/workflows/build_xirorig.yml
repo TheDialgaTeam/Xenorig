@@ -9,7 +9,7 @@ on:
 
   pull_request:
     branches:
-    - xirorig_future
+      - xirorig_future
 
   workflow_dispatch:
 
@@ -21,11 +21,11 @@ env:
   XIRORIG_NATIVE_BUILD_ROOT: Xirorig.Native/xirorig_native/out/build
   XIRORIG_NATIVE_INSTALL_ROOT: Xirorig.Native/xirorig_native/out/install
 
-  DOTNET_VERSION: '6.0'
+  DOTNET_VERSION: "6.0"
   DOTNET_RELEASE_STATUS: GA
 
-  TEMP_DIRECTORY: 'temp'
-  DOTNET_PATH: 'temp/dotnet'
+  TEMP_DIRECTORY: temp
+  DOTNET_PATH: temp/dotnet
 
   VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;files,${{ github.workspace }}/Xirorig.Native/xirorig_native/vcpkg/vcpkg_installed,readwrite
 
@@ -33,11 +33,71 @@ defaults:
   run:
     shell: pwsh
 
-concurrency: 
+concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  build_xirorig:
+    name: Build Xirorig (${{ matrix.xirorig.output_folder_name }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            xirorig_native:
+              use_msys2: true
+              msys2_environment: MINGW64
+              msys2_install: >-
+                mingw-w64-x86_64-toolchain
+                mingw-w64-x86_64-cmake
+                mingw-w64-x86_64-ninja
+              cmake_name: windows-x64
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: "x64-mingw-static"
+            xirorig:
+              arch: win-x64
+              configuration: Release_windows
+              output_folder_name: windows-x64
+          - os: windows-latest
+            xirorig_native:
+              use_msys2: true
+              msys2_environment: MINGW32
+              msys2_install: >-
+                mingw-w64-i686-toolchain
+                mingw-w64-i686-cmake
+                mingw-w64-i686-ninja
+              cmake_name: windows-x86
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: "x86-mingw-static"
+            xirorig:
+              arch: win-x86
+              configuration: Release_windows
+              output_folder_name: windows-x86
+          - os: windows-latest
+            xirorig_native:
+              use_msvc: true
+              msvc_environment: vcvarsamd64_arm
+              use_msys2: false
+              cmake_name: windows-ARM32
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: "arm-windows-static"
+            xirorig:
+              arch: win-ARM32
+              configuration: Release_windows
+              output_folder_name: windows-ARM32
+
+    steps:
+      - name: Test
+        run: |
+          echo Test
+
   build_xirorig_native_windows:
     name: Build Xirorig Native (windows)
     runs-on: windows-latest
@@ -47,7 +107,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: recursive
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v7
@@ -185,7 +245,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v7
@@ -212,7 +272,7 @@ jobs:
 
           sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 999
           sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
-      
+
       # Build
       - name: Build Xirorig Native (x64)
         env:
@@ -280,7 +340,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v7
@@ -327,20 +387,20 @@ jobs:
   build_xirorig_windows:
     name: Build Xirorig (windows)
     runs-on: windows-latest
-    needs: [ build_xirorig_native_windows ]
-  
+    needs: [build_xirorig_native_windows]
+
     steps:
       # Init
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Create Xirorig Native artifact directory
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
           New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
-      
+
       - name: Download Xirorig Native artifact
         uses: actions/download-artifact@v2
         with:
@@ -398,20 +458,20 @@ jobs:
   build_xirorig_linux:
     name: Build Xirorig (linux)
     runs-on: ubuntu-latest
-    needs: [ build_xirorig_native_linux ]
-  
+    needs: [build_xirorig_native_linux]
+
     steps:
       # Init
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Create Xirorig Native artifact directory
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
           New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
-      
+
       - name: Download Xirorig Native artifact
         uses: actions/download-artifact@v2
         with:
@@ -472,27 +532,27 @@ jobs:
   build_xirorig_osx:
     name: Build Xirorig (osx)
     runs-on: macos-latest
-    needs: [ build_xirorig_native_osx ]
-  
+    needs: [build_xirorig_native_osx]
+
     steps:
       # Init
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Create Xirorig Native artifact directory
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
           New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
-      
+
       - name: Download Xirorig Native artifact
         uses: actions/download-artifact@v2
         with:
           name: xirorig_native_osx
           path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
 
-       # Install
+        # Install
       - name: Install target dotnet
         run: |
           $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
@@ -538,7 +598,7 @@ jobs:
   deploy_xirorig:
     name: Deploy Xirorig
     runs-on: ubuntu-latest
-    needs: [ build_xirorig_windows, build_xirorig_linux, build_xirorig_osx ]
+    needs: [build_xirorig_windows, build_xirorig_linux, build_xirorig_osx]
     if: startsWith(github.ref, 'refs/tags/')
 
     steps:
