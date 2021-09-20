@@ -5,7 +5,7 @@ on:
     branches:
       - xirorig_future
     tags:
-      - v1.*
+      - v*
 
   pull_request:
     branches:
@@ -64,6 +64,7 @@ jobs:
             post_install: []
             output_folder: windows-x64
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x64-mingw-static
@@ -89,6 +90,7 @@ jobs:
             post_install: []
             output_folder: windows-x86
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x86-mingw-static
@@ -114,6 +116,7 @@ jobs:
             post_install: []
             output_folder: windows-ARM32
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: arm-windows-static
@@ -136,6 +139,7 @@ jobs:
             post_install: []
             output_folder: windows-ARM64
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: arm64-windows-static
@@ -169,6 +173,7 @@ jobs:
             post_install: []
             output_folder: linux-x64
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x64-linux
@@ -206,6 +211,7 @@ jobs:
               - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
             output_folder: linux-ARM32
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: arm-linux
@@ -243,6 +249,7 @@ jobs:
               - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
             output_folder: linux-ARM64
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: arm64-linux
@@ -266,6 +273,7 @@ jobs:
             post_install: []
             output_folder: osx-x64
             xirorig_native:
+              build_xirorig_native: true
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x64-osx
@@ -294,6 +302,7 @@ jobs:
         with:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_VCPKG_ROOT }}
+          appendedCacheKey: ${{ matrix.output_folder }}
           additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_VCPKG_ROOT }}/vcpkg_installed
 
       - name: Setup NuGet Credentials
@@ -387,6 +396,7 @@ jobs:
 
       # Build Xirorig Native
       - name: Build Xirorig Native
+        if: matrix.xirorig_native.build_xirorig_native
         env:
           XIRORIG_NATIVE_OUTPUT_FOLDER: ${{ matrix.output_folder }}
           XIRORIG_NATIVE_CMAKE_GENERATOR: ${{ matrix.xirorig_native.cmake_generator }}
@@ -469,9 +479,7 @@ jobs:
           XIRORIG_CONFIGURATION: ${{ matrix.xirorig.configuration }}
         run: |
           $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
-          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}" "${env:XIRORIG_OUTPUT_FOLDER}"
-
-          Invoke-Expression "$dotnet publish -p:PublishProfile=`"${env:XIRORIG_ARCH}.pubxml`" -p:Platform=`"${env:XIRORIG_PLATFORM}`" -c `"${env:XIRORIG_CONFIGURATION}`" -o `"$output`""
+          Invoke-Expression "$dotnet publish -p:PublishProfile=`"${env:XIRORIG_ARCH}.pubxml`" -p:Platform=`"${env:XIRORIG_PLATFORM}`" -c `"${env:XIRORIG_CONFIGURATION}`""
 
       # Package
       - name: Package Xirorig
@@ -500,511 +508,10 @@ jobs:
             ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.*
             !${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.tar
 
-  build_xirorig_native_windows:
-    name: Build Xirorig Native (windows)
-    runs-on: windows-latest
-    if: '!always()'
-
-    steps:
-      # Init
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          setupOnly: true
-          vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
-          additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
-
-      - name: Setup NuGet Credentials
-        run: |
-          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg.exe'
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
-
-          Invoke-Expression "$nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
-
-      # Install
-      - name: Setup msys2 environemnt
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: >-
-            mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-ninja
-            mingw-w64-i686-toolchain
-            mingw-w64-i686-cmake
-            mingw-w64-i686-ninja
-
-      # Build
-      - name: Build Xirorig Native (x64)
-        run: |
-          $env:MSYSTEM = 'MINGW64'
-
-          $cmake_generator = 'Ninja'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'x64-mingw-static'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_source_root = $cmake_source_root.Replace('C:\', '/C/')
-          $cmake_source_root = $cmake_source_root.Replace('\', '/')
-
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-x64'
-          $cmake_build_root = $cmake_build_root.Replace('C:\', '/C/')
-          $cmake_build_root = $cmake_build_root.Replace('\', '/')
-
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-x64'
-          $cmake_install_prefix = $cmake_install_prefix.Replace('C:\', '/C/')
-          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
-
-          msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
-          msys2 -c "ninja -C `"$cmake_build_root`" install"
-
-      - name: Build Xirorig Native (x86)
-        run: |
-          $env:MSYSTEM = 'MINGW32'
-
-          $cmake_generator = 'Ninja'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'x86-mingw-static'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_source_root = $cmake_source_root.Replace('C:\', '/C/')
-          $cmake_source_root = $cmake_source_root.Replace('\', '/')
-
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-x86'
-          $cmake_build_root = $cmake_build_root.Replace('C:\', '/C/')
-          $cmake_build_root = $cmake_build_root.Replace('\', '/')
-
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-x86'
-          $cmake_install_prefix = $cmake_install_prefix.Replace('C:\', '/C/')
-          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
-
-          msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
-          msys2 -c "ninja -C `"$cmake_build_root`" install"
-
-      - name: Build Xirorig Native (ARM32)
-        run: |
-          $cmake_generator = 'Visual Studio 16 2019'
-          $cmake_generator_platform = 'ARM'
-          $cmake_generator_toolset = 'v142,host=x64'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'arm-windows-static'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_source_root = $cmake_source_root.Replace('\', '/')
-
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-ARM32'
-          $cmake_build_root = $cmake_build_root.Replace('\', '/')
-
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-ARM32'
-          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
-
-          $msbuild_install_root = Join-Path "$cmake_build_root" 'INSTALL.vcxproj'
-
-          cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm.bat`" && cmake -G `"$cmake_generator`" -A `"$cmake_generator_platform`" -T `"$cmake_generator_toolset`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && msbuild.exe `"$msbuild_install_root`" -p:Configuration=`"$cmake_build_type`""
-
-      - name: Build Xirorig Native (ARM64)
-        run: |
-          $cmake_generator = 'Visual Studio 16 2019'
-          $cmake_generator_platform = 'ARM64'
-          $cmake_generator_toolset = 'v142,host=x64'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'arm64-windows-static'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_source_root = $cmake_source_root.Replace('\', '/')
-
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'windows-ARM64'
-          $cmake_build_root = $cmake_build_root.Replace('\', '/')
-
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'windows-ARM64'
-          $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
-
-          $msbuild_install_root = Join-Path "$cmake_build_root" 'INSTALL.vcxproj'
-
-          cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat`" && cmake -G `"$cmake_generator`" -A `"$cmake_generator_platform`" -T `"$cmake_generator_toolset`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && msbuild.exe `"$msbuild_install_root`" -p:Configuration=`"$cmake_build_type`""
-
-      # Upload Artifacts
-      - name: Upload Xirorig Native artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: xirorig_native_windows
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
-
-  build_xirorig_native_linux:
-    name: Build Xirorig Native (linux)
-    runs-on: ubuntu-latest
-    if: '!always()'
-
-    steps:
-      # Init
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          setupOnly: true
-          vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
-          additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
-
-      - name: Setup NuGet Credentials
-        run: |
-          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
-
-          Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
-
-      # Install
-      - name: Install Dependency
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install curl zip unzip tar p7zip-full cmake ninja-build build-essential pkg-config gcc-10 gcc-10-arm-linux-gnueabihf gcc-10-aarch64-linux-gnu g++-10 g++-10-arm-linux-gnueabihf g++-10-aarch64-linux-gnu -y
-
-          sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
-          sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
-
-          sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 999
-          sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
-
-      # Build
-      - name: Build Xirorig Native (x64)
-        env:
-          CC: gcc-10
-          CXX: g++-10
-        run: |
-          $cmake_generator = 'Ninja'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'x64-linux'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'linux-x64'
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'linux-x64'
-
-          cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
-          ninja -C "$cmake_build_root" install
-
-      - name: Build Xirorig Native (ARM32)
-        run: |
-          $cmake_generator = 'Ninja'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'arm-linux'
-          $cmake_toolchain_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'cmake/raspberrypi-arm.cmake'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'linux-ARM32'
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'linux-ARM32'
-
-          cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
-          ninja -C "$cmake_build_root" install
-
-      - name: Build Xirorig Native (ARM64)
-        run: |
-          $cmake_generator = 'Ninja'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'arm64-linux'
-          $cmake_toolchain_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'cmake/raspberrypi-arm64.cmake'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'linux-ARM64'
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'linux-ARM64'
-
-          cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
-          ninja -C "$cmake_build_root" install
-
-      # Upload Artifacts
-      - name: Upload Xirorig Native artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: xirorig_native_linux
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
-
-  build_xirorig_native_osx:
-    name: Build Xirorig Native (osx)
-    runs-on: macos-latest
-    if: '!always()'
-    
-    env:
-      CC: gcc-10
-      CXX: g++-10
-
-    steps:
-      # Init
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v7
-        with:
-          setupOnly: true
-          vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg
-          additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_SOURCE_ROOT }}/vcpkg/vcpkg_installed
-
-      - name: Setup NuGet Credentials
-        run: |
-          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'vcpkg/vcpkg'
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
-
-          Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
-
-      # Install
-      - name: Install ninja
-        run: |
-          brew update
-          brew install ninja
-
-      # Build
-      - name: Build Xirorig Native (x64)
-        run: |
-          $cmake_generator = 'Ninja'
-
-          $cmake_build_type = 'Release'
-          $cmake_target_triplet = 'x64-osx'
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" 'osx-x64'
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" 'osx-x64'
-
-          cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
-          ninja -C "$cmake_build_root" install
-
-      # Upload Artifacts
-      - name: Upload Xirorig Native artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: xirorig_native_osx
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
-
-  build_xirorig_windows:
-    name: Build Xirorig (windows)
-    runs-on: windows-latest
-    needs: [build_xirorig_native_windows]
-
-    steps:
-      # Init
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-
-      - name: Create Xirorig Native artifact directory
-        run: |
-          $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
-          New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
-
-      - name: Download Xirorig Native artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: xirorig_native_windows
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
-
-      # Install
-      - name: Install target dotnet
-        run: |
-          $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
-          $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.ps1'
-          $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
-
-          Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "$dotnet_install_script_file_path"
-          Invoke-Expression "$dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
-
-      # Before Build
-      - name: Patch Xirorig csproj
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
-          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
-
-      # Build
-      - name: Build Xirorig
-        run: |
-          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
-
-          Invoke-Expression "$dotnet publish -p:PublishProfile=windows-x64.pubxml -p:Platform=x64 -c Release_windows"
-          Invoke-Expression "$dotnet publish -p:PublishProfile=windows-x86.pubxml -p:Platform=x86 -c Release_windows"
-          Invoke-Expression "$dotnet publish -p:PublishProfile=windows-arm.pubxml -p:Platform=ARM32 -c Release_windows"
-          Invoke-Expression "$dotnet publish -p:PublishProfile=windows-arm64.pubxml -p:Platform=ARM64 -c Release_windows"
-
-      # Package
-      - name: Package Xirorig
-        run: |
-          $xirorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
-          Set-Location "$xirorig_publish_root"
-
-          7z a windows-x64.zip windows-x64 -mx=9
-          7z a windows-x86.zip windows-x86 -mx=9
-          7z a windows-arm.zip windows-arm -mx=9
-          7z a windows-arm64.zip windows-arm64 -mx=9
-
-      # Upload Artifacts
-      - name: Upload Xirorig artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: xirorig_windows
-          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.zip
-
-  build_xirorig_linux:
-    name: Build Xirorig (linux)
-    runs-on: ubuntu-latest
-    needs: [build_xirorig_native_linux]
-
-    steps:
-      # Init
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-
-      - name: Create Xirorig Native artifact directory
-        run: |
-          $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
-          New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
-
-      - name: Download Xirorig Native artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: xirorig_native_linux
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
-
-      # Install
-      - name: Install target dotnet
-        run: |
-          $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
-          $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.sh'
-          $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
-
-          Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
-          /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
-
-      # Before Build
-      - name: Patch Xirorig csproj
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
-          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
-
-      # Build
-      - name: Build Xirorig
-        run: |
-          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
-
-          Invoke-Expression "$dotnet publish -p:PublishProfile=linux-x64.pubxml -p:Platform=x64 -c Release_linux"
-          Invoke-Expression "$dotnet publish -p:PublishProfile=linux-arm.pubxml -p:Platform=ARM32 -c Release_linux"
-          Invoke-Expression "$dotnet publish -p:PublishProfile=linux-arm64.pubxml -p:Platform=ARM64 -c Release_linux"
-
-      # Package
-      - name: Package Xirorig
-        run: |
-          $xirorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
-          Set-Location "$xirorig_publish_root"
-
-          7z a linux-x64.tar linux-x64
-          7z a linux-x64.tar.gz linux-x64.tar -mx=9
-
-          7z a linux-arm.tar linux-arm
-          7z a linux-arm.tar.gz linux-arm.tar -mx=9
-
-          7z a linux-arm64.tar linux-arm64
-          7z a linux-arm64.tar.gz linux-arm64.tar -mx=9
-
-      # Upload Artifacts
-      - name: Upload Xirorig artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: xirorig_linux
-          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.tar.gz
-
-  build_xirorig_osx:
-    name: Build Xirorig (osx)
-    runs-on: macos-latest
-    needs: [build_xirorig_native_osx]
-
-    steps:
-      # Init
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-
-      - name: Create Xirorig Native artifact directory
-        run: |
-          $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}"
-          New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
-
-      - name: Download Xirorig Native artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: xirorig_native_osx
-          path: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_INSTALL_ROOT }}
-
-        # Install
-      - name: Install target dotnet
-        run: |
-          $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
-          $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.sh'
-          $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
-
-          Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
-          /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
-
-      # Before Build
-      - name: Patch Xirorig csproj
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          $version = (${env:GITHUB_REF} -split "/" | Select-Object -last 1).Replace('v', '')
-          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
-
-      # Build
-      - name: Build Xirorig
-        run: |
-          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
-
-          Invoke-Expression "$dotnet publish -p:PublishProfile=osx-x64.pubxml -p:Platform=x64 -c Release_osx"
-
-      # Package
-      - name: Package Xirorig
-        run: |
-          $xirorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
-          Set-Location "$xirorig_publish_root"
-
-          7z a osx-x64.tar osx-x64
-          7z a osx-x64.tar.gz osx-x64.tar -mx=9
-
-      # Upload Artifacts
-      - name: Upload Xirorig artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: xirorig_osx
-          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.tar.gz
-
   deploy_xirorig:
     name: Deploy Xirorig
     runs-on: ubuntu-latest
-    needs: [build_xirorig_windows, build_xirorig_linux, build_xirorig_osx]
+    needs: [build_xirorig]
     if: startsWith(github.ref, 'refs/tags/')
 
     steps:
@@ -1014,22 +521,52 @@ jobs:
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
           New-Item "$xirorig_native_install_root" -ItemType 'Directory' -Force
 
-      - name: Download Xirorig artifact (windows)
+      - name: Download Xirorig artifact (windows-x64)
         uses: actions/download-artifact@v2
         with:
-          name: xirorig_windows
+          name: windows-x64
           path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
 
-      - name: Download Xirorig artifact (linux)
+      - name: Download Xirorig artifact (windows-x86)
         uses: actions/download-artifact@v2
         with:
-          name: xirorig_linux
+          name: windows-x86
           path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
 
-      - name: Download Xirorig artifact (osx)
+      - name: Download Xirorig artifact (windows-ARM32)
         uses: actions/download-artifact@v2
         with:
-          name: xirorig_osx
+          name: windows-ARM32
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      - name: Download Xirorig artifact (windows-ARM64)
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-ARM64
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      - name: Download Xirorig artifact (linux-x64)
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-x64
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      - name: Download Xirorig artifact (linux-ARM32)
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-ARM32
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      - name: Download Xirorig artifact (linux-ARM64)
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-ARM64
+          path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
+
+      - name: Download Xirorig artifact (osx-x64)
+        uses: actions/download-artifact@v2
+        with:
+          name: osx-x64
           path: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}
 
       # Deploy
