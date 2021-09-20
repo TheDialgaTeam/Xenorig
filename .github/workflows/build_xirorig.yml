@@ -488,7 +488,7 @@ jobs:
           else
           {
             Invoke-Expression "7z a `"${env:XIRORIG_OUTPUT_FOLDER}.tar`" `"${env:XIRORIG_OUTPUT_FOLDER}`""
-            Invoke-Expression "7z a `"${env:XIRORIG_OUTPUT_FOLDER}.tar.gz`" `"${env:XIRORIG_OUTPUT_FOLDER}`" -mx=9"
+            Invoke-Expression "7z a `"${env:XIRORIG_OUTPUT_FOLDER}.tar.gz`" `"${env:XIRORIG_OUTPUT_FOLDER}.tar`" -mx=9"
           }
 
       # Upload Artifacts
