@@ -503,6 +503,7 @@ jobs:
   build_xirorig_native_windows:
     name: Build Xirorig Native (windows)
     runs-on: windows-latest
+    if: '!always()'
 
     steps:
       # Init
@@ -641,6 +642,7 @@ jobs:
   build_xirorig_native_linux:
     name: Build Xirorig Native (linux)
     runs-on: ubuntu-latest
+    if: '!always()'
 
     steps:
       # Init
@@ -733,6 +735,8 @@ jobs:
   build_xirorig_native_osx:
     name: Build Xirorig Native (osx)
     runs-on: macos-latest
+    if: '!always()'
+    
     env:
       CC: gcc-10
       CXX: g++-10
