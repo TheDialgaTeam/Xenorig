@@ -314,7 +314,6 @@ jobs:
 
       # Install
       - name: Install Program / Dependencies
-        if: ${{ contains(matrix, 'install') || contains(matrix, 'post_install') }}
         env:
           INSTALL: ${{ matrix.install }}
           POST_INSTALL: ${{ join(matrix.post_install, ' && ') }}
@@ -388,7 +387,6 @@ jobs:
 
       # Build Xirorig Native
       - name: Build Xirorig Native
-        if: ${{ contains(matrix, 'xirorig_native') }}
         env:
           XIRORIG_NATIVE_OUTPUT_FOLDER: ${{ matrix.output_folder }}
           XIRORIG_NATIVE_CMAKE_GENERATOR: ${{ matrix.xirorig_native.cmake_generator }}
@@ -464,7 +462,6 @@ jobs:
           ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
 
       - name: Build Xirorig
-        if: ${{ contains(matrix, 'xirorig') }}
         env:
           XIRORIG_OUTPUT_FOLDER: ${{ matrix.output_folder }}
           XIRORIG_ARCH: ${{ matrix.xirorig.arch }}
