@@ -20,6 +20,7 @@ env:
   XIRORIG_NATIVE_SOURCE_ROOT: Xirorig.Native/xirorig_native
   XIRORIG_NATIVE_BUILD_ROOT: Xirorig.Native/xirorig_native/out/build
   XIRORIG_NATIVE_INSTALL_ROOT: Xirorig.Native/xirorig_native/out/install
+  XIRORIG_NATIVE_VCPKG_ROOT: Xirorig.Native/xirorig_native/vcpkg
 
   DOTNET_VERSION: "6.0"
   DOTNET_RELEASE_STATUS: GA
@@ -39,64 +40,468 @@ concurrency:
 
 jobs:
   build_xirorig:
-    name: Build Xirorig (${{ matrix.xirorig.output_folder_name }})
+    name: Build Xirorig (${{ matrix.output_folder }})
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: true
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64, x86, ARM32, ARM64]
+        exclude:
+          - os: ubuntu-latest
+            arch: ARM32
+          - os: macos-latest
+            arch: x86
+          - os: macos-latest
+            arch: ARM32
+          - os: macos-latest
+            arch: ARM64
         include:
           - os: windows-latest
+            arch: x64
+            install: ''
+            post_install: []
+            output_folder: windows-x64
             xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x64-mingw-static
+              cmake_toolchain_file: ''
+              use_msvc: false
+              msvc_environment: 'vcvars64'
               use_msys2: true
               msys2_environment: MINGW64
               msys2_install: >-
                 mingw-w64-x86_64-toolchain
                 mingw-w64-x86_64-cmake
                 mingw-w64-x86_64-ninja
-              cmake_name: windows-x64
-              cmake_generator: Ninja
-              cmake_build_type: Release
-              cmake_target_triplet: "x64-mingw-static"
+              use_gcc: false
+              gcc_cc: ''
+              gcc_cxx: ''
             xirorig:
               arch: win-x64
               configuration: Release_windows
-              output_folder_name: windows-x64
+
           - os: windows-latest
+            arch: x86
+            install: ''
+            post_install: []
+            output_folder: windows-x86
             xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x86-mingw-static
+              cmake_toolchain_file: ''
+              use_msvc: false
+              msvc_environment: 'vcvars32'
               use_msys2: true
               msys2_environment: MINGW32
               msys2_install: >-
                 mingw-w64-i686-toolchain
                 mingw-w64-i686-cmake
                 mingw-w64-i686-ninja
-              cmake_name: windows-x86
-              cmake_generator: Ninja
-              cmake_build_type: Release
-              cmake_target_triplet: "x86-mingw-static"
+              use_gcc: false
+              gcc_cc: ''
+              gcc_cxx: ''
             xirorig:
               arch: win-x86
               configuration: Release_windows
-              output_folder_name: windows-x86
+
           - os: windows-latest
+            arch: ARM32
+            install: ''
+            post_install: []
+            output_folder: windows-ARM32
             xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm-windows-static
+              cmake_toolchain_file: ''
               use_msvc: true
               msvc_environment: vcvarsamd64_arm
               use_msys2: false
-              cmake_name: windows-ARM32
-              cmake_generator: Ninja
-              cmake_build_type: Release
-              cmake_target_triplet: "arm-windows-static"
+              msys2_environment: ''
+              msys2_install: ''
+              use_gcc: false
+              gcc_cc: ''
+              gcc_cxx: ''
             xirorig:
               arch: win-ARM32
               configuration: Release_windows
-              output_folder_name: windows-ARM32
+
+          - os: windows-latest
+            arch: ARM64
+            install: ''
+            post_install: []
+            output_folder: windows-ARM64
+            xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm64-windows-static
+              cmake_toolchain_file: ''
+              use_msvc: true
+              msvc_environment: vcvarsamd64_arm64
+              use_msys2: false
+              msys2_environment: ''
+              msys2_install: ''
+              use_gcc: false
+              gcc_cc: ''
+              gcc_cxx: ''
+            xirorig:
+              arch: win-ARM32
+              configuration: Release_windows
+
+          - os: ubuntu-latest
+            arch: x64
+            install: >-
+              curl
+              zip
+              unzip
+              tar
+              p7zip-full
+              cmake
+              ninja-build
+              build-essential
+              pkg-config
+              gcc-10
+              g++-10
+            post_install: []
+            output_folder: linux-x64
+            xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x64-linux
+              cmake_toolchain_file: ''
+              use_msvc: false
+              msvc_environment: ''
+              use_msys2: false
+              msys2_environment: ''
+              msys2_install: ''
+              use_gcc: true
+              gcc_cc: gcc-10
+              gcc_cxx: g++-10
+            xirorig:
+              arch: linux-x64
+              configuration: Release_linux
+
+          - os: ubuntu-latest
+            arch: ARM32
+            install: >-
+              curl
+              zip
+              unzip
+              tar
+              p7zip-full
+              cmake
+              ninja-build
+              build-essential
+              pkg-config
+              gcc-10
+              g++-10
+              gcc-10-arm-linux-gnueabihf
+              g++-10-arm-linux-gnueabihf
+            post_install:
+              - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
+              - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
+            output_folder: linux-ARM32
+            xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm-linux
+              cmake_toolchain_file: raspberrypi-arm.cmake
+              use_msvc: false
+              msvc_environment: ''
+              use_msys2: false
+              msys2_environment: ''
+              msys2_install: ''
+              use_gcc: true
+              gcc_cc: gcc-10
+              gcc_cxx: g++-10
+            xirorig:
+              arch: linux-arm
+              configuration: Release_linux
+
+          - os: ubuntu-latest
+            arch: ARM64
+            install: >-
+              curl
+              zip
+              unzip
+              tar
+              p7zip-full
+              cmake
+              ninja-build
+              build-essential
+              pkg-config
+              gcc-10
+              g++-10
+              gcc-10-aarch64-linux-gnu
+              g++-10-aarch64-linux-gnu
+            post_install:
+              - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
+              - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
+            output_folder: linux-ARM64
+            xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm64-linux
+              cmake_toolchain_file: raspberrypi-arm64.cmake
+              use_msvc: false
+              msvc_environment: ''
+              use_msys2: false
+              msys2_environment: ''
+              msys2_install: ''
+              use_gcc: true
+              gcc_cc: gcc-10
+              gcc_cxx: g++-10
+            xirorig:
+              arch: linux-arm64
+              configuration: Release_linux
+
+          - os: macos-latest
+            arch: x64
+            install: >-
+              ninja
+            post_install: []
+            output_folder: osx-x64
+            xirorig_native:
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x64-osx
+              cmake_toolchain_file: ''
+              use_msvc: false
+              msvc_environment: ''
+              use_msys2: false
+              msys2_environment: ''
+              msys2_install: ''
+              use_gcc: true
+              gcc_cc: gcc-10
+              gcc_cxx: g++-10
+            xirorig:
+              arch: osx-x64
+              configuration: Release_osx
 
     steps:
-      - name: Test
+      # Init
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v7
+        with:
+          setupOnly: true
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_VCPKG_ROOT }}
+          additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_VCPKG_ROOT }}/vcpkg_installed
+
+      - name: Setup NuGet Credentials
         run: |
-          echo Test
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_VCPKG_ROOT}" 'vcpkg.exe'
+            $mono = ''
+          }
+          else
+          {
+            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
+            $mono = 'mono'
+          }
+
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
+          Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
+
+      # Install
+      - name: Install Program / Dependencies
+        if: ${{ contains(matrix, 'install') || contains(matrix, 'post_install') }}
+        env:
+          INSTALL: ${{ matrix.install }}
+          POST_INSTALL: ${{ join(matrix.post_install, ' && ') }}
+        run: |
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            {
+              Invoke-Expression "choco install ${env:INSTALL}"
+            }
+            
+            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
+            {
+              Invoke-Expression "${env:POST_INSTALL}"
+            }
+          }
+          elseif ("${env:RUNNER_OS}" -eq 'Linux')
+          {
+            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            {
+              sudo apt-get update -y
+              Invoke-Expression "sudo apt-get install ${env:INSTALL} -y"
+            }
+            
+            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
+            {
+              Invoke-Expression "${env:POST_INSTALL}"
+            }
+          }
+          elseif ("${env:RUNNER_OS}" -eq 'macOS')
+          {
+            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            {
+              brew update
+              Invoke-Expression "brew install ${env:INSTALL}"
+            }
+            
+            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
+            {
+              Invoke-Expression "${env:POST_INSTALL}"
+            }
+          }
+
+      - name: Install dotnet
+        run: |
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
+            $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.ps1'
+            $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
+
+            Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "$dotnet_install_script_file_path"
+            Invoke-Expression "$dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
+          }
+          else
+          {
+            $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
+            $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.sh'
+            $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
+
+            Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
+            /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -Quality `"${env:DOTNET_RELEASE_STATUS}`" -InstallDir `"$dotnet_install_directory`""
+          }
+
+      - name: Setup msys2 environemnt
+        uses: msys2/setup-msys2@v2
+        if: ${{ runner.os == 'Windows' && matrix.xirorig_native.use_msys2 == 'true' }}
+        with:
+          update: true
+          install: ${{ matrix.xirorig_native.msys2_install }}
+
+      # Build Xirorig Native
+      - name: Build Xirorig Native
+        if: ${{ contains(matrix, 'xirorig_native') }}
+        env:
+          XIRORIG_NATIVE_OUTPUT_FOLDER: ${{ matrix.output_folder }}
+          XIRORIG_NATIVE_CMAKE_GENERATOR: ${{ matrix.xirorig_native.cmake_generator }}
+          XIRORIG_NATIVE_CMAKE_BUILD_TYPE: ${{ matrix.xirorig_native.cmake_build_type }}
+          XIRORIG_NATIVE_CMAKE_TARGET_TRIPLET: ${{ matrix.xirorig_native.cmake_target_triplet }}
+          XIRORIG_NATIVE_CMAKE_TOOLCHAIN_FILE: ${{ matrix.xirorig_native.cmake_toolchain_file }}
+          XIRORIG_NATIVE_USE_MSVC: ${{ matrix.xirorig_native.use_msvc }}
+          XIRORIG_NATIVE_MSVC_ENVIRONMENT: ${{ matrix.xirorig_native.msvc_environment }}
+          XIRORIG_NATIVE_USE_MSYS2: ${{ matrix.xirorig_native.use_msys2 }}
+          XIRORIG_NATIVE_MSYS2_ENVIRONMENT: ${{ matrix.xirorig_native.msys2_environment }}
+          XIRORIG_NATIVE_MSYS2_INSTALL: ${{ matrix.xirorig_native.msys2_install }}
+          XIRORIG_NATIVE_USE_GCC: ${{ matrix.xirorig_native.use_gcc }}
+          XIRORIG_NATIVE_GCC_CC: ${{ matrix.xirorig_native.gcc_cc }}
+          XIRORIG_NATIVE_GCC_CXX: ${{ matrix.xirorig_native.gcc_cxx }}
+        run: |
+          $cmake_generator = "${env:XIRORIG_NATIVE_CMAKE_GENERATOR}"
+
+          $cmake_build_type = "${env:XIRORIG_NATIVE_CMAKE_BUILD_TYPE}"
+          $cmake_target_triplet = "${env:XIRORIG_NATIVE_CMAKE_TARGET_TRIPLET}"
+          $cmake_toolchain_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}" 'cmake' "${env:XIRORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_BUILD_ROOT}" "${env:XIRORIG_NATIVE_OUTPUT_FOLDER}"
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_INSTALL_ROOT}" "${env:XIRORIG_NATIVE_OUTPUT_FOLDER}"
+
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            $cmake_source_root = $cmake_source_root.Replace('\', '/')
+            $cmake_build_root = $cmake_build_root.Replace('\', '/')
+            $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
+
+            if ("${env:XIRORIG_NATIVE_USE_MSVC}" -eq 'true')
+            {
+              $msbuild_install_root = Join-Path "$cmake_build_root" 'INSTALL.vcxproj'
+              cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\${env:XIRORIG_NATIVE_MSVC_ENVIRONMENT}.bat`" && cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && ninja -C `"$cmake_build_root`" install"
+            }
+            
+            if ("${env:XIRORIG_NATIVE_USE_MSYS2}" -eq 'true')
+            {
+              $cmake_source_root = $cmake_source_root.Replace('C:\', '/C/')
+              $cmake_build_root = $cmake_build_root.Replace('C:\', '/C/')
+              $cmake_install_prefix = $cmake_install_prefix.Replace('C:\', '/C/')
+
+              $env:MSYSTEM = "${env:XIRORIG_NATIVE_MSYS2_ENVIRONMENT}"
+
+              msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
+              msys2 -c "ninja -C `"$cmake_build_root`" install"
+            }
+          }
+          else
+          {
+            $env:CC = "${env:XIRORIG_NATIVE_GCC_CC}"
+            $env:CXX = "${env:XIRORIG_NATIVE_GCC_CXX}"
+
+            if (![string]::IsNullOrWhiteSpace("${env:XIRORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"))
+            {
+              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+            }
+            else
+            {
+              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+            }
+
+            ninja -C "$cmake_build_root" install
+          }
+
+      # Build Xirorig
+      - name: Patch Xirorig csproj
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -Last 1).Replace('v', '')
+          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_CSPROJ_FILE}"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
+
+      - name: Build Xirorig
+        if: ${{ contains(matrix, 'xirorig') }}
+        env:
+          XIRORIG_OUTPUT_FOLDER: ${{ matrix.output_folder }}
+          XIRORIG_ARCH: ${{ matrix.xirorig.arch }}
+          XIRORIG_PLATFORM: ${{ matrix.arch }}
+          XIRORIG_CONFIGURATION: ${{ matrix.xirorig.configuration }}
+        run: |
+          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
+          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}" "${env:XIRORIG_OUTPUT_FOLDER}"
+
+          Invoke-Expression "$dotnet publish -p:PublishProfile=`"${env:XIRORIG_ARCH}.pubxml`" -p:Platform=`"${env:XIRORIG_PLATFORM}`" -c `"${env:XIRORIG_CONFIGURATION}`" -o `"$output`""
+
+      # Package
+      - name: Package Xirorig
+        env:
+          XIRORIG_OUTPUT_FOLDER: ${{ matrix.output_folder }}
+        run: |
+          $xirorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
+          Set-Location "$xirorig_publish_root"
+
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            Invoke-Expression "7z a `"${env:XIRORIG_OUTPUT_FOLDER}.zip`" `"${env:XIRORIG_OUTPUT_FOLDER}`" -mx=9"
+          }
+          else
+          {
+            Invoke-Expression "7z a `"${env:XIRORIG_OUTPUT_FOLDER}.tar`" `"${env:XIRORIG_OUTPUT_FOLDER}`""
+            Invoke-Expression "7z a `"${env:XIRORIG_OUTPUT_FOLDER}.tar.gz`" `"${env:XIRORIG_OUTPUT_FOLDER}`" -mx=9"
+          }
+
+      # Upload Artifacts
+      - name: Upload Xirorig artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.output_folder }}
+          path: |
+            ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.*
+            !${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*.tar
 
   build_xirorig_native_windows:
     name: Build Xirorig Native (windows)
