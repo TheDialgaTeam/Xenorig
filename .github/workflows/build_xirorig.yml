@@ -380,14 +380,13 @@ jobs:
 
       - name: Setup msys2 environemnt
         uses: msys2/setup-msys2@v2
-        if: runner.os == 'Windows' && matrix.xirorig_native.use_msys2 == 'true'
+        if: runner.os == 'Windows' && matrix.xirorig_native.use_msys2
         with:
           update: true
           install: ${{ matrix.xirorig_native.msys2_install }}
 
       # Build Xirorig Native
       - name: Build Xirorig Native
-        if: contains(matrix, 'xirorig_native')
         env:
           XIRORIG_NATIVE_OUTPUT_FOLDER: ${{ matrix.output_folder }}
           XIRORIG_NATIVE_CMAKE_GENERATOR: ${{ matrix.xirorig_native.cmake_generator }}
