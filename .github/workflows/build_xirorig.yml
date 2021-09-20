@@ -131,7 +131,7 @@ jobs:
               gcc_cc: ''
               gcc_cxx: ''
             xirorig:
-              arch: win-ARM32
+              arch: win-arm
               configuration: Release_windows
 
           - os: windows-latest
@@ -154,7 +154,7 @@ jobs:
               gcc_cc: ''
               gcc_cxx: ''
             xirorig:
-              arch: win-ARM32
+              arch: win-arm64
               configuration: Release_windows
 
           - os: ubuntu-latest
