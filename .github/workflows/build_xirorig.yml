@@ -50,7 +50,7 @@ jobs:
         arch: [x64, x86, ARM32, ARM64]
         exclude:
           - os: ubuntu-latest
-            arch: ARM32
+            arch: x86
           - os: macos-latest
             arch: x86
           - os: macos-latest
