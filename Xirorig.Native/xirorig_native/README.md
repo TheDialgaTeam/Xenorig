@@ -48,13 +48,12 @@ SET MSYSTEM=MINGW64
 
 C:\msys64\usr\bin\bash -c "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_INSTALL_PREFIX=""$PWD/Xirorig.Native/xirorig_native/out/install/windows-x64"" -S ""$PWD/Xirorig.Native/xirorig_native"" -B ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x64"" && ninja -C ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x64"" install"
 
-
 # For x86
 SET MSYSTEM=MINGW32
 
 C:\msys64\usr\bin\bash -c "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DCMAKE_INSTALL_PREFIX=""$PWD/Xirorig.Native/xirorig_native/out/install/windows-x86"" -S ""$PWD/Xirorig.Native/xirorig_native"" -B ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x86"" && ninja -C ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x86"" install"
 
-## For GCC/Mingw toolchain, the output file is called `libxirorig_native.dll`. Rename it to `xirorig_native.dll` so that Xirorig can recongnize the native library.
+# For GCC/Mingw toolchain, the output file is called libxirorig_native.dll. Rename it to xirorig_native.dll so that Xirorig can recongnize the native library.
 
 #####################################
 # If you want to use MSVC toolchain #
