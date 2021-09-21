@@ -46,12 +46,13 @@ SET CHERE_INVOKING=yes
 # For x64
 SET MSYSTEM=MINGW64
 
-C:\msys64\usr\bin\bash -c "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_INSTALL_PREFIX=""$PWD/Xirorig.Native/xirorig_native/out/install/windows-x64"" -S ""$PWD/Xirorig.Native/xirorig_native"" -B ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x64"""
+C:\msys64\usr\bin\bash -c "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x64-mingw-static -DCMAKE_INSTALL_PREFIX=""$PWD/Xirorig.Native/xirorig_native/out/install/windows-x64"" -S ""$PWD/Xirorig.Native/xirorig_native"" -B ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x64"" && ninja -C ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x64"" install"
+
 
 # For x86
 SET MSYSTEM=MINGW32
 
-C:\msys64\usr\bin\bash -c "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DCMAKE_INSTALL_PREFIX=""$PWD/Xirorig.Native/xirorig_native/out/install/windows-x86"" -S ""$PWD/Xirorig.Native/xirorig_native"" -B ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x86"""
+C:\msys64\usr\bin\bash -c "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x86-mingw-static -DCMAKE_INSTALL_PREFIX=""$PWD/Xirorig.Native/xirorig_native/out/install/windows-x86"" -S ""$PWD/Xirorig.Native/xirorig_native"" -B ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x86"" && ninja -C ""$PWD/Xirorig.Native/xirorig_native/out/build/windows-x86"" install"
 
 ## For GCC/Mingw toolchain, the output file is called `libxirorig_native.dll`. Rename it to `xirorig_native.dll` so that Xirorig can recongnize the native library.
 
@@ -62,28 +63,24 @@ C:\msys64\usr\bin\bash -c "cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TAR
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_INSTALL_PREFIX="Xirorig.Native/xirorig_native/out/install/windows-x64" -S "Xirorig.Native/xirorig_native" -B "Xirorig.Native/xirorig_native/out/build/windows-x64"
-
 ninja -C "Xirorig.Native/xirorig_native/out/build/windows-x64" install
 
 # For x86
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=x86-windows-static -DCMAKE_INSTALL_PREFIX="Xirorig.Native/xirorig_native/out/install/windows-x86" -S "Xirorig.Native/xirorig_native" -B "Xirorig.Native/xirorig_native/out/build/windows-x86"
-
 ninja -C "Xirorig.Native/xirorig_native/out/build/windows-x86" install
 
 # For ARM32
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm.bat"
 
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=arm-windows-static -DCMAKE_INSTALL_PREFIX="Xirorig.Native/xirorig_native/out/install/windows-ARM32" -S "Xirorig.Native/xirorig_native" -B "Xirorig.Native/xirorig_native/out/build/windows-ARM32"
-
 ninja -C "Xirorig.Native/xirorig_native/out/build/windows-ARM32" install
 
 # For ARM64
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
 
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DVCPKG_TARGET_TRIPLET=arm-windows-static -DCMAKE_INSTALL_PREFIX="Xirorig.Native/xirorig_native/out/install/windows-ARM64" -S "Xirorig.Native/xirorig_native" -B "Xirorig.Native/xirorig_native/out/build/windows-ARM64"
-
 ninja -C "Xirorig.Native/xirorig_native/out/build/windows-ARM64" install
 ```
 
