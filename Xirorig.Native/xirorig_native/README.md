@@ -6,7 +6,6 @@
     - [For Windows](#for-windows)
       - [Via Command Line](#via-command-line)
       - [Via Visual Studio](#via-visual-studio)
-      - [Via CMake GUI](#via-cmake-gui)
     - [For Linux](#for-linux)
       - [Ubuntu 20.04 (LTS)](#ubuntu-2004-lts)
   - [Donations](#donations)
