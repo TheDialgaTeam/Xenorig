@@ -61,7 +61,7 @@ jobs:
         include:
           - os: windows-latest
             arch: x64
-            install: ''
+            install: ""
             post_install: []
             output_folder: windows-x64
             xirorig_native:
@@ -69,9 +69,9 @@ jobs:
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x64-mingw-static
-              cmake_toolchain_file: ''
+              cmake_toolchain_file: ""
               use_msvc: false
-              msvc_environment: 'vcvars64'
+              msvc_environment: "vcvars64"
               use_msys2: true
               msys2_environment: MINGW64
               msys2_install: >-
@@ -79,15 +79,15 @@ jobs:
                 mingw-w64-x86_64-cmake
                 mingw-w64-x86_64-ninja
               use_gcc: false
-              gcc_cc: ''
-              gcc_cxx: ''
+              gcc_cc: ""
+              gcc_cxx: ""
             xirorig:
               arch: win-x64
               configuration: Release_windows
 
           - os: windows-latest
             arch: x86
-            install: ''
+            install: ""
             post_install: []
             output_folder: windows-x86
             xirorig_native:
@@ -95,9 +95,9 @@ jobs:
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x86-mingw-static
-              cmake_toolchain_file: ''
+              cmake_toolchain_file: ""
               use_msvc: false
-              msvc_environment: 'vcvars32'
+              msvc_environment: "vcvars32"
               use_msys2: true
               msys2_environment: MINGW32
               msys2_install: >-
@@ -105,15 +105,15 @@ jobs:
                 mingw-w64-i686-cmake
                 mingw-w64-i686-ninja
               use_gcc: false
-              gcc_cc: ''
-              gcc_cxx: ''
+              gcc_cc: ""
+              gcc_cxx: ""
             xirorig:
               arch: win-x86
               configuration: Release_windows
 
           - os: windows-latest
             arch: ARM32
-            install: ''
+            install: ""
             post_install: []
             output_folder: windows-ARM32
             xirorig_native:
@@ -121,22 +121,22 @@ jobs:
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: arm-windows-static
-              cmake_toolchain_file: ''
+              cmake_toolchain_file: ""
               use_msvc: true
               msvc_environment: vcvarsamd64_arm
               use_msys2: false
-              msys2_environment: ''
-              msys2_install: ''
+              msys2_environment: ""
+              msys2_install: ""
               use_gcc: false
-              gcc_cc: ''
-              gcc_cxx: ''
+              gcc_cc: ""
+              gcc_cxx: ""
             xirorig:
               arch: win-arm
               configuration: Release_windows
 
           - os: windows-latest
             arch: ARM64
-            install: ''
+            install: ""
             post_install: []
             output_folder: windows-ARM64
             xirorig_native:
@@ -144,15 +144,15 @@ jobs:
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: arm64-windows-static
-              cmake_toolchain_file: ''
+              cmake_toolchain_file: ""
               use_msvc: true
               msvc_environment: vcvarsamd64_arm64
               use_msys2: false
-              msys2_environment: ''
-              msys2_install: ''
+              msys2_environment: ""
+              msys2_install: ""
               use_gcc: false
-              gcc_cc: ''
-              gcc_cxx: ''
+              gcc_cc: ""
+              gcc_cxx: ""
             xirorig:
               arch: win-arm64
               configuration: Release_windows
@@ -178,12 +178,12 @@ jobs:
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x64-linux
-              cmake_toolchain_file: ''
+              cmake_toolchain_file: ""
               use_msvc: false
-              msvc_environment: ''
+              msvc_environment: ""
               use_msys2: false
-              msys2_environment: ''
-              msys2_install: ''
+              msys2_environment: ""
+              msys2_install: ""
               use_gcc: true
               gcc_cc: gcc-10
               gcc_cxx: g++-10
@@ -218,10 +218,10 @@ jobs:
               cmake_target_triplet: arm-linux
               cmake_toolchain_file: raspberrypi-arm.cmake
               use_msvc: false
-              msvc_environment: ''
+              msvc_environment: ""
               use_msys2: false
-              msys2_environment: ''
-              msys2_install: ''
+              msys2_environment: ""
+              msys2_install: ""
               use_gcc: true
               gcc_cc: gcc-10
               gcc_cxx: g++-10
@@ -256,10 +256,10 @@ jobs:
               cmake_target_triplet: arm64-linux
               cmake_toolchain_file: raspberrypi-arm64.cmake
               use_msvc: false
-              msvc_environment: ''
+              msvc_environment: ""
               use_msys2: false
-              msys2_environment: ''
-              msys2_install: ''
+              msys2_environment: ""
+              msys2_install: ""
               use_gcc: true
               gcc_cc: gcc-10
               gcc_cxx: g++-10
@@ -278,12 +278,12 @@ jobs:
               cmake_generator: Ninja
               cmake_build_type: Release
               cmake_target_triplet: x64-osx
-              cmake_toolchain_file: ''
+              cmake_toolchain_file: ""
               use_msvc: false
-              msvc_environment: ''
+              msvc_environment: ""
               use_msys2: false
-              msys2_environment: ''
-              msys2_install: ''
+              msys2_environment: ""
+              msys2_install: ""
               use_gcc: true
               gcc_cc: gcc-10
               gcc_cxx: g++-10
@@ -300,6 +300,7 @@ jobs:
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v7
+        if: matrix.xirorig_native.build_xirorig_native
         with:
           setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_VCPKG_ROOT }}
@@ -307,17 +308,10 @@ jobs:
           additionalCachedPaths: ${{ github.workspace }}/${{ env.XIRORIG_NATIVE_VCPKG_ROOT }}/vcpkg_installed
 
       - name: Setup NuGet Credentials
+        if: matrix.xirorig_native.build_xirorig_native
         run: |
-          if ("${env:RUNNER_OS}" -eq 'Windows')
-          {
-            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_VCPKG_ROOT}" 'vcpkg.exe'
-            $mono = ''
-          }
-          else
-          {
-            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
-            $mono = 'mono'
-          }
+          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
+          $mono = "${env:RUNNER_OS}" -eq 'Windows' ? '' : 'mono'
 
           $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
           Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
@@ -332,7 +326,7 @@ jobs:
           {
             if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
             {
-              Invoke-Expression "choco install ${env:INSTALL}"
+              Invoke-Expression "choco install ${env:INSTALL} -y"
             }
             
             if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
@@ -390,7 +384,7 @@ jobs:
 
       - name: Setup msys2 environemnt
         uses: msys2/setup-msys2@v2
-        if: runner.os == 'Windows' && matrix.xirorig_native.use_msys2
+        if: runner.os == 'Windows' && matrix.xirorig_native.build_xirorig_native && matrix.xirorig_native.use_msys2
         with:
           update: true
           install: ${{ matrix.xirorig_native.msys2_install }}
@@ -437,10 +431,6 @@ jobs:
             
             if ("${env:XIRORIG_NATIVE_USE_MSYS2}" -eq 'true')
             {
-              $cmake_source_root = $cmake_source_root.Replace('C:\', '/C/')
-              $cmake_build_root = $cmake_build_root.Replace('C:\', '/C/')
-              $cmake_install_prefix = $cmake_install_prefix.Replace('C:\', '/C/')
-
               $env:MSYSTEM = "${env:XIRORIG_NATIVE_MSYS2_ENVIRONMENT}"
 
               msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
@@ -518,6 +508,11 @@ jobs:
 
     steps:
       # Init
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
       - name: Create Xirorig artifact directory
         run: |
           $xirorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}"
@@ -582,7 +577,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Xirorig ${{ steps.get_version.outputs.version }}
-          body_path: ${{ github.workspace }}/RELEASE_TEMPLATE.txt
+          body_path: ${{ github.workspace }}/RELEASE_TEMPLATE.md
           files: ${{ github.workspace }}/${{ env.XIRORIG_PUBLISH_ROOT }}/*
           draft: true
           fail_on_unmatched_files: true
