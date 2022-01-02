@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
-using Xiropht_Connector_All.Setting;
+using Xenophyte_Connector_All.Setting;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Config
 {

@@ -3,12 +3,12 @@
   <PropertyGroup>
     <AssemblyName>Xirorig</AssemblyName>
     <RootNamespace>TheDialgaTeam.Xiropht.Xirorig</RootNamespace>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <StartupObject>TheDialgaTeam.Xiropht.Xirorig.Program</StartupObject>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
     <PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>
-    <Version>0.2.2.0</Version>
+    <Version>0.2.3.0</Version>
     <Authors>Yong Jian Ming</Authors>
     <Company>The Dialga Team</Company>
     <Product>Xirorig</Product>
@@ -35,11 +35,11 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.8" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="3.1.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.1.0" />
+    <PackageReference Include="TheDialgaTeam.Core.Logger" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TheDialgaTeam.Core.Logger\src\TheDialgaTeam.Core.Logger.csproj" />
-    <ProjectReference Include="..\Xiropht-Connector-All\Xiropht-Connector-All\Xiropht-Connector-All.csproj" />
+    <ProjectReference Include="..\Xenophyte-Connector-All\Xenophyte-Connector-All\Xenophyte-Connector-All.csproj" />
   </ItemGroup>
 
   <ItemGroup>

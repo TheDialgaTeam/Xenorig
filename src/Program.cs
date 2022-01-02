@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using TheDialgaTeam.Core.Logger;
-using TheDialgaTeam.Core.Logger.Formatter;
+using TheDialgaTeam.Core.Logger.Serilog.Formatting.Ansi;
+using TheDialgaTeam.Core.Logger.Serilog.Sinks;
 using TheDialgaTeam.Xiropht.Xirorig.Config;
 using TheDialgaTeam.Xiropht.Xirorig.Miner;
 using TheDialgaTeam.Xiropht.Xirorig.Network;
@@ -58,7 +58,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig
 
                     loggerConfiguration
                         .ReadFrom.Configuration(hostBuilderContext.Configuration)
-                        .WriteTo.AnsiConsole(new OutputTemplateTextFormatter(outputTemplate));
+                        .WriteTo.AnsiConsole(new AnsiOutputTemplateTextFormatter(outputTemplate));
                 });
             ;
         }

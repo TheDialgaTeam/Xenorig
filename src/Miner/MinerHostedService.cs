@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Xiropht.Xirorig.Config;
 using TheDialgaTeam.Xiropht.Xirorig.Network;
-using Xiropht_Connector_All.SoloMining;
+using Xenophyte_Connector_All.SoloMining;
 using Timer = System.Timers.Timer;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Miner

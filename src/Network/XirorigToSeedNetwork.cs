@@ -16,10 +16,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Xiropht.Xirorig.Config;
-using Xiropht_Connector_All.RPC;
-using Xiropht_Connector_All.Setting;
-using Xiropht_Connector_All.SoloMining;
-using Xiropht_Connector_All.Utils;
+using Xenophyte_Connector_All.RPC;
+using Xenophyte_Connector_All.Setting;
+using Xenophyte_Connector_All.SoloMining;
+using Xenophyte_Connector_All.Utils;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Network
 {
