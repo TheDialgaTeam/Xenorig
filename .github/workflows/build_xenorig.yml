@@ -133,9 +133,9 @@ jobs:
               cmake_build_type: Release
               cmake_target_triplet: arm64-windows-static
               cmake_toolchain_file: ""
-              use_msvc: false
+              use_msvc: true
               msvc_environment: vcvarsamd64_arm64
-              use_msys2: true
+              use_msys2: false
               msys2_environment: CLANGARM64
               msys2_install: >-
                 mingw-w64-clang-aarch64-toolchain
