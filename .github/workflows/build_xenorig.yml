@@ -17,7 +17,7 @@ env:
 
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
+  VCPKG_BINARY_SOURCES: clear;nuget,github/TheDialgaTeam,readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
 
 defaults:
   run:
@@ -35,19 +35,19 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-2022, ubuntu-20.04, macos-11]
         arch: [x64, x86, ARM32, ARM64]
         exclude:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             arch: x86
-          - os: macos-latest
+          - os: macos-11
             arch: x86
-          - os: macos-latest
+          - os: macos-11
             arch: ARM32
-          - os: macos-latest
+          - os: macos-11
             arch: ARM64
         include:
-          - os: windows-latest
+          - os: windows-2022
             arch: x64
             install: ""
             post_install: []
@@ -73,7 +73,7 @@ jobs:
               arch: win-x64
               configuration: Release
 
-          - os: windows-latest
+          - os: windows-2022
             arch: x86
             install: ""
             post_install: []
@@ -99,7 +99,7 @@ jobs:
               arch: win-x86
               configuration: Release
 
-          - os: windows-latest
+          - os: windows-2022
             arch: ARM32
             install: ""
             post_install: []
@@ -122,7 +122,7 @@ jobs:
               arch: win-arm
               configuration: Release
 
-          - os: windows-latest
+          - os: windows-2022
             arch: ARM64
             install: ""
             post_install: []
@@ -148,19 +148,11 @@ jobs:
               arch: win-arm64
               configuration: Release
 
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             arch: x64
             install: >-
-              curl
-              zip
-              unzip
-              tar
-              p7zip-full
               cmake
               ninja-build
-              build-essential
-              pkg-config
-              clang
               zlib1g-dev
               libkrb5-dev
             post_install: []
@@ -177,31 +169,21 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
               use_gcc: true
-              gcc_cc: gcc-10
-              gcc_cxx: g++-10
+              gcc_cc: clang
+              gcc_cxx: clang++
             Xenorig:
               arch: linux-x64
               configuration: Release
 
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             arch: ARM32
             install: >-
-              curl
-              zip
-              unzip
-              tar
-              p7zip-full
               cmake
               ninja-build
-              build-essential
-              pkg-config
-              gcc-10
-              g++-10
-              gcc-10-arm-linux-gnueabihf
-              g++-10-arm-linux-gnueabihf
-              clang
               zlib1g-dev
               libkrb5-dev
+              gcc-10-arm-linux-gnueabihf
+              g++-10-arm-linux-gnueabihf
             post_install:
               - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
               - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
@@ -218,31 +200,21 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
               use_gcc: true
-              gcc_cc: arm-linux-gnueabihf-gcc
-              gcc_cxx: arm-linux-gnueabihf-g++
+              gcc_cc: clang
+              gcc_cxx: clang++
             Xenorig:
               arch: linux-arm
               configuration: Release
 
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             arch: ARM64
             install: >-
-              curl
-              zip
-              unzip
-              tar
-              p7zip-full
               cmake
               ninja-build
-              build-essential
-              pkg-config
-              gcc-10
-              g++-10
-              gcc-10-aarch64-linux-gnu
-              g++-10-aarch64-linux-gnu
-              clang
               zlib1g-dev
               libkrb5-dev
+              gcc-10-aarch64-linux-gnu
+              g++-10-aarch64-linux-gnu
             post_install:
               - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 999
               - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
@@ -259,13 +231,13 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
               use_gcc: true
-              gcc_cc: aarch64-linux-gnu-gcc
-              gcc_cxx: aarch64-linux-gnu-g++
+              gcc_cc: clang
+              gcc_cxx: clang++
             Xenorig:
               arch: linux-arm64
               configuration: Release
 
-          - os: macos-latest
+          - os: macos-11
             arch: x64
             install: >-
               ninja
@@ -283,8 +255,8 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
               use_gcc: true
-              gcc_cc: gcc-10
-              gcc_cxx: g++-10
+              gcc_cc: clang
+              gcc_cxx: clang++
             Xenorig:
               arch: osx-x64
               configuration: Release
@@ -474,7 +446,7 @@ jobs:
 
   deploy_Xenorig:
     name: Deploy Xenorig
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: [build_Xenorig]
     if: startsWith(github.ref, 'refs/tags/')
 
