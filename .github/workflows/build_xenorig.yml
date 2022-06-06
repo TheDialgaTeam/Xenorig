@@ -1,0 +1,552 @@
+name: Build and Deploy Xenorig
+
+on:
+  push:
+    tags:
+      - v*
+
+  workflow_dispatch:
+
+env:
+  XENORIG_CSPROJ_FILE: Xenorig/Xenorig.csproj
+  XENORIG_PUBLISH_ROOT: Xenorig/publish
+
+  XENORIG_NATIVE_SOURCE_ROOT: XenoLibNative
+  XENORIG_NATIVE_BUILD_ROOT: XenoLibNative/build
+  XENORIG_NATIVE_VCPKG_ROOT: XenoLibNative/vcpkg
+
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+  VCPKG_BINARY_SOURCES: clear;nuget,GitHub,readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
+
+defaults:
+  run:
+    shell: pwsh
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_Xenorig:
+    name: Build Xenorig (${{ matrix.output_folder }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64, x86, ARM32, ARM64]
+        exclude:
+          - os: ubuntu-latest
+            arch: x86
+          - os: macos-latest
+            arch: x86
+          - os: macos-latest
+            arch: ARM32
+          - os: macos-latest
+            arch: ARM64
+        include:
+          - os: windows-latest
+            arch: x64
+            install: ""
+            post_install: []
+            output_folder: windows-x64
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x64-mingw-static
+              cmake_toolchain_file: ""
+              use_msvc: false
+              msvc_environment: "vcvars64"
+              use_msys2: true
+              msys2_environment: CLANG64
+              msys2_install: >-
+                mingw-w64-clang-x86_64-toolchain
+                mingw-w64-clang-x86_64-cmake
+                mingw-w64-clang-x86_64-ninja
+              use_gcc: false
+              gcc_cc: ""
+              gcc_cxx: ""
+            Xenorig:
+              arch: win-x64
+              configuration: Release
+
+          - os: windows-latest
+            arch: x86
+            install: ""
+            post_install: []
+            output_folder: windows-x86
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x86-mingw-static
+              cmake_toolchain_file: ""
+              use_msvc: false
+              msvc_environment: "vcvars32"
+              use_msys2: true
+              msys2_environment: CLANG32
+              msys2_install: >-
+                mingw-w64-clang-i686-toolchain
+                mingw-w64-clang-i686-cmake
+                mingw-w64-clang-i686-ninja
+              use_gcc: false
+              gcc_cc: ""
+              gcc_cxx: ""
+            Xenorig:
+              arch: win-x86
+              configuration: Release
+
+          - os: windows-latest
+            arch: ARM32
+            install: ""
+            post_install: []
+            output_folder: windows-ARM32
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm-windows-static
+              cmake_toolchain_file: ""
+              use_msvc: true
+              msvc_environment: vcvarsamd64_arm
+              use_msys2: false
+              msys2_environment: ""
+              msys2_install: ""
+              use_gcc: false
+              gcc_cc: ""
+              gcc_cxx: ""
+            Xenorig:
+              arch: win-arm
+              configuration: Release
+
+          - os: windows-latest
+            arch: ARM64
+            install: ""
+            post_install: []
+            output_folder: windows-ARM64
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm64-windows-static
+              cmake_toolchain_file: ""
+              use_msvc: false
+              msvc_environment: vcvarsamd64_arm64
+              use_msys2: true
+              msys2_environment: CLANGARM64
+              msys2_install: >-
+                mingw-w64-clang-aarch64-toolchain
+                mingw-w64-clang-aarch64-cmake
+                mingw-w64-clang-aarch64-ninja
+              use_gcc: false
+              gcc_cc: ""
+              gcc_cxx: ""
+            Xenorig:
+              arch: win-arm64
+              configuration: Release
+
+          - os: ubuntu-latest
+            arch: x64
+            install: >-
+              curl
+              zip
+              unzip
+              tar
+              p7zip-full
+              cmake
+              ninja-build
+              build-essential
+              pkg-config
+              gcc-10
+              g++-10
+            post_install: []
+            output_folder: linux-x64
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x64-linux
+              cmake_toolchain_file: ""
+              use_msvc: false
+              msvc_environment: ""
+              use_msys2: false
+              msys2_environment: ""
+              msys2_install: ""
+              use_gcc: true
+              gcc_cc: gcc-10
+              gcc_cxx: g++-10
+            Xenorig:
+              arch: linux-x64
+              configuration: Release_linux
+
+          - os: ubuntu-latest
+            arch: ARM32
+            install: >-
+              curl
+              zip
+              unzip
+              tar
+              p7zip-full
+              cmake
+              ninja-build
+              build-essential
+              pkg-config
+              gcc-10
+              g++-10
+              gcc-10-arm-linux-gnueabihf
+              g++-10-arm-linux-gnueabihf
+            post_install:
+              - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
+              - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
+            output_folder: linux-ARM32
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm-linux
+              cmake_toolchain_file: raspberrypi-arm.cmake
+              use_msvc: false
+              msvc_environment: ""
+              use_msys2: false
+              msys2_environment: ""
+              msys2_install: ""
+              use_gcc: true
+              gcc_cc: arm-linux-gnueabihf-gcc
+              gcc_cxx: arm-linux-gnueabihf-g++
+            Xenorig:
+              arch: linux-arm
+              configuration: Release_linux
+
+          - os: ubuntu-latest
+            arch: ARM64
+            install: >-
+              curl
+              zip
+              unzip
+              tar
+              p7zip-full
+              cmake
+              ninja-build
+              build-essential
+              pkg-config
+              gcc-10
+              g++-10
+              gcc-10-aarch64-linux-gnu
+              g++-10-aarch64-linux-gnu
+            post_install:
+              - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 999
+              - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
+            output_folder: linux-ARM64
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: arm64-linux
+              cmake_toolchain_file: raspberrypi-arm64.cmake
+              use_msvc: false
+              msvc_environment: ""
+              use_msys2: false
+              msys2_environment: ""
+              msys2_install: ""
+              use_gcc: true
+              gcc_cc: aarch64-linux-gnu-gcc
+              gcc_cxx: aarch64-linux-gnu-g++
+            Xenorig:
+              arch: linux-arm64
+              configuration: Release_linux
+
+          - os: macos-latest
+            arch: x64
+            install: >-
+              ninja
+            post_install: []
+            output_folder: osx-x64
+            Xenorig_native:
+              build_Xenorig_native: true
+              cmake_generator: Ninja
+              cmake_build_type: Release
+              cmake_target_triplet: x64-osx
+              cmake_toolchain_file: ""
+              use_msvc: false
+              msvc_environment: ""
+              use_msys2: false
+              msys2_environment: ""
+              msys2_install: ""
+              use_gcc: true
+              gcc_cc: gcc-10
+              gcc_cxx: g++-10
+            Xenorig:
+              arch: osx-x64
+              configuration: Release_osx
+
+    steps:
+      # Init
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v7
+        if: matrix.Xenorig_native.build_Xenorig_native
+        with:
+          setupOnly: true
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
+          appendedCacheKey: ${{ matrix.output_folder }}
+          additionalCachedPaths: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}/vcpkg_installed
+
+      - name: Setup NuGet Credentials
+        if: matrix.Xenorig_native.build_Xenorig_native
+        run: |
+          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
+          $mono = "${env:RUNNER_OS}" -eq 'Windows' ? '' : 'mono'
+
+          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
+          Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/TheDialgaTeam/index.json`" -storepasswordincleartext -name `"GitHub`" -username `"TheDialgaTeam`" -password `"${{ secrets.GITHUB_TOKEN }}`""
+
+      # Install
+      - name: Install Program / Dependencies
+        env:
+          INSTALL: ${{ matrix.install }}
+          POST_INSTALL: ${{ join(matrix.post_install, ' && ') }}
+        run: |
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            {
+              Invoke-Expression "choco install ${env:INSTALL} -y"
+            }
+            
+            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
+            {
+              Invoke-Expression "${env:POST_INSTALL}"
+            }
+          }
+          elseif ("${env:RUNNER_OS}" -eq 'Linux')
+          {
+            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            {
+              sudo apt-get update -y
+              Invoke-Expression "sudo apt-get install ${env:INSTALL} -y"
+            }
+            
+            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
+            {
+              Invoke-Expression "${env:POST_INSTALL}"
+            }
+          }
+          elseif ("${env:RUNNER_OS}" -eq 'macOS')
+          {
+            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            {
+              brew update
+              Invoke-Expression "brew install ${env:INSTALL}"
+            }
+            
+            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
+            {
+              Invoke-Expression "${env:POST_INSTALL}"
+            }
+          }
+
+      - name: Setup msys2 environemnt
+        uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows' && matrix.Xenorig_native.build_Xenorig_native && matrix.Xenorig_native.use_msys2
+        with:
+          update: true
+          install: ${{ matrix.Xenorig_native.msys2_install }}
+
+      # Build Xenorig Native
+      - name: Build Xenorig Native
+        if: matrix.Xenorig_native.build_Xenorig_native
+        env:
+          XENORIG_NATIVE_OUTPUT_FOLDER: ${{ matrix.output_folder }}
+          XENORIG_NATIVE_CMAKE_GENERATOR: ${{ matrix.Xenorig_native.cmake_generator }}
+          XENORIG_NATIVE_CMAKE_BUILD_TYPE: ${{ matrix.Xenorig_native.cmake_build_type }}
+          XENORIG_NATIVE_CMAKE_TARGET_TRIPLET: ${{ matrix.Xenorig_native.cmake_target_triplet }}
+          XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE: ${{ matrix.Xenorig_native.cmake_toolchain_file }}
+          XENORIG_NATIVE_USE_MSVC: ${{ matrix.Xenorig_native.use_msvc }}
+          XENORIG_NATIVE_MSVC_ENVIRONMENT: ${{ matrix.Xenorig_native.msvc_environment }}
+          XENORIG_NATIVE_USE_MSYS2: ${{ matrix.Xenorig_native.use_msys2 }}
+          XENORIG_NATIVE_MSYS2_ENVIRONMENT: ${{ matrix.Xenorig_native.msys2_environment }}
+          XENORIG_NATIVE_MSYS2_INSTALL: ${{ matrix.Xenorig_native.msys2_install }}
+          XENORIG_NATIVE_USE_GCC: ${{ matrix.Xenorig_native.use_gcc }}
+          XENORIG_NATIVE_GCC_CC: ${{ matrix.Xenorig_native.gcc_cc }}
+          XENORIG_NATIVE_GCC_CXX: ${{ matrix.Xenorig_native.gcc_cxx }}
+        run: |
+          $cmake_generator = "${env:XENORIG_NATIVE_CMAKE_GENERATOR}"
+
+          $cmake_build_type = "${env:XENORIG_NATIVE_CMAKE_BUILD_TYPE}"
+          $cmake_target_triplet = "${env:XENORIG_NATIVE_CMAKE_TARGET_TRIPLET}"
+          $cmake_toolchain_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_SOURCE_ROOT}" 'cmake' "${env:XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"
+
+          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_SOURCE_ROOT}"
+          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_BUILD_ROOT}" "${env:XENORIG_NATIVE_OUTPUT_FOLDER}"
+          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_INSTALL_ROOT}" "${env:XENORIG_NATIVE_OUTPUT_FOLDER}"
+
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            $cmake_source_root = $cmake_source_root.Replace('\', '/')
+            $cmake_build_root = $cmake_build_root.Replace('\', '/')
+            $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
+
+            if ("${env:XENORIG_NATIVE_USE_MSVC}" -eq 'true')
+            {
+              $msbuild_install_root = Join-Path "$cmake_build_root" 'INSTALL.vcxproj'
+              cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\${env:XENORIG_NATIVE_MSVC_ENVIRONMENT}.bat`" && cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && ninja -C `"$cmake_build_root`" install"
+            }
+            
+            if ("${env:XENORIG_NATIVE_USE_MSYS2}" -eq 'true')
+            {
+              $env:MSYSTEM = "${env:XENORIG_NATIVE_MSYS2_ENVIRONMENT}"
+
+              msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
+              msys2 -c "ninja -C `"$cmake_build_root`" install"
+            }
+          }
+          else
+          {
+            $env:CC = "${env:XENORIG_NATIVE_GCC_CC}"
+            $env:CXX = "${env:XENORIG_NATIVE_GCC_CXX}"
+
+            if (![string]::IsNullOrWhiteSpace("${env:XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"))
+            {
+              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+            }
+            else
+            {
+              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+            }
+
+            ninja -C "$cmake_build_root" install
+          }
+
+      # Build Xenorig
+      - name: Patch Xenorig csproj
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          $version = (${env:GITHUB_REF} -split "/" | Select-Object -Last 1).Replace('v', '')
+          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_CSPROJ_FILE}"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
+
+      - name: Build Xenorig
+        env:
+          XENORIG_OUTPUT_FOLDER: ${{ matrix.output_folder }}
+          XENORIG_ARCH: ${{ matrix.Xenorig.arch }}
+          XENORIG_PLATFORM: ${{ matrix.arch }}
+          XENORIG_CONFIGURATION: ${{ matrix.Xenorig.configuration }}
+        run: |
+          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}" "${env:XENORIG_OUTPUT_FOLDER}"
+          Invoke-Expression "dotnet publish -c ${env:XENORIG_CONFIGURATION} -o `"$output`" --runtime ${env:XENORIG_ARCH} --self-contained -p:PublishReadyToRun=true"
+
+      # Package
+      - name: Package Xenorig
+        env:
+          XENORIG_OUTPUT_FOLDER: ${{ matrix.output_folder }}
+        run: |
+          $Xenorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}"
+          Set-Location "$Xenorig_publish_root"
+
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            Invoke-Expression "7z a `"${env:XENORIG_OUTPUT_FOLDER}.zip`" `"${env:XENORIG_OUTPUT_FOLDER}`" -mx=9"
+          }
+          else
+          {
+            Invoke-Expression "7z a `"${env:XENORIG_OUTPUT_FOLDER}.tar`" `"${env:XENORIG_OUTPUT_FOLDER}`""
+            Invoke-Expression "7z a `"${env:XENORIG_OUTPUT_FOLDER}.tar.gz`" `"${env:XENORIG_OUTPUT_FOLDER}.tar`" -mx=9"
+          }
+
+      # Upload Artifacts
+      - name: Upload Xenorig artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.output_folder }}
+          path: |
+            ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}/*.*
+            !${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}/*.tar
+
+  deploy_Xenorig:
+    name: Deploy Xenorig
+    runs-on: ubuntu-latest
+    needs: [build_Xenorig]
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      # Init
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Create Xenorig artifact directory
+        run: |
+          $Xenorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}"
+          New-Item "$Xenorig_native_install_root" -ItemType 'Directory' -Force
+
+      - name: Download Xenorig artifact (windows-x64)
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-x64
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      - name: Download Xenorig artifact (windows-x86)
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-x86
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      - name: Download Xenorig artifact (windows-ARM32)
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-ARM32
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      - name: Download Xenorig artifact (windows-ARM64)
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-ARM64
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      - name: Download Xenorig artifact (linux-x64)
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-x64
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      - name: Download Xenorig artifact (linux-ARM32)
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-ARM32
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      - name: Download Xenorig artifact (linux-ARM64)
+        uses: actions/download-artifact@v2
+        with:
+          name: linux-ARM64
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      - name: Download Xenorig artifact (osx-x64)
+        uses: actions/download-artifact@v2
+        with:
+          name: osx-x64
+          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
+
+      # Deploy
+      - name: Get version number
+        id: get_version
+        run: |
+          $version = "${env:GITHUB_REF}" -split '/' | Select-Object -Last 1
+          Write-Output "::set-output name=version::$version"
+
+      - name: Deploy Xenorig
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Xenorig ${{ steps.get_version.outputs.version }}
+          body_path: ${{ github.workspace }}/RELEASE_TEMPLATE.md
+          files: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}/*
+          draft: true
+          fail_on_unmatched_files: true
