@@ -160,8 +160,9 @@ jobs:
               ninja-build
               build-essential
               pkg-config
-              gcc-10
-              g++-10
+              clang
+              zlib1g-dev
+              libkrb5-dev
             post_install: []
             output_folder: linux-x64
             Xenorig_native:
@@ -198,6 +199,9 @@ jobs:
               g++-10
               gcc-10-arm-linux-gnueabihf
               g++-10-arm-linux-gnueabihf
+              clang
+              zlib1g-dev
+              libkrb5-dev
             post_install:
               - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
               - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
@@ -236,6 +240,9 @@ jobs:
               g++-10
               gcc-10-aarch64-linux-gnu
               g++-10-aarch64-linux-gnu
+              clang
+              zlib1g-dev
+              libkrb5-dev
             post_install:
               - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 999
               - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
