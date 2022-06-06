@@ -312,7 +312,7 @@ jobs:
           $mono = "${env:RUNNER_OS}" -eq 'Windows' ? '' : 'mono'
 
           $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
-          Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -storepasswordincleartext -name `"github/TheDialgaTeam_vcpkg`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`""
+          Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -storepasswordincleartext -name `"vcpkg`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`""
 
           dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/TheDialgaTeam" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
 
