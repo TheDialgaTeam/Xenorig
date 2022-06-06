@@ -53,7 +53,7 @@
 		<DirectPInvoke Include="kernel32" />
 		<DirectPInvoke Include="xeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
 
 		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -66,7 +66,7 @@
 		<DirectPInvoke Include="kernel32" />
 		<DirectPInvoke Include="xeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
 
 		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -85,7 +85,7 @@
 		<DirectPInvoke Include="kernel32" />
 		<DirectPInvoke Include="xeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\xeno_native.lib" />
+		<NativeLibrary Include="..\XenoLibNative\build\static\xeno_native.lib" />
 
 		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -98,7 +98,7 @@
 		<DirectPInvoke Include="libc" />
 		<DirectPInvoke Include="libxeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
 
 		<Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -122,7 +122,7 @@
 
 		<DirectPInvoke Include="libxeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
 
 		<Content Include="..\XenoLibNative\build\libxeno_native.dylib.1.0.0" Link="libxeno_native.dylib">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
