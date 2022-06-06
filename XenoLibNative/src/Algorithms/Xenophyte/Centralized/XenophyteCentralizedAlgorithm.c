@@ -54,6 +54,14 @@ DOTNET_PRIVATE void XorAndConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input
     }
 }
 
+DOTNET_PRIVATE DOTNET_FLOAT Max_Float(DOTNET_FLOAT a, DOTNET_FLOAT b) {
+    return a > b ? a : b;
+}
+
+DOTNET_PRIVATE DOTNET_DOUBLE Max_Double(DOTNET_DOUBLE a, DOTNET_DOUBLE b) {
+    return a > b ? a : b;
+}
+
 void XenophyteCentralizedAlgorithm_GenerateCertificate(DOTNET_STRING header, DOTNET_INT keySize, DOTNET_SPAN_BYTE output) {
     DOTNET_INT headerSize = strlen(header);
     memcpy(output, header, headerSize);
@@ -77,9 +85,9 @@ DOTNET_INT XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(DOTNET_LONG mi
     } else {
         for (DOTNET_INT i = 255; i >= 0; i--) {
             if (range <= MAX_FLOAT_PRECISION) {
-                output[i] = minValue + (DOTNET_LONG) ((0 > i / 255.0f - 0.0000001f) ? 0 : i / 255.0f - 0.0000001f);
+                output[i] = minValue + (DOTNET_LONG) Max_Float(0, i / 255.0f - 0.0000001f);
             } else {
-                output[i] = minValue + (DOTNET_LONG) ((0 > i / 255.0 - 0.00000000001) ? 0 : i / 255.0 - 0.00000000001);
+                output[i] = minValue + (DOTNET_LONG) Max_Double(0, i / 255.0 - 0.00000000001);
             }
         }
 
@@ -109,10 +117,14 @@ DOTNET_INT XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(DOTNET_LONG
 }
 
 DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE encryptedShare, DOTNET_SPAN_BYTE hashEncryptedShare, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_INT aesKeySize, DOTNET_READ_ONLY_SPAN_BYTE aesKey, DOTNET_READ_ONLY_SPAN_BYTE aesIv, DOTNET_INT aesRound) {
-    DOTNET_INT firstOutputLength = inputLength * 2;
-    DOTNET_BYTE firstOutput[firstOutputLength];
-
     // First encryption phase convert to hex and xor each result.
+
+    DOTNET_INT firstOutputLength = inputLength * 2;
+    DOTNET_BYTE_ARRAY firstOutput = malloc(firstOutputLength);
+
+    if (firstOutput == NULL) {
+        return DOTNET_FALSE;
+    }
 
     XorAndConvertByteArrayToHex(input, inputLength, xorKey, xorKeyLength, firstOutput, DOTNET_FALSE);
 
@@ -127,9 +139,14 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
         secondOutputLength = temp * 2 + (temp - 1);
     }
 
-    DOTNET_BYTE secondOutput[secondOutputLength];
+    DOTNET_BYTE_ARRAY secondOutput = malloc(secondOutputLength);
+
+    if (secondOutput == NULL) {
+        return DOTNET_FALSE;
+    }
 
     memcpy(secondOutput, firstOutput, firstOutputLength);
+    free(firstOutput);
 
     DOTNET_INT bytesWritten;
     DOTNET_INT tempSize;
@@ -159,11 +176,16 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
             }
 
             tempSize = bytesWritten * 2 + (bytesWritten - 1);
-            DOTNET_BYTE temp[tempSize];
+            DOTNET_BYTE_ARRAY temp = malloc(tempSize);
+
+            if (temp == NULL) {
+                return DOTNET_FALSE;
+            }
 
             XorAndConvertByteArrayToHex(secondOutput, bytesWritten, xorKey, xorKeyLength, temp, DOTNET_TRUE);
 
             memcpy(secondOutput, temp, tempSize);
+            free(temp);
 
             secondInputLength = tempSize;
         } else {
@@ -189,29 +211,46 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
             }
 
             tempSize = bytesWritten * 2 + (bytesWritten - 1);
-            DOTNET_BYTE temp[tempSize];
+            DOTNET_BYTE_ARRAY temp = malloc(tempSize);
+
+            if (temp == NULL) {
+                return DOTNET_FALSE;
+            }
 
             ConvertByteArrayToHex(secondOutput, bytesWritten, temp, DOTNET_TRUE);
 
             memcpy(secondOutput, temp, tempSize);
+            free(temp);
 
             secondInputLength = tempSize;
         }
     }
 
     // Third encryption phase: compute hash
-    DOTNET_BYTE thirdOutput[64];
+    DOTNET_BYTE_ARRAY thirdOutput = malloc(64);
+
+    if (thirdOutput == NULL) {
+        return DOTNET_FALSE;
+    }
 
     if (!MessageDigestUtility_ComputeSha2_512Hash(secondOutput, secondOutputLength, thirdOutput)) {
         return DOTNET_FALSE;
     }
+
+    free(secondOutput);
 
     for (DOTNET_INT i = 64 - 1; i >= 0; i--) {
         encryptedShare[2 * i] = Base16Characters[thirdOutput[i] >> 4];
         encryptedShare[2 * i + 1] = Base16Characters[thirdOutput[i] & 15];
     }
 
-    DOTNET_BYTE finalOutput[64];
+    free(thirdOutput);
+
+    DOTNET_BYTE_ARRAY finalOutput = malloc(64);
+
+    if (finalOutput == NULL) {
+        return DOTNET_FALSE;
+    }
 
     if (!MessageDigestUtility_ComputeSha2_512Hash(encryptedShare, 64 * 2, finalOutput)) {
         return DOTNET_FALSE;
@@ -221,6 +260,8 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
         hashEncryptedShare[2 * i] = Base16Characters[finalOutput[i] >> 4];
         hashEncryptedShare[2 * i + 1] = Base16Characters[finalOutput[i] & 15];
     }
+
+    free(finalOutput);
 
     return DOTNET_TRUE;
 }
