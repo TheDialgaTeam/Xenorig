@@ -77,9 +77,9 @@ DOTNET_INT XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(DOTNET_LONG mi
     } else {
         for (DOTNET_INT i = 255; i >= 0; i--) {
             if (range <= MAX_FLOAT_PRECISION) {
-                output[i] = minValue + (DOTNET_LONG) ((__max(0, i / 255.0f - 0.0000001f) * range));
+                output[i] = minValue + (DOTNET_LONG) ((0 > i / 255.0f - 0.0000001f) ? 0 : i / 255.0f - 0.0000001f);
             } else {
-                output[i] = minValue + (DOTNET_LONG) ((__max(0, i / 255.0 - 0.00000000001) * range));
+                output[i] = minValue + (DOTNET_LONG) ((0 > i / 255.0 - 0.00000000001) ? 0 : i / 255.0 - 0.00000000001);
             }
         }
 
@@ -97,15 +97,14 @@ DOTNET_INT XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(DOTNET_LONG
     DOTNET_INT amount = 0;
     DOTNET_INT easyBlockValuesIndex = 0;
 
-    for (DOTNET_LONG i = minValue; i <= maxValue; i++)
-    {
+    for (DOTNET_LONG i = minValue; i <= maxValue; i++) {
         if (i < easyBlockValues[easyBlockValuesIndex]) {
             output[amount++] = i;
         } else {
             easyBlockValuesIndex++;
         }
     }
-    
+
     return amount;
 }
 
@@ -160,7 +159,7 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
             }
 
             tempSize = bytesWritten * 2 + (bytesWritten - 1);
-            DOTNET_BYTE temp [tempSize];
+            DOTNET_BYTE temp[tempSize];
 
             XorAndConvertByteArrayToHex(secondOutput, bytesWritten, xorKey, xorKeyLength, temp, DOTNET_TRUE);
 
@@ -190,7 +189,7 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
             }
 
             tempSize = bytesWritten * 2 + (bytesWritten - 1);
-            DOTNET_BYTE temp [tempSize];
+            DOTNET_BYTE temp[tempSize];
 
             ConvertByteArrayToHex(secondOutput, bytesWritten, temp, DOTNET_TRUE);
 

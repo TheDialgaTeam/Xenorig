@@ -5,8 +5,6 @@ on:
     tags:
       - v*
 
-  workflow_dispatch:
-
 env:
   XENORIG_CSPROJ_FILE: Xenorig/Xenorig.csproj
   XENORIG_PUBLISH_ROOT: Xenorig/publish
@@ -17,7 +15,8 @@ env:
 
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-  VCPKG_BINARY_SOURCES: clear;nuget,github/TheDialgaTeam,readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
+  VCPKG_USE_NUGET_CACHE: true
+  VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.actor }},readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
 
 defaults:
   run:
@@ -36,16 +35,16 @@ jobs:
       fail-fast: true
       matrix:
         os: [windows-2022, ubuntu-20.04, macos-11]
-        arch: [x64, x86, ARM32, ARM64]
+        arch: [x64, x86, arm, arm64]
         exclude:
           - os: ubuntu-20.04
             arch: x86
           - os: macos-11
             arch: x86
           - os: macos-11
-            arch: ARM32
+            arch: arm
           - os: macos-11
-            arch: ARM64
+            arch: arm64
         include:
           - os: windows-2022
             arch: x64
@@ -100,10 +99,10 @@ jobs:
               configuration: Release
 
           - os: windows-2022
-            arch: ARM32
+            arch: arm
             install: ""
             post_install: []
-            output_folder: windows-ARM32
+            output_folder: windows-arm
             Xenorig_native:
               build_Xenorig_native: true
               cmake_generator: Ninja
@@ -123,10 +122,10 @@ jobs:
               configuration: Release
 
           - os: windows-2022
-            arch: ARM64
+            arch: arm64
             install: ""
             post_install: []
-            output_folder: windows-ARM64
+            output_folder: windows-arm64
             Xenorig_native:
               build_Xenorig_native: true
               cmake_generator: Ninja
@@ -154,7 +153,6 @@ jobs:
               cmake
               ninja-build
               zlib1g-dev
-              libkrb5-dev
             post_install: []
             output_folder: linux-x64
             Xenorig_native:
@@ -176,18 +174,17 @@ jobs:
               configuration: Release
 
           - os: ubuntu-20.04
-            arch: ARM32
+            arch: arm
             install: >-
               cmake
               ninja-build
               zlib1g-dev
-              libkrb5-dev
               gcc-10-arm-linux-gnueabihf
               g++-10-arm-linux-gnueabihf
             post_install:
               - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-gcc arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-10 999
               - sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-10 999
-            output_folder: linux-ARM32
+            output_folder: linux-arm
             Xenorig_native:
               build_Xenorig_native: true
               cmake_generator: Ninja
@@ -207,18 +204,17 @@ jobs:
               configuration: Release
 
           - os: ubuntu-20.04
-            arch: ARM64
+            arch: arm64
             install: >-
               cmake
               ninja-build
               zlib1g-dev
-              libkrb5-dev
               gcc-10-aarch64-linux-gnu
               g++-10-aarch64-linux-gnu
             post_install:
               - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-10 999
               - sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-g++ aarch64-linux-gnu-g++ /usr/bin/aarch64-linux-gnu-g++-10 999
-            output_folder: linux-ARM64
+            output_folder: linux-arm64
             Xenorig_native:
               build_Xenorig_native: true
               cmake_generator: Ninja
@@ -280,7 +276,7 @@ jobs:
       - name: Setup NuGet Credentials
         if: matrix.Xenorig_native.build_Xenorig_native
         run: |
-          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/TheDialgaTeam" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
+          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/${{ github.actor }}" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
 
       # Install
       - name: Install Program / Dependencies
@@ -474,16 +470,16 @@ jobs:
           name: windows-x86
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
-      - name: Download Xenorig artifact (windows-ARM32)
+      - name: Download Xenorig artifact (windows-arm)
         uses: actions/download-artifact@v2
         with:
-          name: windows-ARM32
+          name: windows-arm
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
-      - name: Download Xenorig artifact (windows-ARM64)
+      - name: Download Xenorig artifact (windows-arm64)
         uses: actions/download-artifact@v2
         with:
-          name: windows-ARM64
+          name: windows-arm64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (linux-x64)
@@ -492,16 +488,16 @@ jobs:
           name: linux-x64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
-      - name: Download Xenorig artifact (linux-ARM32)
+      - name: Download Xenorig artifact (linux-arm)
         uses: actions/download-artifact@v2
         with:
-          name: linux-ARM32
+          name: linux-arm
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
-      - name: Download Xenorig artifact (linux-ARM64)
+      - name: Download Xenorig artifact (linux-arm64)
         uses: actions/download-artifact@v2
         with:
-          name: linux-ARM64
+          name: linux-arm64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (osx-x64)
