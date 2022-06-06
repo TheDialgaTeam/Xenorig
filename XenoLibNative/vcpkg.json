@@ -1,0 +1,12 @@
+{
+  "name": "xeno-native",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "openssl",
+    "lz4",
+    {
+      "name": "cpuinfo",
+      "platform": "(windows & (x64 | x86)) | linux | osx"
+    }
+  ]
+}
