@@ -448,7 +448,10 @@ jobs:
         run: |
           $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
           $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}" "${env:XIRORIG_OUTPUT_FOLDER}"
-          Invoke-Expression "$dotnet publish -c ${env:XENORIG_CONFIGURATION} -o `"$output`" --runtime ${env:XENORIG_ARCH} --self-contained -p:PublishReadyToRun=true"
+          
+          New-Item "$output" -ItemType 'Directory' -Force
+          
+          Invoke-Expression "$dotnet publish -c ${env:XENORIG_CONFIGURATION} --runtime ${env:XENORIG_ARCH} -o `"$output`" --self-contained -p:PublishTrimmed=true -p:PublishReadyToRun=true"
 
       # Package
       - name: Package Xenorig
