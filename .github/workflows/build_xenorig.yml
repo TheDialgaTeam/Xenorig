@@ -180,7 +180,7 @@ jobs:
               gcc_cxx: g++-10
             Xenorig:
               arch: linux-x64
-              configuration: Release_linux
+              configuration: Release
 
           - os: ubuntu-latest
             arch: ARM32
@@ -218,7 +218,7 @@ jobs:
               gcc_cxx: arm-linux-gnueabihf-g++
             Xenorig:
               arch: linux-arm
-              configuration: Release_linux
+              configuration: Release
 
           - os: ubuntu-latest
             arch: ARM64
@@ -256,7 +256,7 @@ jobs:
               gcc_cxx: aarch64-linux-gnu-g++
             Xenorig:
               arch: linux-arm64
-              configuration: Release_linux
+              configuration: Release
 
           - os: macos-latest
             arch: x64
@@ -280,7 +280,7 @@ jobs:
               gcc_cxx: g++-10
             Xenorig:
               arch: osx-x64
-              configuration: Release_osx
+              configuration: Release
 
     steps:
       # Init
