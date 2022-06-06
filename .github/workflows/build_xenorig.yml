@@ -308,12 +308,6 @@ jobs:
       - name: Setup NuGet Credentials
         if: matrix.Xenorig_native.build_Xenorig_native
         run: |
-          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
-          $mono = "${env:RUNNER_OS}" -eq 'Windows' ? '' : 'mono'
-
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
-          Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -storepasswordincleartext -name `"vcpkg`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`""
-
           dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/TheDialgaTeam" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
 
       # Install
