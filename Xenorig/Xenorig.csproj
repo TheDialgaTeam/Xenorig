@@ -105,13 +105,6 @@
     </ItemGroup>
 
     <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm64'))">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.linux-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-
-        <DirectPInvoke Include="libc" />
-        <DirectPInvoke Include="libxeno_native" />
-
-        <NativeLibrary Include="..\XenoLibNative\build\libxeno_native.a" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.so.1.0.0')" />
-
         <Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.so.1.0.0')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
