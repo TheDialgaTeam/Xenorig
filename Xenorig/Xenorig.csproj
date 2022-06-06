@@ -1,141 +1,141 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
 
-        <ApplicationIcon>Logo.ico</ApplicationIcon>
+		<ApplicationIcon>Logo.ico</ApplicationIcon>
 
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
-        <PackageId>TheDialgaTeam.Xenophyte.Xenorig</PackageId>
-        <Version>1.0.0.0</Version>
-        <Authors>Yong Jian Ming</Authors>
-        <Company>The Dialga Team</Company>
-        <Product>Xenorig</Product>
-        <Description>Xenophyte cryptocurrency miner</Description>
-        <PackageProjectUrl>https://github.com/TheDialgaTeam/Xenorig</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/TheDialgaTeam/Xenorig</RepositoryUrl>
+		<PackageId>TheDialgaTeam.Xenophyte.Xenorig</PackageId>
+		<Version>1.0.0.0</Version>
+		<Authors>Yong Jian Ming</Authors>
+		<Company>The Dialga Team</Company>
+		<Product>Xenorig</Product>
+		<Description>Xenophyte cryptocurrency miner</Description>
+		<PackageProjectUrl>https://github.com/TheDialgaTeam/Xenorig</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/TheDialgaTeam/Xenorig</RepositoryUrl>
 
-        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
-        <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
-        <InvariantGlobalization>true</InvariantGlobalization>
-    </PropertyGroup>
+		<IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+		<InvariantGlobalization>true</InvariantGlobalization>
+	</PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <DebugType>embedded</DebugType>
-    </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DebugType>none</DebugType>
-    </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DebugType>none</DebugType>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <Content Include="Logo.ico" />
-    </ItemGroup>
+	<ItemGroup>
+		<Content Include="Logo.ico" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0-*" />
-        <PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.5.0" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0-*" />
+		<PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.5.0" />
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win')) AND '$(Configuration)'=='Debug'">
-        <Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win')) AND '$(Configuration)'=='Debug'">
+		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
+		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
 
-        <DirectPInvoke Include="kernel32" />
-        <DirectPInvoke Include="xeno_native" />
+		<DirectPInvoke Include="kernel32" />
+		<DirectPInvoke Include="xeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')" />
+		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" />
 
-        <Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x86'))">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x86'))">
+		<PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
 
-        <DirectPInvoke Include="kernel32" />
-        <DirectPInvoke Include="xeno_native" />
+		<DirectPInvoke Include="kernel32" />
+		<DirectPInvoke Include="xeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')" />
+		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" />
 
-        <Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm'))">
-        <Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm'))">
+		<Content Include="..\XenoLibNative\build\xeno_native.dll" Link="xeno_native.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm64'))">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm64'))">
+		<PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
 
-        <DirectPInvoke Include="kernel32" />
-        <DirectPInvoke Include="xeno_native" />
+		<DirectPInvoke Include="kernel32" />
+		<DirectPInvoke Include="xeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')" />
+		<NativeLibrary Include="..\XenoLibNative\build\xeno_native.lib" />
 
-        <Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
+		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
 
-        <DirectPInvoke Include="libc" />
-        <DirectPInvoke Include="libxeno_native" />
+		<DirectPInvoke Include="libc" />
+		<DirectPInvoke Include="libxeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\libxeno_native.a" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.so.1.0.0')" />
+		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.a" />
 
-        <Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.so.1.0.0')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+		<Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm'))">
-        <Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.so.1.0.0')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm'))">
+		<Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm64'))">
-        <Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.so.1.0.0')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm64'))">
+		<Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
-        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
+		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
 
-        <DirectPInvoke Include="libxeno_native" />
+		<DirectPInvoke Include="libxeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\libxeno_native.a" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.dylib.1.0.0')" />
+		<NativeLibrary Include="..\XenoLibNative\build\libxeno_native.a" />
 
-        <Content Include="..\XenoLibNative\build\libxeno_native.dylib.1.0.0" Link="libxeno_native.dylib" Condition="Exists('..\XenoLibNative\build\libxeno_native.a') AND Exists('..\XenoLibNative\build\libxeno_native.dylib.1.0.0')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
+		<Content Include="..\XenoLibNative\build\libxeno_native.dylib.1.0.0" Link="libxeno_native.dylib">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <ItemGroup>
-        <None Update="appsettings.Development.json" Condition="'$(Configuration)'=='Debug'">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="appsettings.json" Condition="'$(Configuration)'=='Release'">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
+	<ItemGroup>
+		<None Update="appsettings.Development.json" Condition="'$(Configuration)'=='Debug'">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="appsettings.json" Condition="'$(Configuration)'=='Release'">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

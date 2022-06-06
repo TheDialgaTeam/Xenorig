@@ -13,6 +13,9 @@ env:
   XENORIG_NATIVE_BUILD_ROOT: XenoLibNative/build
   XENORIG_NATIVE_VCPKG_ROOT: XenoLibNative/vcpkg
 
+  TEMP_DIRECTORY: temp
+  DOTNET_PATH: temp/dotnet
+  DOTNET_VERSION: 6.0
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   VCPKG_USE_NUGET_CACHE: true
@@ -260,7 +263,7 @@ jobs:
             Xenorig:
               arch: osx-x64
               configuration: Release
-              targetFramework: net5.0
+              targetFramework: net6.0
 
     steps:
       # Init
@@ -326,6 +329,31 @@ jobs:
             {
               Invoke-Expression "${env:POST_INSTALL}"
             }
+          }
+          
+      - name: Install dotnet
+        run: |
+          if ("${env:RUNNER_OS}" -eq 'Windows')
+          {
+            $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
+            New-Item "$temp_directory" -ItemType 'Directory' -Force
+
+            $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.ps1'
+            $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
+
+            Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "$dotnet_install_script_file_path"
+            Invoke-Expression "$dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -InstallDir `"$dotnet_install_directory`""
+          }
+          else
+          {
+            $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
+            New-Item "$temp_directory" -ItemType 'Directory' -Force
+
+            $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.sh'
+            $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
+
+            Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
+            /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -InstallDir `"$dotnet_install_directory`""
           }
 
       - name: Setup msys2 environemnt
@@ -418,8 +446,9 @@ jobs:
           XENORIG_PLATFORM: ${{ matrix.arch }}
           XENORIG_CONFIGURATION: ${{ matrix.Xenorig.configuration }}
         run: |
-          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}" "${env:XENORIG_OUTPUT_FOLDER}"
-          Invoke-Expression "dotnet publish -c ${env:XENORIG_CONFIGURATION} -o `"$output`" --runtime ${env:XENORIG_ARCH} --self-contained -p:PublishReadyToRun=true"
+          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
+          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}" "${env:XIRORIG_OUTPUT_FOLDER}"
+          Invoke-Expression "$dotnet publish -c ${env:XENORIG_CONFIGURATION} -o `"$output`" --runtime ${env:XENORIG_ARCH} --self-contained -p:PublishReadyToRun=true"
 
       # Package
       - name: Package Xenorig
