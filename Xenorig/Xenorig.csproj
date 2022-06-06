@@ -61,7 +61,14 @@
     </ItemGroup>
 
     <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x86'))">
-        <Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll')">
+        <PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
+
+        <DirectPInvoke Include="kernel32" />
+        <DirectPInvoke Include="xeno_native" />
+
+        <NativeLibrary Include="..\XenoLibNative\build\libxeno_native.dll.a" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')" />
+
+        <Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll.a') AND Exists('..\XenoLibNative\build\libxeno_native.dll')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>

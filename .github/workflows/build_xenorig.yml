@@ -71,6 +71,7 @@ jobs:
             Xenorig:
               arch: win-x64
               configuration: Release
+              targetFramework: net6.0
 
           - os: windows-2022
             arch: x86
@@ -97,6 +98,7 @@ jobs:
             Xenorig:
               arch: win-x86
               configuration: Release
+              targetFramework: net6.0
 
           - os: windows-2022
             arch: arm
@@ -120,6 +122,7 @@ jobs:
             Xenorig:
               arch: win-arm
               configuration: Release
+              targetFramework: net6.0
 
           - os: windows-2022
             arch: arm64
@@ -146,6 +149,7 @@ jobs:
             Xenorig:
               arch: win-arm64
               configuration: Release
+              targetFramework: net6.0
 
           - os: ubuntu-20.04
             arch: x64
@@ -172,6 +176,7 @@ jobs:
             Xenorig:
               arch: linux-x64
               configuration: Release
+              targetFramework: net6.0
 
           - os: ubuntu-20.04
             arch: arm
@@ -202,6 +207,7 @@ jobs:
             Xenorig:
               arch: linux-arm
               configuration: Release
+              targetFramework: net6.0
 
           - os: ubuntu-20.04
             arch: arm64
@@ -232,6 +238,7 @@ jobs:
             Xenorig:
               arch: linux-arm64
               configuration: Release
+              targetFramework: net6.0
 
           - os: macos-11
             arch: x64
@@ -256,6 +263,7 @@ jobs:
             Xenorig:
               arch: osx-x64
               configuration: Release
+              targetFramework: net5.0
 
     steps:
       # Init
@@ -397,11 +405,14 @@ jobs:
 
       # Build Xenorig
       - name: Patch Xenorig csproj
+        env:
+          XENORIG_TARGET_FRAMEWORK: ${{ matrix.Xenorig.targetFramework }}
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           $version = (${env:GITHUB_REF} -split "/" | Select-Object -Last 1).Replace('v', '')
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_CSPROJ_FILE}"
           ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<TargetFramework>.+?<\/TargetFramework>(\s*)$', "`$1<TargetFramework>${env:XENORIG_TARGET_FRAMEWORK}</TargetFramework>`$2") | Set-Content "$csproj_file"
 
       - name: Build Xenorig
         env:
