@@ -6,16 +6,16 @@ on:
       - v*
 
 env:
-  XENORIG_CSPROJ_FILE: Xenorig/Xenorig.csproj
-  XENORIG_PUBLISH_ROOT: Xenorig/publish
+  XENORIG_CSPROJ_FILE: "Xenorig/Xenorig.csproj"
+  XENORIG_PUBLISH_ROOT: "Xenorig/publish"
 
-  XENORIG_NATIVE_SOURCE_ROOT: XenoLibNative
-  XENORIG_NATIVE_BUILD_ROOT: XenoLibNative/build
-  XENORIG_NATIVE_INSTALL_ROOT: XenoLibNative/install
-  XENORIG_NATIVE_VCPKG_ROOT: XenoLibNative/vcpkg
+  XENORIG_NATIVE_SOURCE_ROOT: "XenoLibNative"
+  XENORIG_NATIVE_BUILD_ROOT: "XenoLibNative/build"
+  XENORIG_NATIVE_INSTALL_ROOT: "XenoLibNative/install"
+  XENORIG_NATIVE_VCPKG_ROOT: "XenoLibNative/vcpkg"
 
-  TEMP_DIRECTORY: temp
-  DOTNET_PATH: temp/dotnet
+  TEMP_DIRECTORY: "temp"
+  DOTNET_PATH: "temp/dotnet"
   DOTNET_VERSION: "6.0"
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
@@ -447,10 +447,7 @@ jobs:
           XENORIG_CONFIGURATION: ${{ matrix.Xenorig.configuration }}
         run: |
           $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
-          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XIRORIG_PUBLISH_ROOT}" "${env:XIRORIG_OUTPUT_FOLDER}"
-          
-          New-Item "$output" -ItemType 'Directory' -Force
-          
+          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}" "${env:XENORIG_OUTPUT_FOLDER}"
           Invoke-Expression "$dotnet publish -c ${env:XENORIG_CONFIGURATION} --runtime ${env:XENORIG_ARCH} -o `"$output`" --self-contained -p:PublishTrimmed=true -p:PublishReadyToRun=true"
 
       # Package
