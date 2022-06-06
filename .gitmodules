@@ -1,0 +1,3 @@
+[submodule "XenoLibNative/vcpkg"]
+	path = XenoLibNative/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
