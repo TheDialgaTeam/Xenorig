@@ -396,7 +396,7 @@ jobs:
             if ("${env:XENORIG_NATIVE_USE_MSVC}" -eq 'true')
             {
               $msbuild_install_root = Join-Path "$cmake_build_root" 'INSTALL.vcxproj'
-              cmd /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\${env:XENORIG_NATIVE_MSVC_ENVIRONMENT}.bat`" && cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && ninja -C `"$cmake_build_root`" install"
+              cmd /c "call `"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\${env:XENORIG_NATIVE_MSVC_ENVIRONMENT}.bat`" && cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" && ninja -C `"$cmake_build_root`" install"
             }
             
             if ("${env:XENORIG_NATIVE_USE_MSYS2}" -eq 'true')
