@@ -290,7 +290,7 @@ jobs:
           $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
           
           Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -storepasswordincleartext -name `"github/${{ github.repository_owner }}`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`""
-          Invoke-Expression "$mono $nuget_executable setapikey "${{ github.token }}" -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`""
+          Invoke-Expression "$mono $nuget_executable setapikey `"${{ github.token }}`" -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`""
           
       # Install
       - name: Install Program / Dependencies
