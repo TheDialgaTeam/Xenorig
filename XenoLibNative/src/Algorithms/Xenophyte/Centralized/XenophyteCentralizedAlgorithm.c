@@ -150,7 +150,6 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
 
     DOTNET_INT bytesWritten;
     DOTNET_INT tempSize;
-    DOTNET_BYTE_ARRAY temp;
 
     for (DOTNET_INT i = aesRound; i >= 0; i--) {
         if (i == 1) {
