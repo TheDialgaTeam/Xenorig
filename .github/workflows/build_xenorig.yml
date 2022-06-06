@@ -16,7 +16,7 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   VCPKG_USE_NUGET_CACHE: true
-  VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.actor }},readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
+  VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.repository_owner }},readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
 
 defaults:
   run:
@@ -156,7 +156,6 @@ jobs:
             install: >-
               cmake
               ninja-build
-              zlib1g-dev
             post_install: []
             output_folder: linux-x64
             Xenorig_native:
@@ -183,7 +182,6 @@ jobs:
             install: >-
               cmake
               ninja-build
-              zlib1g-dev
               gcc-10-arm-linux-gnueabihf
               g++-10-arm-linux-gnueabihf
             post_install:
@@ -214,7 +212,6 @@ jobs:
             install: >-
               cmake
               ninja-build
-              zlib1g-dev
               gcc-10-aarch64-linux-gnu
               g++-10-aarch64-linux-gnu
             post_install:
@@ -284,14 +281,8 @@ jobs:
       - name: Setup NuGet Credentials
         if: matrix.Xenorig_native.build_Xenorig_native
         run: |
-          $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
-          $mono = "${env:RUNNER_OS}" -eq 'Windows' ? '' : 'mono'
+          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/${{ github.repository_owner }}" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
 
-          $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
-          
-          Invoke-Expression "$mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -storepasswordincleartext -name `"github/${{ github.repository_owner }}`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`""
-          Invoke-Expression "$mono $nuget_executable setapikey `"${{ github.token }}`" -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`""
-          
       # Install
       - name: Install Program / Dependencies
         env:
