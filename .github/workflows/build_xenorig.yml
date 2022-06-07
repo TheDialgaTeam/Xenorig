@@ -240,6 +240,7 @@ jobs:
         if: matrix.Xenorig_native.build_Xenorig_native
         run: |
           dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/${{ github.repository_owner }}" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
+          dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" --name "dotnet7"
 
       # Install
       - name: Install Program / Dependencies
