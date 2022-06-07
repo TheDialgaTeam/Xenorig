@@ -1,7 +1,7 @@
 # Xenorig Project
 ***This miner is inspired by [XMRig](https://github.com/xmrig/xmrig) and thus the similarity in UI design. The codes are 100% original.***
 
-[![Build and Deploy Xenorig](https://github.com/TheDialgaTeam/Xenorig/actions/workflows/build_xenorig.yml/badge.svg?branch=xenorig_future)](https://github.com/TheDialgaTeam/Xenorig/actions/workflows/build_xenorig.yml)
+[![Build and Deploy Xenorig](https://github.com/TheDialgaTeam/Xenorig/actions/workflows/build_xenorig.yml/badge.svg)](https://github.com/TheDialgaTeam/Xenorig/actions/workflows/build_xenorig.yml)
 
 Xenorig is a high performance Xenorig (XENOP) miner, with official support for Windows, Linux, and MacOS. Originally based on [Xenophyte-Solo-Miner](https://github.com/Xenophyte-coin/Xenophyte-Solo-Miner) with heavy optimizations/rewrites.
 
