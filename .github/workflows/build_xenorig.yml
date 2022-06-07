@@ -315,18 +315,22 @@ jobs:
 
             $env:MSYSTEM = "${env:XENORIG_NATIVE_MSYS2_ENVIRONMENT}"
 
-            msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" --install"
+            msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
+            msys2 -c "cd $cmake_build_root && cmake --install ."
           }
           else
           {
             if (![string]::IsNullOrWhiteSpace("${env:XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"))
             {
-              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root" --install
+              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
             }
             else
             {
               cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root" --install
             }
+
+            cd "$cmake_build_root"
+            cmake --install .
           }
 
       # Build Xenorig
