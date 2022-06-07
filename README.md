@@ -19,10 +19,9 @@ Xenorig is a high performance Xenorig (XENOP) miner, with official support for W
   - [Developers](#developers)
 
 ## Features
-- High performance.
+- High performance thanks to Microsoft Native AOT.
 - Official support for Windows, Linux, and MacOS. (Includes Raspberry PI as well)
 - Support for backup (failover) mining server.
-- Multi Algorithm mining support.
 - It's open source software.
 
 ## Downloads
@@ -32,13 +31,12 @@ Xenorig is a high performance Xenorig (XENOP) miner, with official support for W
 - Donation is optional but I do appreciate at least 1% for the effort.
 
 ### CPU mining performance
-Please note performance is highly dependent on system load. Tasks heavily using a processor, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the number of cores you have on your cpu.
+Please note performance is highly dependent on system load. Tasks heavily using a processor, such as video playback, can greatly degrade hashrate. Optimal number of threads depends on the number of cores you have on your hardware.
 
 ### Maximum performance checklist
 - Idle operating system.
 - Do not exceed optimal thread count.
-- Try setup optimal cpu affinity.
-- Use modern hardware that supports SIMD instructions.
+- Try setup optimal thread affinity. 
 
 ## Donations
 - BTC: `3Dc5jpiyuts136YhamcRbAeue7mi44gW8d`
