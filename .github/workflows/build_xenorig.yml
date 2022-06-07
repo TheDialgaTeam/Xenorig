@@ -260,6 +260,7 @@ jobs:
       - name: Install dotnet
         run: |
           $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
+          New-Item "$temp_directory" -ItemType 'Directory' -Force
 
           if ("${env:RUNNER_OS}" -eq 'Windows')
           {
