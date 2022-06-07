@@ -316,7 +316,7 @@ jobs:
             $env:MSYSTEM = "${env:XENORIG_NATIVE_MSYS2_ENVIRONMENT}"
 
             msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
-            msys2 -c "cd $cmake_build_root && cmake --install ."
+            msys2 -c "cd $cmake_build_root && cmake --build . && cmake --install ."
           }
           else
           {
@@ -330,6 +330,7 @@ jobs:
             }
 
             cd "$cmake_build_root"
+            cmake --build .
             cmake --install .
           }
 
