@@ -335,6 +335,8 @@ internal partial class XenophyteCentralizedAlgorithm
         }
 
         Interlocked.Increment(ref _totalHashCalculatedIn10Seconds[threadId]);
+        Interlocked.Increment(ref _totalHashCalculatedIn60Seconds[threadId]);
+        Interlocked.Increment(ref _totalHashCalculatedIn15Minutes[threadId]);
 
         Span<char> hashEncryptedShareString = stackalloc char[Encoding.ASCII.GetCharCount(hashEncryptedShare)];
         Encoding.ASCII.GetChars(hashEncryptedShare, hashEncryptedShareString);
