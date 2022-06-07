@@ -36,6 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-2022, ubuntu-20.04, macos-11]
         arch: [x64, x86, arm, arm64]
