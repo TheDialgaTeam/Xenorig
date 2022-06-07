@@ -19,8 +19,6 @@ env:
   DOTNET_VERSION: "6.0"
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-  VCPKG_USE_NUGET_CACHE: true
-  VCPKG_NUGET_REPOSITORY: "https://github.com/${{ github.repository }}"
   VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.repository_owner }},readwrite
 
 defaults:
@@ -344,6 +342,8 @@ jobs:
           $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_SOURCE_ROOT}"
           $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_BUILD_ROOT}"
           $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_INSTALL_ROOT}"
+          
+          $env:VCPKG_NUGET_REPOSITORY = "https://github.com/${{ github.repository }}"
 
           if ("${env:RUNNER_OS}" -eq 'Windows')
           {

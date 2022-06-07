@@ -103,7 +103,7 @@
 
 		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a" />
 
-		<Content Include="..\XenoLibNative\build\install\lib\libxeno_native.dylib.1.0.0" Link="libxeno_native.dylib">
+		<Content Include="..\XenoLibNative\build\install\lib\libxeno_native.1.0.0.dylib" Link="libxeno_native.dylib">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
