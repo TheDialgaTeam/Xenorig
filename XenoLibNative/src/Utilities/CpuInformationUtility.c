@@ -1,13 +1,7 @@
 #include "CpuInformationUtility.h"
-
-#ifndef NO_CPU_INFO
 #include "cpuinfo.h"
-#endif
 
 DOTNET_STRING CpuInformationUtility_GetProcessorName() {
-#ifdef NO_CPU_INFO
-    return "Unknown CPU";
-#else
     if (!cpuinfo_initialize()) {
         return "";
     }
@@ -19,13 +13,9 @@ DOTNET_STRING CpuInformationUtility_GetProcessorName() {
     }
 
     return package->name;
-#endif
 }
 
 DOTNET_INT CpuInformationUtility_GetProcessorL2Cache() {
-#ifdef NO_CPU_INFO
-    return 0;
-#else
     if (!cpuinfo_initialize()) {
         return 0;
     }
@@ -37,13 +27,9 @@ DOTNET_INT CpuInformationUtility_GetProcessorL2Cache() {
     }
 
     return cache->size * cpuinfo_get_cores_count();
-#endif
 }
 
 DOTNET_INT CpuInformationUtility_GetProcessorL3Cache() {
-#ifdef NO_CPU_INFO
-    return 0;
-#else
     if (!cpuinfo_initialize()) {
         return 0;
     }
@@ -55,17 +41,12 @@ DOTNET_INT CpuInformationUtility_GetProcessorL3Cache() {
     }
 
     return cache->size;
-#endif
 }
 
 DOTNET_INT CpuInformationUtility_GetProcessorCoreCount() {
-#ifdef NO_CPU_INFO
-    return 0;
-#else
     if (!cpuinfo_initialize()) {
         return 0;
     }
 
     return cpuinfo_get_cores_count();
-#endif
 }

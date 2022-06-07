@@ -1,6 +1,11 @@
 {
+    "terminal.integrated.defaultProfile.windows": "MSYS2 / CLANG64",
+    "cmake.configureEnvironment": {
+        "VCPKG_NUGET_REPOSITORY": "https://github.com/TheDialgaTeam/Xenorig",
+    },
     "cmake.configureSettings": {
-        "VCPKG_TARGET_TRIPLET": "x64-mingw-static"
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-static",
+        "CMAKE_INSTALL_PREFIX": "install"
     },
     "files.insertFinalNewline": true
 }

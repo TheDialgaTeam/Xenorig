@@ -17,7 +17,7 @@ DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumV
         DOTNET_BYTE result;
 
         do {
-            if (!RAND_bytes(span, 1)) {
+            if (!RAND_bytes(span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -35,7 +35,7 @@ DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumV
         DOTNET_USHORT result;
 
         do {
-            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, 2)) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -54,7 +54,7 @@ DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumV
         DOTNET_UINT result;
 
         do {
-            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, 4)) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -81,7 +81,7 @@ DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minim
         DOTNET_BYTE result;
 
         do {
-            if (!RAND_bytes(span, 1)) {
+            if (!RAND_bytes(span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -99,7 +99,7 @@ DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minim
         DOTNET_USHORT result;
 
         do {
-            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, 2)) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -118,7 +118,7 @@ DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minim
         DOTNET_UINT result;
 
         do {
-            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, 4)) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -138,7 +138,7 @@ DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minim
         DOTNET_ULONG result;
 
         do {
-            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, 8)) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) span, sizeof(span))) {
                 return minimumValue;
             }
 

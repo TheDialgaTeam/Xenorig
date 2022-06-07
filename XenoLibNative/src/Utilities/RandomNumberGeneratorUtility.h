@@ -3,7 +3,7 @@
 
 #include "global.h"
 
-XENO_NATIVE_EXPORT DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumValue, DOTNET_INT maximumValue);
-XENO_NATIVE_EXPORT DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minimumValue, DOTNET_LONG maximumValue);
+DOTNET_PUBLIC DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumValue, DOTNET_INT maximumValue);
+DOTNET_PUBLIC DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minimumValue, DOTNET_LONG maximumValue);
 
 #endif

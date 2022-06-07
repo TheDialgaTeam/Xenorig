@@ -43,7 +43,6 @@ internal class XenorigOptions
     }
 }
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 internal class Pool
 {
     private static readonly string DefaultUserAgent = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
@@ -98,7 +97,6 @@ internal class Pool
     }
 }
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 internal class CpuMiner
 {
     public int? Threads { get; set; }
@@ -135,7 +133,6 @@ internal class CpuMiner
     }
 }
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 internal class CpuMinerThreadConfiguration
 {
     public ulong? ThreadAffinity { get; set; }

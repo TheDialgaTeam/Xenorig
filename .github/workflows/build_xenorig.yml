@@ -20,7 +20,8 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   VCPKG_USE_NUGET_CACHE: true
-  VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.repository_owner }},readwrite;files,${{ github.workspace }}/XenoLibNative/vcpkg/vcpkg_installed,readwrite
+  VCPKG_NUGET_REPOSITORY: "${{ github.repositoryUrl }}"
+  VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.repository_owner }},readwrite
 
 defaults:
   run:

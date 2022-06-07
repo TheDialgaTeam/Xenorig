@@ -5,7 +5,7 @@ DOTNET_PRIVATE DOTNET_BOOL ComputeBaseValue(KDF_PBKDF1_CTX *ctx) {
         return DOTNET_FALSE;
     }
 
-    DOTNET_SPAN_BYTE tempBaseValue = malloc(sizeof(DOTNET_BYTE) * EVP_MD_get_size(ctx->Hash));
+    DOTNET_SPAN_BYTE tempBaseValue = malloc(EVP_MD_get_size(ctx->Hash));
 
     if (tempBaseValue == NULL) {
         return DOTNET_FALSE;
@@ -251,7 +251,7 @@ DOTNET_INT KeyDerivationFunctionUtility_GetBytes(KDF_PBKDF1_CTX *ctx, DOTNET_SPA
     }
 
     DOTNET_INT cbHash = EVP_MD_get_size(ctx->Hash);
-    DOTNET_INT rgbLength = sizeof(DOTNET_BYTE) * ((cb - ib + cbHash - 1) / cbHash * cbHash);
+    DOTNET_INT rgbLength = ((cb - ib + cbHash - 1) / cbHash * cbHash);
     DOTNET_SPAN_BYTE rgb = malloc(rgbLength);
 
     if (!ComputeBytes(ctx, cb - ib, rgb)) {

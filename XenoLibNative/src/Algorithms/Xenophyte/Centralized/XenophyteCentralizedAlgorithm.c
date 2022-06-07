@@ -85,9 +85,9 @@ DOTNET_INT XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(DOTNET_LONG mi
     } else {
         for (DOTNET_INT i = 255; i >= 0; i--) {
             if (range <= MAX_FLOAT_PRECISION) {
-                output[i] = minValue + (DOTNET_LONG) Max_Float(0, i / 255.0f - 0.0000001f);
+                output[i] = minValue + (DOTNET_LONG) (Max_Float(0, i / 255.0f - 0.0000001f) * range);
             } else {
-                output[i] = minValue + (DOTNET_LONG) Max_Double(0, i / 255.0 - 0.00000000001);
+                output[i] = minValue + (DOTNET_LONG) (Max_Double(0, i / 255.0 - 0.00000000001) * range);
             }
         }
 
@@ -120,11 +120,7 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
     // First encryption phase convert to hex and xor each result.
 
     DOTNET_INT firstOutputLength = inputLength * 2;
-    DOTNET_BYTE_ARRAY firstOutput = malloc(firstOutputLength);
-
-    if (firstOutput == NULL) {
-        return DOTNET_FALSE;
-    }
+    DOTNET_BYTE firstOutput[firstOutputLength];
 
     XorAndConvertByteArrayToHex(input, inputLength, xorKey, xorKeyLength, firstOutput, DOTNET_FALSE);
 
@@ -139,14 +135,8 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
         secondOutputLength = temp * 2 + (temp - 1);
     }
 
-    DOTNET_BYTE_ARRAY secondOutput = malloc(secondOutputLength);
-
-    if (secondOutput == NULL) {
-        return DOTNET_FALSE;
-    }
-
+    DOTNET_BYTE secondOutput[secondOutputLength];
     memcpy(secondOutput, firstOutput, firstOutputLength);
-    free(firstOutput);
 
     DOTNET_INT bytesWritten;
     DOTNET_INT tempSize;
@@ -175,17 +165,11 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
             }
 
             tempSize = bytesWritten * 2 + (bytesWritten - 1);
-            DOTNET_BYTE_ARRAY temp = malloc(tempSize);
-
-            if (temp == NULL) {
-                return DOTNET_FALSE;
-            }
+            DOTNET_BYTE temp[tempSize];
 
             XorAndConvertByteArrayToHex(secondOutput, bytesWritten, xorKey, xorKeyLength, temp, DOTNET_TRUE);
 
             memcpy(secondOutput, temp, tempSize);
-            free(temp);
-
             secondInputLength = tempSize;
         } else {
             switch (aesKeySize) {
@@ -210,46 +194,28 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
             }
 
             tempSize = bytesWritten * 2 + (bytesWritten - 1);
-            DOTNET_BYTE_ARRAY temp = malloc(tempSize);
-
-            if (temp == NULL) {
-                return DOTNET_FALSE;
-            }
+            DOTNET_BYTE temp[tempSize];
 
             ConvertByteArrayToHex(secondOutput, bytesWritten, temp, DOTNET_TRUE);
 
             memcpy(secondOutput, temp, tempSize);
-            free(temp);
-
             secondInputLength = tempSize;
         }
     }
 
     // Third encryption phase: compute hash
-    DOTNET_BYTE_ARRAY thirdOutput = malloc(64);
-
-    if (thirdOutput == NULL) {
-        return DOTNET_FALSE;
-    }
+    DOTNET_BYTE thirdOutput[64];
 
     if (!MessageDigestUtility_ComputeSha2_512Hash(secondOutput, secondOutputLength, thirdOutput)) {
         return DOTNET_FALSE;
     }
-
-    free(secondOutput);
 
     for (DOTNET_INT i = 64 - 1; i >= 0; i--) {
         encryptedShare[2 * i] = Base16Characters[thirdOutput[i] >> 4];
         encryptedShare[2 * i + 1] = Base16Characters[thirdOutput[i] & 15];
     }
 
-    free(thirdOutput);
-
-    DOTNET_BYTE_ARRAY finalOutput = malloc(64);
-
-    if (finalOutput == NULL) {
-        return DOTNET_FALSE;
-    }
+    DOTNET_BYTE finalOutput[64];
 
     if (!MessageDigestUtility_ComputeSha2_512Hash(encryptedShare, 64 * 2, finalOutput)) {
         return DOTNET_FALSE;
@@ -259,8 +225,6 @@ DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNET_READ_ONLY_SP
         hashEncryptedShare[2 * i] = Base16Characters[finalOutput[i] >> 4];
         hashEncryptedShare[2 * i + 1] = Base16Characters[finalOutput[i] & 15];
     }
-
-    free(finalOutput);
 
     return DOTNET_TRUE;
 }

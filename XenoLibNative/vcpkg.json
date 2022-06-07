@@ -4,9 +4,6 @@
   "dependencies": [
     "openssl",
     "lz4",
-    {
-      "name": "cpuinfo",
-      "platform": "(windows & (x64 | x86)) | linux | osx"
-    }
+    "cpuinfo"
   ]
 }

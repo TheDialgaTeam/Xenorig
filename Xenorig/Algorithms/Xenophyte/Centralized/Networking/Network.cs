@@ -64,7 +64,7 @@ internal partial class XenophyteCentralizedAlgorithm
         {
             try
             {
-                if (++_poolRetryCount > _context.Options.GetMaxRetryCount() && ++_poolIndex >= _pools.Length)
+                if (++_poolRetryCount > _options.GetMaxRetryCount() && ++_poolIndex >= _pools.Length)
                 {
                     _poolIndex = 0;
                 }
@@ -80,7 +80,7 @@ internal partial class XenophyteCentralizedAlgorithm
 
                     if (json?["result"]?.GetValue<string>().Equals(SendTokenCheckWalletAddressInvalid, StringComparison.Ordinal) ?? true)
                     {
-                        _poolRetryCount = _context.Options.GetMaxRetryCount();
+                        _poolRetryCount = _options.GetMaxRetryCount();
                         Logger.PrintLoginFailed(_logger, $"{selectedPool.GetUrl()}:{SeedNodePort}", "Invalid wallet address.");
                         continue;
                     }

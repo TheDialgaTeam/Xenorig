@@ -44,9 +44,6 @@ internal static class Program
             .ConfigureServices((context, collection) =>
             {
                 collection.Configure<XenorigOptions>(context.Configuration.GetSection("Xenorig"));
-
-                collection.AddSingleton<ProgramContext>();
-
                 collection.AddHostedService<ProgramHostedService>();
             })
             .ConfigureLogging(builder =>

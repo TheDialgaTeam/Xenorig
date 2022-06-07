@@ -18,8 +18,6 @@
 		<PackageProjectUrl>https://github.com/TheDialgaTeam/Xenorig</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/TheDialgaTeam/Xenorig</RepositoryUrl>
 
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-
 		<IlcOptimizationPreference>Speed</IlcOptimizationPreference>
 		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
@@ -41,8 +39,8 @@
 		<PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.5.0" />
 	</ItemGroup>
 
-	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win')) AND '$(Configuration)'=='Debug'">
-		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll" Condition="Exists('..\XenoLibNative\build\libxeno_native.dll')">
+	<ItemGroup Condition="'$(Configuration)'=='Debug'">
+		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
@@ -53,9 +51,9 @@
 		<DirectPInvoke Include="kernel32" />
 		<DirectPInvoke Include="xeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.dll.a" />
 
-		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll">
+		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="libxeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
@@ -66,28 +64,9 @@
 		<DirectPInvoke Include="kernel32" />
 		<DirectPInvoke Include="xeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.dll.a" />
 
-		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="libxeno_native.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-
-	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm'))">
-		<Content Include="..\XenoLibNative\build\xeno_native.dll" Link="xeno_native.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-
-	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm64'))">
-		<PackageReference Include="Microsoft.DotNet.ILCompiler; runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-
-		<DirectPInvoke Include="kernel32" />
-		<DirectPInvoke Include="xeno_native" />
-
-		<NativeLibrary Include="..\XenoLibNative\build\static\xeno_native.lib" />
-
-		<Content Include="..\XenoLibNative\build\libxeno_native.dll" Link="xeno_native.dll">
+		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="libxeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
@@ -98,21 +77,21 @@
 		<DirectPInvoke Include="libc" />
 		<DirectPInvoke Include="libxeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a" />
 
-		<Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+		<Content Include="..\XenoLibNative\build\install\lib\libxeno_native.so.1.0.0" Link="libxeno_native.so">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
 	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm'))">
-		<Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+		<Content Include="..\XenoLibNative\build\install\lib\libxeno_native.so.1.0.0" Link="libxeno_native.so">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
 	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm64'))">
-		<Content Include="..\XenoLibNative\build\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+		<Content Include="..\XenoLibNative\build\install\lib\libxeno_native.so.1.0.0" Link="libxeno_native.so">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
@@ -122,9 +101,9 @@
 
 		<DirectPInvoke Include="libxeno_native" />
 
-		<NativeLibrary Include="..\XenoLibNative\build\static\libxeno_native.a" />
+		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a" />
 
-		<Content Include="..\XenoLibNative\build\libxeno_native.dylib.1.0.0" Link="libxeno_native.dylib">
+		<Content Include="..\XenoLibNative\build\install\lib\libxeno_native.dylib.1.0.0" Link="libxeno_native.dylib">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

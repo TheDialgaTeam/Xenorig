@@ -1,6 +1,6 @@
 #include "SymmetricAlgorithmUtility.h"
 
-inline DOTNET_INT SymmetricAlgorithmUtility_GetPaddedLength(DOTNET_INT size)
+DOTNET_INT SymmetricAlgorithmUtility_GetPaddedLength(DOTNET_INT size)
 {
     return 16 - size % 16;
 }

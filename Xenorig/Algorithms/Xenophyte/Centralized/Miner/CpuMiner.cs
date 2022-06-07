@@ -37,6 +37,9 @@ internal partial class XenophyteCentralizedAlgorithm
     private const string JobTypeSemiRandom = "Semi Random";
     private const string JobTypeRandom = "Random";
 
+    private const string InvalidShare = "Invalid Share";
+    private const string OrphanShare = "Orphan Share";
+
     private int _isCpuMinerActive;
 
     private readonly Thread[] _cpuMiningThreads;
@@ -44,6 +47,14 @@ internal partial class XenophyteCentralizedAlgorithm
     private readonly long[] _totalHashCalculatedIn10Seconds;
     private readonly long[] _totalHashCalculatedIn60Seconds;
     private readonly long[] _totalHashCalculatedIn15Minutes;
+
+    private static (int startIndex, int size) GetJobChunk(int totalSize, int numberOfChunks, int threadId)
+    {
+        var output = Math.DivRem(totalSize, numberOfChunks);
+        var startIndex = threadId * output.Quotient + Math.Min(threadId, output.Remainder);
+        var nextIndex = (threadId + 1) * output.Quotient + Math.Min(threadId + 1, output.Remainder);
+        return (startIndex, nextIndex - startIndex);
+    }
 
     private void StartCpuMiner()
     {
@@ -54,20 +65,14 @@ internal partial class XenophyteCentralizedAlgorithm
             thread.Start();
         }
 
-        _averageHashCalculatedIn10SecondsTimer.Start();
-        _averageHashCalculatedIn60SecondsTimer.Start();
-        _averageHashCalculatedIn15MinutesTimer.Start();
-        _totalAverageHashCalculatedTimer.Start();
+        _calculateAverageHashTimer.Start();
     }
 
     private void StopCpuMiner()
     {
         if (Interlocked.CompareExchange(ref _isCpuMinerActive, 0, 1) == 0) return;
 
-        _averageHashCalculatedIn10SecondsTimer.Stop();
-        _averageHashCalculatedIn60SecondsTimer.Stop();
-        _averageHashCalculatedIn15MinutesTimer.Stop();
-        _totalAverageHashCalculatedTimer.Stop();
+        _calculateAverageHashTimer.Stop();
     }
 
     private void ExecuteCpuMinerThread(int threadId, CpuMiner options)
@@ -174,6 +179,7 @@ internal partial class XenophyteCentralizedAlgorithm
                 DoEasyBlocksCalculations(threadId, options, ref jobTemplate);
 
                 if (_isBlockFound == 1) continue;
+                if (_currentBlockIndication != jobTemplate.BlockIndication) continue;
 
                 DoNonEasyBlocksCalculations(threadId, options, ref jobTemplate);
             }
@@ -189,17 +195,15 @@ internal partial class XenophyteCentralizedAlgorithm
         var numberOfEasyBlockValues = Native.XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(jobTemplate.BlockMinRange, jobTemplate.BlockMaxRange, MemoryMarshal.GetReference(jobTemplate.EasyBlockValues));
         jobTemplate.EasyBlockValuesLength = numberOfEasyBlockValues;
 
-        var startIndex = (int) MathF.Ceiling((float) numberOfEasyBlockValues / options.GetNumberOfThreads()) * threadId;
-        var workingSetLength = (int) MathF.Min(numberOfEasyBlockValues - startIndex, MathF.Ceiling((float) numberOfEasyBlockValues / options.GetNumberOfThreads()));
+        var (startIndex, size) = GetJobChunk(numberOfEasyBlockValues, options.GetNumberOfThreads(), threadId);
+        if (size == 0) return;
 
-        if (workingSetLength == 0) return;
+        Span<long> temp = stackalloc long[size];
+        jobTemplate.EasyBlockValues.Slice(startIndex, size).CopyTo(temp);
 
-        Span<long> temp = stackalloc long[workingSetLength];
-        jobTemplate.EasyBlockValues.Slice(startIndex, workingSetLength).CopyTo(temp);
+        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeEasy, numberOfEasyBlockValues, startIndex, startIndex + size - 1, size);
 
-        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeEasy, numberOfEasyBlockValues, startIndex, startIndex + workingSetLength - 1, workingSetLength);
-
-        for (var i = workingSetLength - 1; i >= 0; i--)
+        for (var i = size - 1; i >= 0; i--)
         {
             var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
 
@@ -221,22 +225,20 @@ internal partial class XenophyteCentralizedAlgorithm
 
         if (jobTemplate.NonEasyBlockValues.Length < numberOfNonEasyBlockValues)
         {
-            jobTemplate.NonEasyBlockValues = new long[numberOfNonEasyBlockValues + 9999];
+            jobTemplate.NonEasyBlockValues = new long[numberOfNonEasyBlockValues];
         }
 
         jobTemplate.NonEasyBlockValuesLength = Native.XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(jobTemplate.BlockMinRange, jobTemplate.BlockMaxRange, MemoryMarshal.GetReference(jobTemplate.EasyBlockValues), jobTemplate.EasyBlockValuesLength, MemoryMarshal.GetReference(jobTemplate.NonEasyBlockValues));
 
-        var startIndex = (int) MathF.Ceiling((float) numberOfNonEasyBlockValues / options.GetNumberOfThreads()) * threadId;
-        var workingSetLength = (int) MathF.Min(numberOfNonEasyBlockValues - startIndex, MathF.Ceiling((float) numberOfNonEasyBlockValues / options.GetNumberOfThreads()));
+        var (startIndex, size) = GetJobChunk((int) numberOfNonEasyBlockValues, options.GetNumberOfThreads(), threadId);
+        if (size == 0) return;
 
-        if (workingSetLength == 0) return;
+        Span<long> temp = stackalloc long[size];
+        jobTemplate.NonEasyBlockValues.Slice(startIndex, size).CopyTo(temp);
 
-        Span<long> temp = stackalloc long[workingSetLength];
-        jobTemplate.NonEasyBlockValues.Slice(startIndex, workingSetLength).CopyTo(temp);
+        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeSemiRandom, numberOfNonEasyBlockValues, startIndex, startIndex + size - 1, size);
 
-        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeSemiRandom, numberOfNonEasyBlockValues, startIndex, startIndex + workingSetLength - 1, workingSetLength);
-
-        for (var i = workingSetLength - 1; i >= 0; i--)
+        for (var i = size - 1; i >= 0; i--)
         {
             var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
 
@@ -252,9 +254,12 @@ internal partial class XenophyteCentralizedAlgorithm
             if (_currentBlockIndication != jobTemplate.BlockIndication) break;
         }
 
-        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom, numberOfNonEasyBlockValues, startIndex, startIndex + workingSetLength - 1, workingSetLength);
+        if (_isBlockFound == 1) return;
+        if (_currentBlockIndication != jobTemplate.BlockIndication) return;
 
-        for (var i = workingSetLength - 1; i >= 0; i--)
+        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom, numberOfNonEasyBlockValues, startIndex, startIndex + size - 1, size);
+
+        for (var i = size - 1; i >= 0; i--)
         {
             var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
 
@@ -294,8 +299,7 @@ internal partial class XenophyteCentralizedAlgorithm
         }
 
         // Division Rule:
-        var integerDivideResult = firstNumber / secondNumber;
-        var integerDivideRemainder = firstNumber % secondNumber;
+        var (integerDivideResult, integerDivideRemainder) = Math.DivRem(firstNumber, secondNumber);
 
         if (integerDivideRemainder == 0 && integerDivideResult >= jobTemplate.BlockMinRange)
         {
@@ -311,9 +315,6 @@ internal partial class XenophyteCentralizedAlgorithm
 
     private void ValidateAndSubmitShare(int threadId, in JobTemplate jobTemplate, long firstNumber, long secondNumber, long solution, char op, string jobType)
     {
-        Span<byte> encryptedShare = stackalloc byte[64 * 2];
-        Span<byte> hashEncryptedShare = stackalloc byte[64 * 2];
-
         Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19 + 1];
 
         firstNumber.TryFormat(stringToEncrypt, out var firstNumberWritten);
@@ -328,14 +329,15 @@ internal partial class XenophyteCentralizedAlgorithm
         Span<byte> bytesToEncrypt = stackalloc byte[firstNumberWritten + 3 + secondNumberWritten + finalWritten];
         Encoding.ASCII.GetBytes(stringToEncrypt[..(firstNumberWritten + 3 + secondNumberWritten + finalWritten)], bytesToEncrypt);
 
+        Span<byte> encryptedShare = stackalloc byte[64 * 2];
+        Span<byte> hashEncryptedShare = stackalloc byte[64 * 2];
+
         if (!Native.XenophyteCentralizedAlgorithm_MakeEncryptedShare(MemoryMarshal.GetReference(bytesToEncrypt), firstNumberWritten + 3 + secondNumberWritten + finalWritten, MemoryMarshal.GetReference(encryptedShare), MemoryMarshal.GetReference(hashEncryptedShare), MemoryMarshal.GetReference(jobTemplate.XorKey), jobTemplate.XorKeyLength, jobTemplate.AesKeyLength, MemoryMarshal.GetReference(jobTemplate.AesKey), MemoryMarshal.GetReference(jobTemplate.AesIv), jobTemplate.AesRound))
         {
             return;
         }
 
         Interlocked.Increment(ref _totalHashCalculatedIn10Seconds[threadId]);
-        Interlocked.Increment(ref _totalHashCalculatedIn60Seconds[threadId]);
-        Interlocked.Increment(ref _totalHashCalculatedIn15Minutes[threadId]);
 
         Span<char> hashEncryptedShareString = stackalloc char[Encoding.ASCII.GetCharCount(hashEncryptedShare)];
         Encoding.ASCII.GetChars(hashEncryptedShare, hashEncryptedShareString);
@@ -371,7 +373,7 @@ internal partial class XenophyteCentralizedAlgorithm
                         break;
                 }
 
-                Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, "Invalid Share.", time);
+                Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, InvalidShare, time);
             }
             else if (temp.StartsWith(ShareUnlock))
             {
@@ -409,7 +411,7 @@ internal partial class XenophyteCentralizedAlgorithm
                         break;
                 }
 
-                Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, "Orphan Share.", time);
+                Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, OrphanShare, time);
             }
             else if (temp.StartsWith(ShareNotExist))
             {
@@ -428,7 +430,7 @@ internal partial class XenophyteCentralizedAlgorithm
                         break;
                 }
 
-                Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, "Invalid Share.", time);
+                Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, InvalidShare, time);
             }
         }));
 

@@ -50,14 +50,29 @@ internal static partial class Logger
     [LoggerMessage(EventId = 15, Level = LogLevel.Information, Message = $"{RedForegroundColor}rejected {Reset}({{goodTotal}}/{{badTotal}}) - {{reason}} {GrayForegroundColor}({{ping}} ms){Reset}")]
     public static partial void PrintBlockRejectResult(ILogger logger, ulong goodTotal, ulong badTotal, string reason, double ping);
 
-    [LoggerMessage(EventId = 16, Level = LogLevel.Information, Message = $"{WhiteForegroundColor}speed {DarkGrayForegroundColor}10s/60s/15m {CyanForegroundColor}{{average10SecondsSum:F0}} {BlueForegroundColor}{{average60SecondsSum:F0}} {{average15MinutesSum:F0}} {CyanForegroundColor}H/s {DarkGrayForegroundColor}max {CyanForegroundColor}{{maxHash:F0}}{Reset}")]
-    public static partial void PrintCpuMinerSpeed(ILogger logger, decimal average10SecondsSum, decimal average60SecondsSum, decimal average15MinutesSum, decimal maxHash);
+    [LoggerMessage(EventId = 16, Level = LogLevel.Information, Message = $"{WhiteForegroundColor}speed {DarkGrayForegroundColor}10s/60s/15m {CyanForegroundColor}{{average10SecondsSum:F1}} {BlueForegroundColor}{{average60SecondsSum:F1}} {{average15MinutesSum:F1}} {CyanForegroundColor}H/s {DarkGrayForegroundColor}max {CyanForegroundColor}{{maxHash:F1}}{Reset}")]
+    public static partial void PrintCpuMinerSpeed(ILogger logger, double average10SecondsSum, double average60SecondsSum, double average15MinutesSum, double maxHash);
+
+    [LoggerMessage(EventId = 17, Level = LogLevel.Information, Message = "|      | Easy Blocks | Semi Random | Random Blocks | Total Blocks |")]
+    public static partial void PrintXenophyteCentralizedStatsHeader(ILogger logger);
+    
+    [LoggerMessage(EventId = 18, Level = LogLevel.Information, Message = $"| {GreenForegroundColor}Good{Reset} | {{easy,-11}} | {{semi,-11}} | {{random,-13}} | {{total,-12}} |")]
+    public static partial void PrintXenophyteCentralizedStatsGood(ILogger logger, ulong easy, ulong semi, ulong random, ulong total);
+
+    [LoggerMessage(EventId = 19, Level = LogLevel.Information, Message = $"| {RedForegroundColor}Bad{Reset}  | {{easy,-11}} | {{semi,-11}} | {{random,-13}} | {{total,-12}} |")]
+    public static partial void PrintXenophyteCentralizedStatsBad(ILogger logger, ulong easy, ulong semi, ulong random, ulong total);
+
+    [LoggerMessage(EventId = 20, Level = LogLevel.Information, Message = "| THREAD |  10s H/s  |  60s H/s  |  15m H/s  |")]
+    public static partial void PrintCpuMinerSpeedHeader(ILogger logger);
+
+    [LoggerMessage(EventId = 21, Level = LogLevel.Information, Message = "| {threadId,-6} | {hash,-9:F1} | {hash2,-9:F1} | {hash3,-9:F1} |")]
+    public static partial void PrintCpuMinerSpeedBreakdown(ILogger logger, int threadId, double hash, double hash2, double hash3);
 
 #if DEBUG
-    [LoggerMessage(EventId = 16, Level = LogLevel.Debug, Message = "Receive Packet: {packet}")]
+    [LoggerMessage(EventId = 22, Level = LogLevel.Trace, Message = "Receive Packet: {packet}")]
     public static partial void PrintRawPacket(ILogger logger, string packet);
 
-    [LoggerMessage(EventId = 17, Level = LogLevel.Debug, Message = "Error: {message}")]
+    [LoggerMessage(EventId = 23, Level = LogLevel.Debug, Message = "Error: {message}")]
     public static partial void PrintException(ILogger logger, Exception exception, string message);
 #endif
 }
