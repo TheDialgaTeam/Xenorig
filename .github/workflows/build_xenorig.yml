@@ -60,7 +60,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-windows-x64
             Xenorig_native:
-              cmake_generator: Ninja
+              cmake_generator: MSYS Makefiles
               cmake_build_type: Release
               cmake_target_triplet: x64-mingw-static
               cmake_toolchain_file: ""
@@ -82,7 +82,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-windows-x86
             Xenorig_native:
-              cmake_generator: Ninja
+              cmake_generator: MSYS Makefiles
               cmake_build_type: Release
               cmake_target_triplet: x86-mingw-static
               cmake_toolchain_file: ""
@@ -103,11 +103,10 @@ jobs:
             install: >-
               clang
               cmake
-              ninja-build
             post_install: []
             output_folder: Xenorig-linux-x64
             Xenorig_native:
-              cmake_generator: Ninja
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: x64-linux
               cmake_toolchain_file: ""
@@ -125,11 +124,10 @@ jobs:
             install: >-
               clang
               cmake
-              ninja-build
             post_install: []
             output_folder: Xenorig-linux-arm
             Xenorig_native:
-              cmake_generator: Ninja
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: arm-linux
               cmake_toolchain_file: raspberrypi-arm.cmake
@@ -147,11 +145,10 @@ jobs:
             install: >-
               clang
               cmake
-              ninja-build
             post_install: []
             output_folder: Xenorig-linux-arm64
             Xenorig_native:
-              cmake_generator: Ninja
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: arm64-linux
               cmake_toolchain_file: raspberrypi-arm64.cmake
@@ -169,11 +166,10 @@ jobs:
             install: >-
               llvm
               cmake
-              ninja
             post_install: []
             output_folder: Xenorig-osx-x64
             Xenorig_native:
-              cmake_generator: Ninja
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: x64-osx
               cmake_toolchain_file: ""
@@ -319,21 +315,18 @@ jobs:
 
             $env:MSYSTEM = "${env:XENORIG_NATIVE_MSYS2_ENVIRONMENT}"
 
-            msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`""
-            msys2 -c "ninja -C `"$cmake_build_root`" install"
+            msys2 -c "cmake -G `"$cmake_generator`" -DCMAKE_BUILD_TYPE=`"$cmake_build_type`" -DVCPKG_TARGET_TRIPLET=`"$cmake_target_triplet`" -DCMAKE_INSTALL_PREFIX=`"$cmake_install_prefix`" -S `"$cmake_source_root`" -B `"$cmake_build_root`" --install"
           }
           else
           {
             if (![string]::IsNullOrWhiteSpace("${env:XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"))
             {
-              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root" --install
             }
             else
             {
-              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
+              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root" --install
             }
-
-            ninja -C "$cmake_build_root" install
           }
 
       # Build Xenorig
