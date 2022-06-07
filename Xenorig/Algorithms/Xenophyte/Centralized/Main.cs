@@ -149,7 +149,7 @@ internal partial class XenophyteCentralizedAlgorithm : IAlgorithm, IDisposable
                 for (var i = _averageHashCalculatedIn60Seconds.Length - 1; i >= 0; i--)
                 {
                     _averageHashCalculatedIn15Minutes[i] = Interlocked.Read(ref _totalHashCalculatedIn15Minutes[i]) / (TimeSpan.FromMinutes(15) + (DateTime.Now - e.SignalTime)).TotalSeconds;
-                    Interlocked.Exchange(ref _averageHashCalculatedIn15Minutes[i], 0);
+                    Interlocked.Exchange(ref _totalHashCalculatedIn15Minutes[i], 0);
                 }
 
                 Interlocked.Exchange(ref _amountSampledFor15Minutes, 0);
