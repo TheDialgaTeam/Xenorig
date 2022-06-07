@@ -169,10 +169,6 @@ internal partial class XenophyteCentralizedAlgorithm
 
         SendPacketToNetwork(new PacketData($"{MinerLoginType}|{selectedPool.GetUsername()}", true, (packet, time) =>
         {
-#if DEBUG
-            Logger.PrintRawPacket(_logger, Encoding.ASCII.GetString(packet));
-#endif
-
             if (Encoding.ASCII.GetString(packet).Equals(SendLoginAccepted))
             {
                 Logger.PrintConnected(_logger, "SOLO", $"{selectedPool.GetUrl()}:{SeedNodePort}", time);
@@ -194,10 +190,6 @@ internal partial class XenophyteCentralizedAlgorithm
             var packetHandler = _packetDataCollection.Take();
             if (packetHandler.Execute(_tcpClient.GetStream(), _networkAesKey, _networkAesIv, out var exception)) continue;
 
-#if DEBUG
-            Logger.PrintException(_logger, exception!, exception!.Message);
-#endif
-
             DisconnectFromSeedNetworkAsync(true).GetAwaiter().GetResult();
             break;
         }
@@ -207,10 +199,6 @@ internal partial class XenophyteCentralizedAlgorithm
     {
         SendPacketToNetwork(new PacketData(ReceiveAskCurrentBlockMining, true, (packet, _) =>
         {
-#if DEBUG
-            Logger.PrintRawPacket(_logger, Encoding.ASCII.GetString(packet));
-#endif
-
             if (!UpdateBlockHeader(packet))
             {
                 DisconnectFromSeedNetworkAsync(true).GetAwaiter().GetResult();
@@ -219,10 +207,6 @@ internal partial class XenophyteCentralizedAlgorithm
 
             SendPacketToNetwork(new PacketData($"{ReceiveAskContentBlockMethod}|{_blockMethod}", true, (innerPacket, _) =>
             {
-#if DEBUG
-                Logger.PrintRawPacket(_logger, Encoding.ASCII.GetString(innerPacket));
-#endif
-
                 if (!UpdateBlockMethod(innerPacket))
                 {
                     DisconnectFromSeedNetworkAsync(true).GetAwaiter().GetResult();

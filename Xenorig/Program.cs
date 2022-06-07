@@ -26,8 +26,7 @@ internal static class Program
     }
 
     public const string XenoNativeLibrary = "xeno_native";
-
-    [SuppressMessage("Dependent Types", "IL2026")]
+    
     public static async Task Main(string[] args)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

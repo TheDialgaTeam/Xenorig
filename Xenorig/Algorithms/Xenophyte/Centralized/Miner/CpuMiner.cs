@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 using Xenorig.Options;
@@ -11,15 +12,6 @@ internal partial class XenophyteCentralizedAlgorithm
 {
     private static partial class Native
     {
-        [DllImport("kernel32", EntryPoint = "GetCurrentThreadId")]
-        public static extern int GetCurrentThreadId_Windows();
-
-        [DllImport("kernel32", EntryPoint = "OpenThread")]
-        public static extern IntPtr OpenThread_Windows(int desiredAccess, bool inheritHandle, int threadId);
-
-        [DllImport("kernel32", EntryPoint = "SetThreadAffinityMask")]
-        public static extern UIntPtr SetThreadAffinityMask_Windows(IntPtr hThread, in ulong dwThreadAffinityMask);
-
         [DllImport("libc", EntryPoint = "sched_setaffinity")]
         public static extern int SetThreadAffinityMask_Linux(int pid, int cpuSetSize, in ulong mask);
 
@@ -50,9 +42,9 @@ internal partial class XenophyteCentralizedAlgorithm
 
     private static (int startIndex, int size) GetJobChunk(int totalSize, int numberOfChunks, int threadId)
     {
-        var output = Math.DivRem(totalSize, numberOfChunks);
-        var startIndex = threadId * output.Quotient + Math.Min(threadId, output.Remainder);
-        var nextIndex = (threadId + 1) * output.Quotient + Math.Min(threadId + 1, output.Remainder);
+        var (quotient, remainder) = Math.DivRem(totalSize, numberOfChunks);
+        var startIndex = threadId * quotient + Math.Min(threadId, remainder);
+        var nextIndex = (threadId + 1) * quotient + Math.Min(threadId + 1, remainder);
         return (startIndex, nextIndex - startIndex);
     }
 
@@ -60,9 +52,19 @@ internal partial class XenophyteCentralizedAlgorithm
     {
         if (Interlocked.CompareExchange(ref _isCpuMinerActive, 1, 0) == 1) return;
 
-        foreach (var thread in _cpuMiningThreads)
+        for (var i = 0; i < _cpuMiningThreads.Length; i++)
         {
+            var thread = _cpuMiningThreads[i];
             thread.Start();
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) continue;
+
+            var threadAffinity = (long) _options.GetCpuMiner().GetThreadAffinity(i);
+
+            if (threadAffinity > 0)
+            {
+                Process.GetCurrentProcess().Threads[^1].ProcessorAffinity = new IntPtr(threadAffinity);
+            }
         }
 
         _calculateAverageHashTimer.Start();
@@ -85,14 +87,9 @@ internal partial class XenophyteCentralizedAlgorithm
 
             if (threadAffinity != 0)
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    var threadPtr = Native.OpenThread_Windows(96, false, Native.GetCurrentThreadId_Windows());
-                    Native.SetThreadAffinityMask_Windows(threadPtr, threadAffinity);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    Native.SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
+                    var _ =Native.SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
                 }
             }
 
@@ -346,10 +343,6 @@ internal partial class XenophyteCentralizedAlgorithm
 
         SendPacketToNetwork(new PacketData($"{ReceiveJob}|{Encoding.ASCII.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{jobTemplate.BlockHeight}|{_pools[_poolIndex].GetUserAgent()}", true, (packet, time) =>
         {
-#if DEBUG
-            Logger.PrintRawPacket(_logger, Encoding.ASCII.GetString(packet));
-#endif
-
             Span<char> temp = stackalloc char[Encoding.ASCII.GetCharCount(packet)];
             Encoding.ASCII.GetChars(packet, temp);
 

@@ -67,12 +67,4 @@ internal static partial class Logger
 
     [LoggerMessage(EventId = 21, Level = LogLevel.Information, Message = "| {threadId,-6} | {hash,-9:F1} | {hash2,-9:F1} | {hash3,-9:F1} |")]
     public static partial void PrintCpuMinerSpeedBreakdown(ILogger logger, int threadId, double hash, double hash2, double hash3);
-
-#if DEBUG
-    [LoggerMessage(EventId = 22, Level = LogLevel.Trace, Message = "Receive Packet: {packet}")]
-    public static partial void PrintRawPacket(ILogger logger, string packet);
-
-    [LoggerMessage(EventId = 23, Level = LogLevel.Debug, Message = "Error: {message}")]
-    public static partial void PrintException(ILogger logger, Exception exception, string message);
-#endif
 }

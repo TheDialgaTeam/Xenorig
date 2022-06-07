@@ -11,7 +11,7 @@ env:
 
   XENORIG_NATIVE_SOURCE_ROOT: "XenoLibNative"
   XENORIG_NATIVE_BUILD_ROOT: "XenoLibNative/build"
-  XENORIG_NATIVE_INSTALL_ROOT: "XenoLibNative/install"
+  XENORIG_NATIVE_INSTALL_ROOT: "XenoLibNative/build/install"
   XENORIG_NATIVE_VCPKG_ROOT: "XenoLibNative/vcpkg"
 
   TEMP_DIRECTORY: "temp"
@@ -42,6 +42,10 @@ jobs:
         os: [windows-2022, ubuntu-20.04, macos-11]
         arch: [x64, x86, arm, arm64]
         exclude:
+          - os: windows-2022
+            arch: arm
+          - os: windows-2022
+            arch: arm64
           - os: ubuntu-20.04
             arch: x86
           - os: macos-11
@@ -102,57 +106,6 @@ jobs:
               gcc_cxx: ""
             Xenorig:
               arch: win-x86
-              configuration: Release
-              targetFramework: net6.0
-
-          - os: windows-2022
-            arch: arm
-            install: ""
-            post_install: []
-            output_folder: windows-arm
-            Xenorig_native:
-              build_Xenorig_native: true
-              cmake_generator: Ninja
-              cmake_build_type: Release
-              cmake_target_triplet: arm-windows-static
-              cmake_toolchain_file: ""
-              use_msvc: true
-              msvc_environment: vcvarsamd64_arm
-              use_msys2: false
-              msys2_environment: ""
-              msys2_install: ""
-              use_gcc: false
-              gcc_cc: ""
-              gcc_cxx: ""
-            Xenorig:
-              arch: win-arm
-              configuration: Release
-              targetFramework: net6.0
-
-          - os: windows-2022
-            arch: arm64
-            install: ""
-            post_install: []
-            output_folder: windows-arm64
-            Xenorig_native:
-              build_Xenorig_native: true
-              cmake_generator: Ninja
-              cmake_build_type: Release
-              cmake_target_triplet: arm64-windows-static
-              cmake_toolchain_file: ""
-              use_msvc: true
-              msvc_environment: vcvarsamd64_arm64
-              use_msys2: false
-              msys2_environment: CLANGARM64
-              msys2_install: >-
-                mingw-w64-clang-aarch64-toolchain
-                mingw-w64-clang-aarch64-cmake
-                mingw-w64-clang-aarch64-ninja
-              use_gcc: false
-              gcc_cc: ""
-              gcc_cxx: ""
-            Xenorig:
-              arch: win-arm64
               configuration: Release
               targetFramework: net6.0
 
@@ -506,18 +459,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: windows-x86
-          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
-
-      - name: Download Xenorig artifact (windows-arm)
-        uses: actions/download-artifact@v2
-        with:
-          name: windows-arm
-          path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
-
-      - name: Download Xenorig artifact (windows-arm64)
-        uses: actions/download-artifact@v2
-        with:
-          name: windows-arm64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (linux-x64)
