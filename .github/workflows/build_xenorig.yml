@@ -90,9 +90,7 @@ jobs:
 
           - os: ubuntu-20.04
             arch: x64
-            install: >-
-              clang
-              cmake
+            install: ""
             output_folder: Xenorig-linux-x64
             Xenorig_native:
               configure_preset: linux-x64
@@ -107,7 +105,6 @@ jobs:
           - os: ubuntu-20.04
             arch: arm
             install: >-
-              clang
               gcc-arm-linux-gnueabihf
               g++-arm-linux-gnueabihf
             output_folder: Xenorig-linux-arm
@@ -124,7 +121,6 @@ jobs:
           - os: ubuntu-20.04
             arch: arm64
             install: >-
-              clang
               gcc-aarch64-linux-gnu
               g++-aarch64-linux-gnu
             output_folder: Xenorig-linux-arm64
@@ -140,9 +136,7 @@ jobs:
 
           - os: macos-11
             arch: x64
-            install: >-
-              llvm
-              cmake
+            install: ""
             output_folder: Xenorig-osx-x64
             Xenorig_native:
               configure_preset: osx-x64
@@ -237,14 +231,23 @@ jobs:
           configurePreset: ${{ matrix.Xenorig_native.configure_preset }}
           buildPreset: ${{ matrix.Xenorig_native.build_preset }}
 
+      - name: Install Xirorig Native
+        run: |
+          $build_path = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_NATIVE_BUILD_ROOT }}"
+          cmake --install "$build_path"
+
       # Build Xenorig
-      - name: Patch Xenorig csproj
+      - name: Patch Xenorig Target Framework 
+        run: |
+          $csproj_file = Join-Path "${{ github.workspace }}" "${env:XENORIG_CSPROJ_FILE}"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<TargetFramework>.+?<\/TargetFramework>(\s*)$', "`$1<TargetFramework>${{ matrix.Xenorig.target_framework }}</TargetFramework>`$2") | Set-Content "$csproj_file"
+
+      - name: Patch Xenorig Version
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          $version = (${env:GITHUB_REF} -split "/" | Select-Object -Last 1).Replace('v', '')
-          $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_CSPROJ_FILE}"
+          $version = (${{ github.ref }} -split "/" | Select-Object -Last 1).Replace('v', '')
+          $csproj_file = Join-Path "${{ github.workspace }}" "${env:XENORIG_CSPROJ_FILE}"
           ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<TargetFramework>.+?<\/TargetFramework>(\s*)$', "`$1<TargetFramework>${{ matrix.Xenorig.target_framework }}</TargetFramework>`$2") | Set-Content "$csproj_file"
 
       - name: Build Xenorig
         run: |
