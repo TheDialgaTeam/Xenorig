@@ -109,6 +109,7 @@ jobs:
             install: >-
               clang
               gcc-arm-linux-gnueabihf
+              g++-arm-linux-gnueabihf
             output_folder: Xenorig-linux-arm
             Xenorig_native:
               configure_preset: linux-arm
@@ -125,6 +126,7 @@ jobs:
             install: >-
               clang
               gcc-aarch64-linux-gnu
+              g++-aarch64-linux-gnu
             output_folder: Xenorig-linux-arm64
             Xenorig_native:
               configure_preset: linux-arm64
