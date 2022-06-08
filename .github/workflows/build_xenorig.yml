@@ -62,7 +62,7 @@ jobs:
             Xenorig_native:
               cmake_generator: MSYS Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: x64-mingw-static-release
+              cmake_target_triplet: x64-clang-static-release
               cmake_toolchain_file: ""
               msys2_environment: CLANG64
               msys2_install: >-
@@ -84,7 +84,7 @@ jobs:
             Xenorig_native:
               cmake_generator: MSYS Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: x86-mingw-static-release
+              cmake_target_triplet: x86-clang-static-release
               cmake_toolchain_file: ""
               msys2_environment: CLANG32
               msys2_install: >-
@@ -108,7 +108,7 @@ jobs:
             Xenorig_native:
               cmake_generator: Unix Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: x64-linux
+              cmake_target_triplet: x64-clang-static-release
               cmake_toolchain_file: ""
               msys2_environment: ""
               msys2_install: ""
@@ -129,8 +129,8 @@ jobs:
             Xenorig_native:
               cmake_generator: Unix Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: arm-linux
-              cmake_toolchain_file: raspberrypi-arm.cmake
+              cmake_target_triplet: arm-clang-static-release
+              cmake_toolchain_file: ""
               msys2_environment: ""
               msys2_install: ""
               cc: clang
@@ -150,8 +150,8 @@ jobs:
             Xenorig_native:
               cmake_generator: Unix Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: arm64-linux
-              cmake_toolchain_file: raspberrypi-arm64.cmake
+              cmake_target_triplet: arm64-clang-static-release
+              cmake_toolchain_file: ""
               msys2_environment: ""
               msys2_install: ""
               cc: clang
@@ -171,7 +171,7 @@ jobs:
             Xenorig_native:
               cmake_generator: Unix Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: x64-osx
+              cmake_target_triplet: x64-clang-static-release
               cmake_toolchain_file: ""
               msys2_environment: ""
               msys2_install: ""
