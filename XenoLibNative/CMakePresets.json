@@ -12,8 +12,6 @@
             "binaryDir": "${sourceDir}/build",
             "installDir": "${sourceDir}/build/install",
             "environment": {
-                "CC": "clang",
-                "CXX": "clang++",
                 "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/triplets"
             }
         },
@@ -46,7 +44,9 @@
             "inherits": ["default"],
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm-linux-release",
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "gcc-arm-linux-gnueabihf",
+                "CMAKE_CXX_COMPILER": "g++-arm-linux-gnueabihf"
             }
         },
         {
@@ -55,6 +55,8 @@
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm64-linux-release",
                 "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_C_COMPILER": "gcc-aarch64-linux-gnu",
+                "CMAKE_CXX_COMPILER": "g++-aarch64-linux-gnu"
             }
         },
         {
