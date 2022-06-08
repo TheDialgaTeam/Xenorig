@@ -2,6 +2,8 @@ name: Build and Deploy Xenorig
 
 on:
   push:
+    branches:
+      - Xenorig_future
     tags:
       - v*
 
@@ -14,9 +16,7 @@ env:
   XENORIG_NATIVE_INSTALL_ROOT: "XenoLibNative/build/install"
   XENORIG_NATIVE_VCPKG_ROOT: "XenoLibNative/vcpkg"
 
-  TEMP_DIRECTORY: "temp"
-  DOTNET_PATH: "temp/dotnet"
-  DOTNET_VERSION: "6.0"
+  DOTNET_VERSION: "6.0.x"
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   VCPKG_NUGET_REPOSITORY: "https://github.com/${{ github.repository }}"
@@ -57,20 +57,15 @@ jobs:
           - os: windows-2022
             arch: x64
             install: ""
-            post_install: []
             output_folder: Xenorig-windows-x64
             Xenorig_native:
-              cmake_generator: Ninja
-              cmake_build_type: Release
-              cmake_target_triplet: x64-clang-static-release
-              cmake_toolchain_file: ""
+              configure_preset: windows-x64
+              build_preset: windows-x64
               msys2_environment: CLANG64
               msys2_install: >-
                 mingw-w64-clang-x86_64-toolchain
                 mingw-w64-clang-x86_64-cmake
                 mingw-w64-clang-x86_64-ninja
-              cc: "clang"
-              cxx: "clang++"
             Xenorig:
               configuration: Release
               arch: win-x64
@@ -79,20 +74,15 @@ jobs:
           - os: windows-2022
             arch: x86
             install: ""
-            post_install: []
             output_folder: Xenorig-windows-x86
             Xenorig_native:
-              cmake_generator: Ninja
-              cmake_build_type: Release
-              cmake_target_triplet: x86-clang-static-release
-              cmake_toolchain_file: ""
+              configure_preset: windows-x86
+              build_preset: windows-x86
               msys2_environment: CLANG32
               msys2_install: >-
                 mingw-w64-clang-i686-toolchain
                 mingw-w64-clang-i686-cmake
                 mingw-w64-clang-i686-ninja
-              cc: "clang"
-              cxx: "clang++"
             Xenorig:
               configuration: Release
               arch: win-x86
@@ -103,17 +93,12 @@ jobs:
             install: >-
               clang
               cmake
-            post_install: []
             output_folder: Xenorig-linux-x64
             Xenorig_native:
-              cmake_generator: Unix Makefiles
-              cmake_build_type: Release
-              cmake_target_triplet: x64-clang-static-release
-              cmake_toolchain_file: ""
+              configure_preset: linux-x64
+              build_preset: linux-x64
               msys2_environment: ""
               msys2_install: ""
-              cc: clang
-              cxx: clang++
             Xenorig:
               configuration: Release
               arch: linux-x64
@@ -123,21 +108,13 @@ jobs:
             arch: arm
             install: >-
               clang
-              cmake
-              binutils-arm-linux-gnueabihf
-              libc6-dev-armhf-cross
-              libstdc++-9-dev-armhf-cross
-            post_install: []
+              gcc-arm-linux-gnueabihf
             output_folder: Xenorig-linux-arm
             Xenorig_native:
-              cmake_generator: Unix Makefiles
-              cmake_build_type: Release
-              cmake_target_triplet: arm-clang-static-release
-              cmake_toolchain_file: ""
+              configure_preset: linux-arm
+              build_preset: linux-arm
               msys2_environment: ""
               msys2_install: ""
-              cc: clang
-              cxx: clang++
             Xenorig:
               configuration: Release
               arch: linux-arm
@@ -147,21 +124,13 @@ jobs:
             arch: arm64
             install: >-
               clang
-              cmake
-              binutils-aarch64-linux-gnu
-              libc6-dev-arm64-cross
-              libstdc++-9-dev-arm64-cross
-            post_install: []
+              gcc-aarch64-linux-gnu
             output_folder: Xenorig-linux-arm64
             Xenorig_native:
-              cmake_generator: Unix Makefiles
-              cmake_build_type: Release
-              cmake_target_triplet: arm64-clang-static-release
-              cmake_toolchain_file: ""
+              configure_preset: linux-arm64
+              build_preset: linux-arm64
               msys2_environment: ""
               msys2_install: ""
-              cc: clang
-              cxx: clang++
             Xenorig:
               configuration: Release
               arch: linux-arm64
@@ -172,17 +141,12 @@ jobs:
             install: >-
               llvm
               cmake
-            post_install: []
             output_folder: Xenorig-osx-x64
             Xenorig_native:
-              cmake_generator: Unix Makefiles
-              cmake_build_type: Release
-              cmake_target_triplet: x64-clang-static-release
-              cmake_toolchain_file: ""
+              configure_preset: osx-x64
+              build_preset: osx-x64
               msys2_environment: ""
               msys2_install: ""
-              cc: clang
-              cxx: clang++
             Xenorig:
               configuration: Release
               arch: osx-x64
@@ -194,7 +158,6 @@ jobs:
         with:
           submodules: recursive
 
-      # Install
       - name: Install Program / Dependencies
         run: |
           if ("${{ runner.os }}" -eq "Windows")
@@ -220,28 +183,9 @@ jobs:
               brew install ${{ matrix.install }}
             }
           }
-          
-      - name: Install dotnet
-        run: |
-          $temp_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:TEMP_DIRECTORY}"
-          New-Item "$temp_directory" -ItemType 'Directory' -Force
 
-          if ("${env:RUNNER_OS}" -eq 'Windows')
-          {
-            $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.ps1'
-            $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
-
-            Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile "$dotnet_install_script_file_path"
-            Invoke-Expression "$dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -InstallDir `"$dotnet_install_directory`""
-          }
-          else
-          {
-            $dotnet_install_script_file_path = Join-Path "$temp_directory" 'dotnet-install.sh'
-            $dotnet_install_directory = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}"
-
-            Invoke-WebRequest "https://dot.net/v1/dotnet-install.sh" -OutFile "$dotnet_install_script_file_path"
-            /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -InstallDir `"$dotnet_install_directory`""
-          }
+      - name: Install cmake
+        uses: lukka/get-cmake@latest
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v10
@@ -249,13 +193,18 @@ jobs:
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
           appendedCacheKey: ${{ matrix.output_folder }}
 
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: "${{ env.DOTNET_VERSION }}"
+
       - name: Setup NuGet Credentials
         run: |
           dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/${{ github.repository_owner }}" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
-          
-          if ("${env:RUNNER_OS}" -ne 'Windows')
+
+          if ("${{ runner.os }}" -ne 'Windows')
           {
-            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
+            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" "vcpkg"
 
             $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
             Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -name `"github/${{ github.repository_owner }}`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`" -storepasswordincleartext"
@@ -267,85 +216,38 @@ jobs:
         with:
           update: true
           install: ${{ matrix.Xenorig_native.msys2_install }}
+          msystem: ${{ matrix.Xenorig_native.msys2_environment }}
 
-      - name: Install cmake
-        uses: lukka/get-cmake@latest
-
-      # Build Xenorig Native
       - name: Build Xenorig Native
-        env:
-          XENORIG_NATIVE_CMAKE_GENERATOR: ${{ matrix.Xenorig_native.cmake_generator }}
-          XENORIG_NATIVE_CMAKE_BUILD_TYPE: ${{ matrix.Xenorig_native.cmake_build_type }}
-          XENORIG_NATIVE_CMAKE_TARGET_TRIPLET: ${{ matrix.Xenorig_native.cmake_target_triplet }}
-          XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE: ${{ matrix.Xenorig_native.cmake_toolchain_file }}
-          XENORIG_NATIVE_USE_MSYS2: ${{ matrix.Xenorig_native.use_msys2 }}
-          XENORIG_NATIVE_MSYS2_ENVIRONMENT: ${{ matrix.Xenorig_native.msys2_environment }}
-          XENORIG_NATIVE_CC: ${{ matrix.Xenorig_native.cc }}
-          XENORIG_NATIVE_CXX: ${{ matrix.Xenorig_native.cxx }}
-        run: |
-          $cmake_generator = "${env:XENORIG_NATIVE_CMAKE_GENERATOR}"
+        uses: lukka/run-cmake@v10
+        if: runner.os == 'Windows'
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/XenoLibNative/CMakeLists.txt'
+          configurePreset: ${{ matrix.Xenorig_native.configure_preset }}
+          buildPreset: ${{ matrix.Xenorig_native.build_preset }}
+          useShell: msys2
 
-          $cmake_build_type = "${env:XENORIG_NATIVE_CMAKE_BUILD_TYPE}"
-          $cmake_target_triplet = "${env:XENORIG_NATIVE_CMAKE_TARGET_TRIPLET}"
-          $cmake_toolchain_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_SOURCE_ROOT}" 'cmake' "${env:XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"
-
-          $cmake_source_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_SOURCE_ROOT}"
-          $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_BUILD_ROOT}"
-          $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_INSTALL_ROOT}"
-
-          $custom_triplets_root = Join-Path "$cmake_source_root" "triplets"
-
-          $env:CC = "${env:XENORIG_NATIVE_CC}"
-          $env:CXX = "${env:XENORIG_NATIVE_CXX}"
-          $env:VCPKG_OVERLAY_TRIPLETS = "$custom_triplets_root"
-
-          if ("${env:RUNNER_OS}" -eq 'Windows')
-          {
-            $cmake_source_root = $cmake_source_root.Replace('\', '/')
-            $cmake_build_root = $cmake_build_root.Replace('\', '/')
-            $cmake_install_prefix = $cmake_install_prefix.Replace('\', '/')
-
-            $env:MSYSTEM = "${env:XENORIG_NATIVE_MSYS2_ENVIRONMENT}"
-
-            msys2 -c "cmake -G \`"$cmake_generator\`" -DCMAKE_BUILD_TYPE=\`"$cmake_build_type\`" -DVCPKG_TARGET_TRIPLET=\`"$cmake_target_triplet\`" -DCMAKE_INSTALL_PREFIX=\`"$cmake_install_prefix\`" -S \`"$cmake_source_root\`" -B \`"$cmake_build_root\`""
-            msys2 -c "cd \`"$cmake_build_root\`" && cmake --build . && cmake --install ."
-          }
-          else
-          {
-            if (![string]::IsNullOrWhiteSpace("${env:XENORIG_NATIVE_CMAKE_TOOLCHAIN_FILE}"))
-            {
-              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE="$cmake_toolchain_file" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
-            }
-            else
-            {
-              cmake -G "$cmake_generator" -DCMAKE_BUILD_TYPE="$cmake_build_type" -DVCPKG_TARGET_TRIPLET="$cmake_target_triplet" -DCMAKE_INSTALL_PREFIX="$cmake_install_prefix" -S "$cmake_source_root" -B "$cmake_build_root"
-            }
-
-            cd "$cmake_build_root"
-            cmake --build .
-            cmake --install .
-          }
+      - name: Build Xenorig Native
+        uses: lukka/run-cmake@v10
+        if: runner.os != 'Windows'
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/XenoLibNative/CMakeLists.txt'
+          configurePreset: ${{ matrix.Xenorig_native.configure_preset }}
+          buildPreset: ${{ matrix.Xenorig_native.build_preset }}
 
       # Build Xenorig
       - name: Patch Xenorig csproj
-        env:
-          XENORIG_TARGET_FRAMEWORK: ${{ matrix.Xenorig.target_framework }}
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           $version = (${env:GITHUB_REF} -split "/" | Select-Object -Last 1).Replace('v', '')
           $csproj_file = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_CSPROJ_FILE}"
           ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<TargetFramework>.+?<\/TargetFramework>(\s*)$', "`$1<TargetFramework>${env:XENORIG_TARGET_FRAMEWORK}</TargetFramework>`$2") | Set-Content "$csproj_file"
+          ((Get-Content "$csproj_file") -replace '^(\s*)<TargetFramework>.+?<\/TargetFramework>(\s*)$', "`$1<TargetFramework>${{ matrix.Xenorig.target_framework }}</TargetFramework>`$2") | Set-Content "$csproj_file"
 
       - name: Build Xenorig
-        env:
-          XENORIG_OUTPUT_FOLDER: ${{ matrix.output_folder }}
-          XENORIG_CONFIGURATION: ${{ matrix.Xenorig.configuration }}
-          XENORIG_ARCH: ${{ matrix.Xenorig.arch }}
         run: |
-          $dotnet = Join-Path "${env:GITHUB_WORKSPACE}" "${env:DOTNET_PATH}" 'dotnet'
-          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}" "${env:XENORIG_OUTPUT_FOLDER}"
-          Invoke-Expression "$dotnet publish -c ${env:XENORIG_CONFIGURATION} --runtime ${env:XENORIG_ARCH} -o `"$output`" --self-contained -p:PublishTrimmed=true -p:PublishReadyToRun=true"
+          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}" "${{ matrix.output_folder }}"
+          Invoke-Expression "dotnet publish -c ${{ matrix.Xenorig.configuration }} --runtime ${{ matrix.Xenorig.arch }} -o `"$output`" --self-contained -p:PublishTrimmed=true -p:PublishReadyToRun=true"
 
       # Package
       - name: Package Xenorig
