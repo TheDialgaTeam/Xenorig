@@ -60,7 +60,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-windows-x64
             Xenorig_native:
-              cmake_generator: "MSYS Makefiles"
+              cmake_generator: ninja
               cmake_build_type: Release
               cmake_target_triplet: x64-clang-static-release
               cmake_toolchain_file: ""
@@ -82,7 +82,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-windows-x86
             Xenorig_native:
-              cmake_generator: "MSYS Makefiles"
+              cmake_generator: ninja
               cmake_build_type: Release
               cmake_target_triplet: x86-clang-static-release
               cmake_toolchain_file: ""
@@ -106,7 +106,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-linux-x64
             Xenorig_native:
-              cmake_generator: "Unix Makefiles"
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: x64-clang-static-release
               cmake_toolchain_file: ""
@@ -130,7 +130,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-linux-arm
             Xenorig_native:
-              cmake_generator: "Unix Makefiles"
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: arm-clang-static-release
               cmake_toolchain_file: ""
@@ -175,7 +175,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-osx-x64
             Xenorig_native:
-              cmake_generator: "Unix Makefiles"
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: x64-clang-static-release
               cmake_toolchain_file: ""
