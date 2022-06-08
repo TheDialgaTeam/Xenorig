@@ -154,7 +154,7 @@ jobs:
             post_install: []
             output_folder: Xenorig-linux-arm64
             Xenorig_native:
-              cmake_generator: "Unix Makefiles"
+              cmake_generator: Unix Makefiles
               cmake_build_type: Release
               cmake_target_triplet: arm64-clang-static-release
               cmake_toolchain_file: ""
