@@ -3,7 +3,7 @@ name: Build and Deploy Xenorig
 on:
   push:
     branches:
-      - Xenorig_future
+      - xenorig_future
     tags:
       - v*
 
