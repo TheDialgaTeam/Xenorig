@@ -62,7 +62,7 @@ jobs:
             Xenorig_native:
               cmake_generator: MSYS Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: x64-mingw-static
+              cmake_target_triplet: x64-mingw-static-release
               cmake_toolchain_file: ""
               msys2_environment: CLANG64
               msys2_install: >-
@@ -84,7 +84,7 @@ jobs:
             Xenorig_native:
               cmake_generator: MSYS Makefiles
               cmake_build_type: Release
-              cmake_target_triplet: x86-mingw-static
+              cmake_target_triplet: x86-mingw-static-release
               cmake_toolchain_file: ""
               msys2_environment: CLANG32
               msys2_install: >-
@@ -304,8 +304,11 @@ jobs:
           $cmake_build_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_BUILD_ROOT}"
           $cmake_install_prefix = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_INSTALL_ROOT}"
 
+          $custom_triplets_root = Join-Path "$cmake_source_root" "triplets"
+
           $env:CC = "${env:XENORIG_NATIVE_CC}"
           $env:CXX = "${env:XENORIG_NATIVE_CXX}"
+          $env:VCPKG_OVERLAY_TRIPLETS = "$custom_triplets_root"
 
           if ("${env:RUNNER_OS}" -eq 'Windows')
           {
