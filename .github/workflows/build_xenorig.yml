@@ -221,7 +221,7 @@ jobs:
           cmakeListsTxtPath: '${{ github.workspace }}/XenoLibNative/CMakeLists.txt'
           configurePreset: ${{ matrix.Xenorig_native.configure_preset }}
           buildPreset: ${{ matrix.Xenorig_native.build_preset }}
-          useShell: msys2
+          useShell: C:/msys64/msys2_shell.cmd -defterm -here -no-start -${{ matrix.Xenorig_native.msys2_environment }}
 
       - name: Build Xenorig Native
         uses: lukka/run-cmake@v10
