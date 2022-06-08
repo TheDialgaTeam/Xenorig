@@ -20,7 +20,7 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   VCPKG_NUGET_REPOSITORY: "https://github.com/${{ github.repository }}"
-  VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.repository_owner }},readwrite
+  VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.repository_owner }},readwrite;default,readwrite
 
 defaults:
   run:
@@ -171,7 +171,7 @@ jobs:
               sudo apt-get install ${{ matrix.install }} -y
             }
           }
-          elseif ("${{ runner.os }}" -eq 'macOS')
+          elseif ("${{ runner.os }}" -eq "macOS")
           {
             if (![string]::IsNullOrWhiteSpace("${{ matrix.install }}"))
             {
@@ -181,18 +181,20 @@ jobs:
           }
 
       - name: Install cmake
+        if: runner.os != 'Windows'
         uses: lukka/get-cmake@latest
-
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v10
-        with:
-          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
-          appendedCacheKey: ${{ matrix.output_folder }}
 
       - name: Install dotnet
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: "${{ env.DOTNET_VERSION }}"
+
+      - name: Setup vcpkg
+        if: runner.os != 'Windows'
+        uses: lukka/run-vcpkg@v10
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
+          appendedCacheKey: ${{ matrix.output_folder }}
 
       - name: Setup NuGet Credentials
         run: |
@@ -200,7 +202,7 @@ jobs:
 
           if ("${{ runner.os }}" -ne 'Windows')
           {
-            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" "vcpkg"
+            $vcpkg_executable = Join-Path "${{ github.workspace }}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" "vcpkg"
 
             $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
             Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -name `"github/${{ github.repository_owner }}`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`" -storepasswordincleartext"
@@ -214,24 +216,32 @@ jobs:
           install: ${{ matrix.Xenorig_native.msys2_install }}
           msystem: ${{ matrix.Xenorig_native.msys2_environment }}
 
-      - name: Build Xenorig Native
-        uses: lukka/run-cmake@v10
+      - name: Setup vcpkg
         if: runner.os == 'Windows'
+        uses: lukka/run-vcpkg@v10
         with:
-          cmakeListsTxtPath: '${{ github.workspace }}/XenoLibNative/CMakeLists.txt'
-          configurePreset: ${{ matrix.Xenorig_native.configure_preset }}
-          buildPreset: ${{ matrix.Xenorig_native.build_preset }}
-          useShell: C:/msys64/msys2_shell.cmd
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
+          appendedCacheKey: ${{ matrix.output_folder }}
+          runVcpkgInstall: true
+
+      - name: Build and Install Xenorig Native
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          cmake --preset ${{ matrix.Xenorig_native.configure_preset }} "${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}"
+          cmake --build --preset ${{ matrix.Xenorig_native.configure_preset }} "${{ github.workspace }}/${{ env.XENORIG_NATIVE_BUILD_ROOT }}"
+          cmake --install "${{ github.workspace }}/${{ env.XENORIG_NATIVE_BUILD_ROOT }}"
 
       - name: Build Xenorig Native
-        uses: lukka/run-cmake@v10
         if: runner.os != 'Windows'
+        uses: lukka/run-cmake@v10
         with:
           cmakeListsTxtPath: '${{ github.workspace }}/XenoLibNative/CMakeLists.txt'
           configurePreset: ${{ matrix.Xenorig_native.configure_preset }}
           buildPreset: ${{ matrix.Xenorig_native.build_preset }}
 
       - name: Install Xirorig Native
+        if: runner.os != 'Windows'
         run: |
           $build_path = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_NATIVE_BUILD_ROOT }}"
           cmake --install "$build_path"
