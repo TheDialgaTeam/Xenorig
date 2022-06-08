@@ -189,66 +189,35 @@ jobs:
               target_framework: net6.0
 
     steps:
-      # Init
       - name: Checkout
         uses: actions/checkout@v2
         with:
           submodules: recursive
 
-      - name: Setup NuGet Credentials
-        run: |
-          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/${{ github.repository_owner }}" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
-          
-          if ("${env:RUNNER_OS}" -ne 'Windows')
-          {
-            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
-
-            $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
-            Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -name `"github/${{ github.repository_owner }}`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`" -storepasswordincleartext"
-          }
-
       # Install
       - name: Install Program / Dependencies
-        env:
-          INSTALL: ${{ matrix.install }}
-          POST_INSTALL: ${{ join(matrix.post_install, ' && ') }}
         run: |
-          if ("${env:RUNNER_OS}" -eq 'Windows')
+          if ("${{ runner.os }}" -eq "Windows")
           {
-            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            if (![string]::IsNullOrWhiteSpace("${{ matrix.install }}"))
             {
-              Invoke-Expression "choco install ${env:INSTALL} -y"
-            }
-            
-            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
-            {
-              Invoke-Expression "${env:POST_INSTALL}"
+              choco install ${{ matrix.install }} -y
             }
           }
-          elseif ("${env:RUNNER_OS}" -eq 'Linux')
+          elseif ("${{ runner.os }}" -eq "Linux")
           {
-            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            if (![string]::IsNullOrWhiteSpace("${{ matrix.install }}"))
             {
               sudo apt-get update -y
-              Invoke-Expression "sudo apt-get install ${env:INSTALL} -y"
-            }
-            
-            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
-            {
-              Invoke-Expression "${env:POST_INSTALL}"
+              sudo apt-get install ${{ matrix.install }} -y
             }
           }
-          elseif ("${env:RUNNER_OS}" -eq 'macOS')
+          elseif ("${{ runner.os }}" -eq 'macOS')
           {
-            if (![string]::IsNullOrWhiteSpace("${env:INSTALL}"))
+            if (![string]::IsNullOrWhiteSpace("${{ matrix.install }}"))
             {
               brew update
-              Invoke-Expression "brew install ${env:INSTALL}"
-            }
-            
-            if (![string]::IsNullOrWhiteSpace("${env:POST_INSTALL}"))
-            {
-              Invoke-Expression "${env:POST_INSTALL}"
+              brew install ${{ matrix.install }}
             }
           }
           
@@ -274,6 +243,24 @@ jobs:
             /usr/bin/env bash -c "chmod u+x $dotnet_install_script_file_path && $dotnet_install_script_file_path -Channel `"${env:DOTNET_VERSION}`" -InstallDir `"$dotnet_install_directory`""
           }
 
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v10
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
+          appendedCacheKey: ${{ matrix.output_folder }}
+
+      - name: Setup NuGet Credentials
+        run: |
+          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/${{ github.repository_owner }}" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
+          
+          if ("${env:RUNNER_OS}" -ne 'Windows')
+          {
+            $vcpkg_executable = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_NATIVE_VCPKG_ROOT}" 'vcpkg'
+
+            $nuget_executable = @(Invoke-Expression "$vcpkg_executable fetch nuget") | Select-Object -Last 1
+            Invoke-Expression "mono $nuget_executable sources add -source `"https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json`" -name `"github/${{ github.repository_owner }}`" -username `"${{ github.actor }}`" -password `"${{ github.token }}`" -storepasswordincleartext"
+          }
+
       - name: Setup msys2 environemnt
         uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
@@ -281,12 +268,8 @@ jobs:
           update: true
           install: ${{ matrix.Xenorig_native.msys2_install }}
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v10
-        with:
-          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
-          appendedCacheKey: ${{ matrix.output_folder }}
-          runVcpkgInstall: true
+      - name: Install cmake
+        uses: lukka/get-cmake@latest
 
       # Build Xenorig Native
       - name: Build Xenorig Native
