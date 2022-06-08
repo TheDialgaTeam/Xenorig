@@ -190,7 +190,6 @@ jobs:
           dotnet-version: "${{ env.DOTNET_VERSION }}"
 
       - name: Setup vcpkg
-        if: runner.os != 'Windows'
         uses: lukka/run-vcpkg@v10
         with:
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
@@ -216,21 +215,13 @@ jobs:
           install: ${{ matrix.Xenorig_native.msys2_install }}
           msystem: ${{ matrix.Xenorig_native.msys2_environment }}
 
-      - name: Setup vcpkg
-        if: runner.os == 'Windows'
-        uses: lukka/run-vcpkg@v10
-        with:
-          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
-          appendedCacheKey: ${{ matrix.output_folder }}
-          runVcpkgInstall: true
-
       - name: Build and Install Xenorig Native
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
           cmake --preset ${{ matrix.Xenorig_native.configure_preset }} "${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}"
-          cmake --build --preset ${{ matrix.Xenorig_native.configure_preset }} "${{ github.workspace }}/${{ env.XENORIG_NATIVE_BUILD_ROOT }}"
-          cmake --install "${{ github.workspace }}/${{ env.XENORIG_NATIVE_BUILD_ROOT }}"
+          cmake --build --preset ${{ matrix.Xenorig_native.configure_preset }} "${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}"
+          cmake --install "${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}"
 
       - name: Build Xenorig Native
         if: runner.os != 'Windows'
