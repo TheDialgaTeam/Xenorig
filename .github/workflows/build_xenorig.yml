@@ -166,7 +166,6 @@ jobs:
             install: >-
               llvm
               cmake
-              nasm
             post_install: []
             output_folder: Xenorig-osx-x64
             Xenorig_native:
@@ -191,9 +190,8 @@ jobs:
           submodules: recursive
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v7
+        uses: lukka/run-vcpkg@v10
         with:
-          setupOnly: true
           vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
           appendedCacheKey: ${{ matrix.output_folder }}
 
