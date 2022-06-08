@@ -195,12 +195,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v10
-        with:
-          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
-          appendedCacheKey: ${{ matrix.output_folder }}
-
       - name: Setup NuGet Credentials
         run: |
           dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name "github/${{ github.repository_owner }}" --username "${{ github.actor }}" --password "${{ github.token }}" --store-password-in-clear-text
@@ -286,6 +280,13 @@ jobs:
         with:
           update: true
           install: ${{ matrix.Xenorig_native.msys2_install }}
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v10
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_VCPKG_ROOT }}
+          appendedCacheKey: ${{ matrix.output_folder }}
+          runVcpkgInstall: true
 
       # Build Xenorig Native
       - name: Build Xenorig Native
