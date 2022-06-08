@@ -45,8 +45,8 @@
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm-linux-release",
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "gcc-arm-linux-gnueabihf",
-                "CMAKE_CXX_COMPILER": "g++-arm-linux-gnueabihf"
+                "CMAKE_C_COMPILER": "arm-linux-gnueabihf-gcc",
+                "CMAKE_CXX_COMPILER": "arm-linux-gnueabihf-g++"
             }
         },
         {
@@ -55,8 +55,8 @@
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm64-linux-release",
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "gcc-aarch64-linux-gnu",
-                "CMAKE_CXX_COMPILER": "g++-aarch64-linux-gnu"
+                "CMAKE_C_COMPILER": "aarch64-linux-gnu-gcc",
+                "CMAKE_CXX_COMPILER": "aarch64-linux-gnu-g++"
             }
         },
         {
