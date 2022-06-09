@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TheDialgaTeam.Core.Logging.Microsoft;
@@ -26,7 +25,7 @@ internal static class Program
     }
 
     public const string XenoNativeLibrary = "xeno_native";
-    
+
     public static async Task Main(string[] args)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

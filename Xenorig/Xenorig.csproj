@@ -10,7 +10,7 @@
 		<Nullable>enable</Nullable>
 
 		<PackageId>TheDialgaTeam.Xenophyte.Xenorig</PackageId>
-		<Version>1.0.0.0</Version>
+		<Version>1.0.0</Version>
 		<Authors>Yong Jian Ming</Authors>
 		<Company>The Dialga Team</Company>
 		<Product>Xenorig</Product>
@@ -22,11 +22,11 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 
@@ -60,6 +60,18 @@
 
 	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x86'))">
 		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm'))">
+		<Content Include="..\XenoLibNative\build\install\bin\xeno_native.dll" Link="xeno_native.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm64'))">
+		<Content Include="..\XenoLibNative\build\install\bin\xeno_native.dll" Link="xeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
