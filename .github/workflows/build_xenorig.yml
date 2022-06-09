@@ -8,13 +8,11 @@ on:
       - v*
 
 env:
+  XENORIG_NATIVE_SOURCE_ROOT: "XenoLibNative"
+  XENORIG_NATIVE_VCPKG_ROOT: "XenoLibNative/vcpkg"
+
   XENORIG_CSPROJ_FILE: "Xenorig/Xenorig.csproj"
   XENORIG_PUBLISH_ROOT: "Xenorig/publish"
-
-  XENORIG_NATIVE_SOURCE_ROOT: "XenoLibNative"
-  XENORIG_NATIVE_BUILD_ROOT: "XenoLibNative/build"
-  XENORIG_NATIVE_INSTALL_ROOT: "XenoLibNative/build/install"
-  XENORIG_NATIVE_VCPKG_ROOT: "XenoLibNative/vcpkg"
 
   DOTNET_VERSION: "6.0.x"
   DOTNET_CLI_TELEMETRY_OPTOUT: true
@@ -61,11 +59,11 @@ jobs:
             Xenorig_native:
               configure_preset: windows-x64
               build_preset: windows-x64
-              msys2_environment: CLANG64
+              msys2_environment: MINGW64
               msys2_install: >-
-                mingw-w64-clang-x86_64-toolchain
-                mingw-w64-clang-x86_64-cmake
-                mingw-w64-clang-x86_64-ninja
+                mingw-w64-x86_64-toolchain
+                mingw-w64-x86_64-cmake
+                mingw-w64-x86_64-ninja
             Xenorig:
               configuration: Release
               arch: win-x64
@@ -78,11 +76,11 @@ jobs:
             Xenorig_native:
               configure_preset: windows-x86
               build_preset: windows-x86
-              msys2_environment: CLANG32
+              msys2_environment: MINGW32
               msys2_install: >-
-                mingw-w64-clang-i686-toolchain
-                mingw-w64-clang-i686-cmake
-                mingw-w64-clang-i686-ninja
+                mingw-w64-i686-toolchain
+                mingw-w64-i686-cmake
+                mingw-w64-i686-ninja
             Xenorig:
               configuration: Release
               arch: win-x86
@@ -90,7 +88,10 @@ jobs:
 
           - os: ubuntu-20.04
             arch: x64
-            install: ""
+            install: >-
+              cmake
+              ninja
+              build-essential
             output_folder: Xenorig-linux-x64
             Xenorig_native:
               configure_preset: linux-x64
@@ -105,8 +106,9 @@ jobs:
           - os: ubuntu-20.04
             arch: arm
             install: >-
-              gcc-arm-linux-gnueabihf
-              g++-arm-linux-gnueabihf
+              cmake
+              ninja
+              crossbuild-essential-armhf
             output_folder: Xenorig-linux-arm
             Xenorig_native:
               configure_preset: linux-arm
@@ -121,8 +123,9 @@ jobs:
           - os: ubuntu-20.04
             arch: arm64
             install: >-
-              gcc-aarch64-linux-gnu
-              g++-aarch64-linux-gnu
+              cmake
+              ninja
+              crossbuild-essential-arm64
             output_folder: Xenorig-linux-arm64
             Xenorig_native:
               configure_preset: linux-arm64
@@ -136,7 +139,10 @@ jobs:
 
           - os: macos-11
             arch: x64
-            install: ""
+            install: >-
+              cmake
+              ninja
+              llvm
             output_folder: Xenorig-osx-x64
             Xenorig_native:
               configure_preset: osx-x64
@@ -180,10 +186,6 @@ jobs:
             }
           }
 
-      - name: Install cmake
-        if: runner.os != 'Windows'
-        uses: lukka/get-cmake@latest
-
       - name: Install dotnet
         uses: actions/setup-dotnet@v2
         with:
@@ -215,65 +217,54 @@ jobs:
           install: ${{ matrix.Xenorig_native.msys2_install }}
           msystem: ${{ matrix.Xenorig_native.msys2_environment }}
 
-      - name: Build and Install Xenorig Native
-        if: runner.os == 'Windows'
-        shell: msys2 {0}
-        run: |
-          cmake --preset ${{ matrix.Xenorig_native.configure_preset }} "${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}"
-          cmake --build --preset ${{ matrix.Xenorig_native.configure_preset }} "${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}"
-          cmake --install "${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}"
-
       - name: Build Xenorig Native
-        if: runner.os != 'Windows'
-        uses: lukka/run-cmake@v10
-        with:
-          cmakeListsTxtPath: '${{ github.workspace }}/XenoLibNative/CMakeLists.txt'
-          configurePreset: ${{ matrix.Xenorig_native.configure_preset }}
-          buildPreset: ${{ matrix.Xenorig_native.build_preset }}
-
-      - name: Install Xirorig Native
-        if: runner.os != 'Windows'
+        working-directory: ${{ github.workspace }}/${{ env.XENORIG_NATIVE_SOURCE_ROOT }}
         run: |
-          $build_path = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_NATIVE_BUILD_ROOT }}"
-          cmake --install "$build_path"
+          if ("${{ runner.os }}" -eq 'Windows')
+          {
+            msys2 -c "cmake --preset ${{ matrix.Xenorig_native.configure_preset }}"
+            msys2 -c "cmake --build --preset ${{ matrix.Xenorig_native.configure_preset }}"
+            msys2 -c "cmake --install build"
+          }
+          else
+          {
+            cmake --preset ${{ matrix.Xenorig_native.configure_preset }}
+            cmake --build --preset ${{ matrix.Xenorig_native.configure_preset }}
+            cmake --install build
+          }
 
-      # Build Xenorig
       - name: Patch Xenorig Target Framework 
         run: |
-          $csproj_file = Join-Path "${{ github.workspace }}" "${env:XENORIG_CSPROJ_FILE}"
+          $csproj_file = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_CSPROJ_FILE }}"
           ((Get-Content "$csproj_file") -replace '^(\s*)<TargetFramework>.+?<\/TargetFramework>(\s*)$', "`$1<TargetFramework>${{ matrix.Xenorig.target_framework }}</TargetFramework>`$2") | Set-Content "$csproj_file"
 
       - name: Patch Xenorig Version
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           $version = (${{ github.ref }} -split "/" | Select-Object -Last 1).Replace('v', '')
-          $csproj_file = Join-Path "${{ github.workspace }}" "${env:XENORIG_CSPROJ_FILE}"
+          $csproj_file = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_CSPROJ_FILE }}"
           ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
 
       - name: Build Xenorig
         run: |
-          $output = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}" "${{ matrix.output_folder }}"
+          $output = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_PUBLISH_ROOT }}" "${{ matrix.output_folder }}"
           Invoke-Expression "dotnet publish -c ${{ matrix.Xenorig.configuration }} --runtime ${{ matrix.Xenorig.arch }} -o `"$output`" --self-contained -p:PublishTrimmed=true -p:PublishReadyToRun=true"
 
-      # Package
       - name: Package Xenorig
-        env:
-          XENORIG_OUTPUT_FOLDER: ${{ matrix.output_folder }}
         run: |
-          $Xenorig_publish_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}"
+          $Xenorig_publish_root = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_PUBLISH_ROOT }}"
           Set-Location "$Xenorig_publish_root"
 
-          if ("${env:RUNNER_OS}" -eq 'Windows')
+          if ("${{ runner.os }}" -eq 'Windows')
           {
-            Invoke-Expression "7z a `"${env:XENORIG_OUTPUT_FOLDER}.zip`" `"${env:XENORIG_OUTPUT_FOLDER}`" -mx=9"
+            Invoke-Expression "7z a `"${{ matrix.output_folder }}.zip`" `"${{ matrix.output_folder }}`" -mx=9"
           }
           else
           {
-            Invoke-Expression "7z a `"${env:XENORIG_OUTPUT_FOLDER}.tar`" `"${env:XENORIG_OUTPUT_FOLDER}`""
-            Invoke-Expression "7z a `"${env:XENORIG_OUTPUT_FOLDER}.tar.gz`" `"${env:XENORIG_OUTPUT_FOLDER}.tar`" -mx=9"
+            Invoke-Expression "7z a `"${{ matrix.output_folder }}.tar`" `"${{ matrix.output_folder }}`""
+            Invoke-Expression "7z a `"${{ matrix.output_folder }}.tar.gz`" `"${{ matrix.output_folder }}.tar`" -mx=9"
           }
 
-      # Upload Artifacts
       - name: Upload Xenorig artifacts
         uses: actions/upload-artifact@v2
         with:
@@ -289,7 +280,6 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
 
     steps:
-      # Init
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -297,7 +287,7 @@ jobs:
 
       - name: Create Xenorig artifact directory
         run: |
-          $Xenorig_native_install_root = Join-Path "${env:GITHUB_WORKSPACE}" "${env:XENORIG_PUBLISH_ROOT}"
+          $Xenorig_native_install_root = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_PUBLISH_ROOT }}"
           New-Item "$Xenorig_native_install_root" -ItemType 'Directory' -Force
 
       - name: Download Xenorig artifact (windows-x64)
@@ -336,11 +326,10 @@ jobs:
           name: Xenorig-osx-x64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
-      # Deploy
       - name: Get version number
         id: get_version
         run: |
-          $version = "${env:GITHUB_REF}" -split '/' | Select-Object -Last 1
+          $version = "${{ github.ref }}" -split '/' | Select-Object -Last 1
           Write-Output "::set-output name=version::$version"
 
       - name: Deploy Xenorig
