@@ -1,9 +1,9 @@
 {
-    "version": 4,
+    "version": 3,
     "cmakeMinimumRequired": {
         "major": 3,
-        "minor": 23,
-        "patch": 0
+        "minor": 7,
+        "patch": 2
     },
     "configurePresets": [
         {
@@ -12,12 +12,15 @@
             "binaryDir": "${sourceDir}/build",
             "installDir": "${sourceDir}/build/install",
             "environment": {
-                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/triplets"
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/triplets",
+                "VCPKG_NUGET_REPOSITORY": "https://github.com/TheDialgaTeam/Xenorig"
             }
         },
         {
             "name": "windows-x64",
-            "inherits": ["default"],
+            "inherits": [
+                "default"
+            ],
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "x64-mingw-static-release",
                 "CMAKE_BUILD_TYPE": "Release"
@@ -25,7 +28,9 @@
         },
         {
             "name": "windows-x86",
-            "inherits": ["default"],
+            "inherits": [
+                "default"
+            ],
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "x86-mingw-static-release",
                 "CMAKE_BUILD_TYPE": "Release"
@@ -33,7 +38,9 @@
         },
         {
             "name": "linux-x64",
-            "inherits": ["default"],
+            "inherits": [
+                "default"
+            ],
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "x64-linux-release",
                 "CMAKE_BUILD_TYPE": "Release"
@@ -41,7 +48,9 @@
         },
         {
             "name": "linux-arm",
-            "inherits": ["default"],
+            "inherits": [
+                "default"
+            ],
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm-linux-release",
                 "CMAKE_BUILD_TYPE": "Release",
@@ -51,7 +60,9 @@
         },
         {
             "name": "linux-arm64",
-            "inherits": ["default"],
+            "inherits": [
+                "default"
+            ],
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "arm64-linux-release",
                 "CMAKE_BUILD_TYPE": "Release",
@@ -61,7 +72,9 @@
         },
         {
             "name": "osx-x64",
-            "inherits": ["default"],
+            "inherits": [
+                "default"
+            ],
             "cacheVariables": {
                 "VCPKG_TARGET_TRIPLET": "x64-osx-release",
                 "CMAKE_BUILD_TYPE": "Release"
