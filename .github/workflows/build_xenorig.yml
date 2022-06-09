@@ -90,7 +90,7 @@ jobs:
             arch: x64
             install: >-
               cmake
-              ninja
+              ninja-build
               build-essential
             output_folder: Xenorig-linux-x64
             Xenorig_native:
@@ -107,7 +107,7 @@ jobs:
             arch: arm
             install: >-
               cmake
-              ninja
+              ninja-build
               crossbuild-essential-armhf
             output_folder: Xenorig-linux-arm
             Xenorig_native:
@@ -124,7 +124,7 @@ jobs:
             arch: arm64
             install: >-
               cmake
-              ninja
+              ninja-build
               crossbuild-essential-arm64
             output_folder: Xenorig-linux-arm64
             Xenorig_native:
