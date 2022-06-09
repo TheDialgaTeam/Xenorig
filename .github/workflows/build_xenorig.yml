@@ -241,7 +241,7 @@ jobs:
       - name: Patch Xenorig Version
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          $version = (${{ github.ref }} -split "/" | Select-Object -Last 1).Replace('v', '')
+          $version = ("${{ github.ref }}" -split "/" | Select-Object -Last 1).Replace('v', '')
           $csproj_file = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_CSPROJ_FILE }}"
           ((Get-Content "$csproj_file") -replace '^(\s*)<Version>.+?<\/Version>(\s*)$', "`$1<Version>$version</Version>`$2") | Set-Content "$csproj_file"
 
