@@ -7,6 +7,7 @@ project(xeno_native VERSION 1.0.0 DESCRIPTION "Xeno Native Library")
 set(XENO_NATIVE_SOURCE_FILES
 	"src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.c"
 	"src/Utilities/Base64Utility.c"
+	"src/Utilities/BufferUtility.c"
 	"src/Utilities/CpuInformationUtility.c"
 	"src/Utilities/KeyDerivationFunctionUtility.c"
 	"src/Utilities/MessageDigestUtility.c"
@@ -17,6 +18,7 @@ set(XENO_NATIVE_PUBLIC_HEADER
 	"src/global.h"
 	"src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.h"
 	"src/Utilities/Base64Utility.h"
+	"src/Utilities/BufferUtility.h"
 	"src/Utilities/CpuInformationUtility.h"
 	"src/Utilities/KeyDerivationFunctionUtility.h"
 	"src/Utilities/MessageDigestUtility.h"

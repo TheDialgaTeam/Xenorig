@@ -213,6 +213,7 @@ internal partial class XenophyteCentralizedAlgorithm
                     return;
                 }
 
+                Thread.Sleep(1000);
                 GetNewBlockHeader();
             }));
         }));

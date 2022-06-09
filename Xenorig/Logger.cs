@@ -36,7 +36,7 @@ internal static partial class Logger
     public static partial void PrintCpuMinerReady(ILogger logger, int threads);
 
     [LoggerMessage(EventId = 11, Level = LogLevel.Information, Message = $"{MagentaForegroundColor}{{job}}{Reset} from {WhiteForegroundColor}{{host}}{Reset} diff {WhiteForegroundColor}{{difficulty}}{Reset} algo {WhiteForegroundColor}{{algorithm}}{Reset} height {WhiteForegroundColor}{{height}}{Reset}")]
-    public static partial void PrintJob(ILogger logger, string job, string host, ulong difficulty, string algorithm, int height);
+    public static partial void PrintJob(ILogger logger, string job, string host, long difficulty, string algorithm, int height);
 
     [LoggerMessage(EventId = 12, Level = LogLevel.Information, Message = $"{BlueForegroundColor}Thread: {{threadId,-2}} | Job Type: {{jobType}} | Job Total: {{jobTotal}} | Job Chunk: {{startIndex}}-{{endIndex}} ({{size}}){Reset}")]
     public static partial void PrintCurrentThreadJob(ILogger logger, int threadId, string jobType, long jobTotal, long startIndex, long endIndex, long size);
@@ -55,7 +55,7 @@ internal static partial class Logger
 
     [LoggerMessage(EventId = 17, Level = LogLevel.Information, Message = "|      | Easy Blocks | Semi Random | Random Blocks | Total Blocks |")]
     public static partial void PrintXenophyteCentralizedStatsHeader(ILogger logger);
-    
+
     [LoggerMessage(EventId = 18, Level = LogLevel.Information, Message = $"| {GreenForegroundColor}Good{Reset} | {{easy,-11}} | {{semi,-11}} | {{random,-13}} | {{total,-12}} |")]
     public static partial void PrintXenophyteCentralizedStatsGood(ILogger logger, ulong easy, ulong semi, ulong random, ulong total);
 

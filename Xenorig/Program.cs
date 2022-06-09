@@ -59,6 +59,13 @@ internal static class Program
 
         try
         {
+            AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+            {
+                if (!eventArgs.IsTerminating) return;
+                var crashFileLocation = Path.Combine(contentRootPath, $"{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_crash.log");
+                File.WriteAllText(crashFileLocation, ((Exception) eventArgs.ExceptionObject).ToString());
+            };
+
             await host.RunAsync();
         }
         catch (Exception ex)

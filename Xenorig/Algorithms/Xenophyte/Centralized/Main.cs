@@ -118,7 +118,7 @@ internal partial class XenophyteCentralizedAlgorithm : IAlgorithm, IDisposable
 
     public void PrintCurrentJob()
     {
-        Logger.PrintJob(_logger, "current job", $"{_pools[_poolIndex].Url}:{SeedNodePort}", _blockDifficulty, _blockMethod, _blockId);
+        Logger.PrintJob(_logger, "current job", $"{_pools[_poolIndex].Url}:{SeedNodePort}", _blockDifficulty, _blockMethod, _blockHeight);
     }
 
     private void CalculateAverageHashTimerOnElapsed(object? sender, ElapsedEventArgs e)

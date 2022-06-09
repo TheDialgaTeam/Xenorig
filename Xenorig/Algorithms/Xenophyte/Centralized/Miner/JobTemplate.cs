@@ -8,7 +8,7 @@ internal ref struct JobTemplate
 
     public string BlockIndication { get; set; } = string.Empty;
 
-    public ulong BlockDifficulty { get; set; } = 0;
+    public long BlockDifficulty { get; set; } = 0;
 
     public long BlockMinRange { get; set; } = 0;
 
@@ -16,31 +16,19 @@ internal ref struct JobTemplate
 
     public Span<byte> XorKey { get; set; } = Span<byte>.Empty;
 
-    public int XorKeyLength { get; set; } = 0;
-
-    public Span<byte> AesPassword { get; set; } = Span<byte>.Empty;
-
-    public int AesPasswordLength { get; set; } = 0;
-
-    public Span<byte> AesSalt { get; set; } = Span<byte>.Empty;
-
-    public int AesSaltLength { get; set; } = 0;
-
     public Span<byte> AesKey { get; set; } = Span<byte>.Empty;
 
-    public int AesKeyLength { get; set; } = 0;
-
-    public Span<byte> AesIv { get; } = new byte[16];
+    public Span<byte> AesIv { get; set; } = Span<byte>.Empty;
 
     public int AesRound { get; set; } = 0;
 
-    public Span<long> EasyBlockValues { get; } = new long[256];
+    public Span<long> EasyBlockValues { get; set; } = Span<long>.Empty;
 
-    public int EasyBlockValuesLength { get; set; } = 0;
+    public long[] NonEasyBlockValues { get; set; } = Array.Empty<long>();
 
-    public Span<long> NonEasyBlockValues { get; set; } = Span<long>.Empty;
+    public long NonEasyBlockValuesLength { get; set; } = 0;
 
-    public int NonEasyBlockValuesLength { get; set; } = 0;
+    public long[] TempNonEasyBlockValues { get; set; } = Array.Empty<long>();
 
     public JobTemplate()
     {

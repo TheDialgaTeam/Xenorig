@@ -1,31 +1,54 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using Xenorig.Utilities.KeyDerivationFunction;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized;
 
 internal partial class XenophyteCentralizedAlgorithm
 {
+    private static partial class Native
+    {
+        [DllImport(Program.XenoNativeLibrary)]
+        public static extern int XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(long minValue, long maxValue, in long output);
+
+        [DllImport(Program.XenoNativeLibrary)]
+        public static extern int XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(long minValue, long maxvalue, in long easyBlockValues, int easyBlockValuesLength, in long output);
+    }
+
     private readonly ReaderWriterLockSlim _blockHeaderLock = new();
 
-    private int _blockId;
-    private ulong _blockDifficulty;
+    private int _blockHeight;
     private long _blockTimestampCreate;
 
     private string _blockMethod = string.Empty;
     private string _blockIndication = string.Empty;
-    
+
+    private long _blockDifficulty;
     private long _blockMinRange;
     private long _blockMaxRange;
 
+    private byte[] _blockAesPassword = Array.Empty<byte>();
+    private int _blockAesPasswordLength;
+
+    private byte[] _blockAesSalt = Array.Empty<byte>();
+    private int _blockAesSaltLength;
+
+    private readonly byte[] _blockAesIv = new byte[16];
+    private byte[] _blockAesKey = Array.Empty<byte>();
+    private int _blockAesKeySize;
     private int _blockAesRound;
-    private int _blockAesSize;
 
-    private string _blockKey = string.Empty;
-    private string _blockAesKey = string.Empty;
+    private byte[] _blockXorKey = Array.Empty<byte>();
+    private int _blockXorKeyLength;
 
-    private string _blockXorKey = string.Empty;
+    private readonly long[] _easyBlockValues = new long[256];
+    private int _easyBlockValuesLength;
+
+    private long[] _nonEasyBlockValues = Array.Empty<long>();
+    private long _nonEasyBlockValuesLength;
 
     private string _currentBlockIndication = string.Empty;
-
     private int _isBlockFound;
 
     private bool UpdateBlockHeader(ReadOnlySpan<byte> packet)
@@ -80,7 +103,7 @@ internal partial class XenophyteCentralizedAlgorithm
 
                 if (key.SequenceEqual("ID"))
                 {
-                    _blockId = int.Parse(value);
+                    _blockHeight = int.Parse(value);
                 }
                 else if (key.SequenceEqual("METHOD"))
                 {
@@ -89,7 +112,7 @@ internal partial class XenophyteCentralizedAlgorithm
                 }
                 else if (key.SequenceEqual("DIFFICULTY"))
                 {
-                    _blockDifficulty = ulong.Parse(value);
+                    _blockDifficulty = long.Parse(value);
                 }
                 else if (key.SequenceEqual("TIMESTAMP"))
                 {
@@ -97,8 +120,14 @@ internal partial class XenophyteCentralizedAlgorithm
                 }
                 else if (key.SequenceEqual("KEY"))
                 {
-                    if (value.SequenceEqual(_blockKey)) continue;
-                    _blockKey = value.ToString();
+                    var aesPasswordLength = Encoding.ASCII.GetByteCount(value);
+
+                    if (_blockAesPassword.Length < aesPasswordLength)
+                    {
+                        _blockAesPassword = new byte[aesPasswordLength];
+                    }
+
+                    _blockAesPasswordLength = Encoding.ASCII.GetBytes(value, _blockAesPassword);
                 }
                 else if (key.SequenceEqual("INDICATION"))
                 {
@@ -111,6 +140,19 @@ internal partial class XenophyteCentralizedAlgorithm
                     _blockMinRange = long.Parse(value[..index]);
                     _blockMaxRange = long.Parse(value[(index + 1)..]);
                 }
+            }
+
+            _easyBlockValuesLength = Native.XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(_blockMinRange, _blockMaxRange, Unsafe.AsRef(_easyBlockValues[0]));
+            _nonEasyBlockValuesLength = _blockMaxRange - _blockMinRange + 1 - _easyBlockValuesLength;
+
+            if (_nonEasyBlockValuesLength > 0 && _nonEasyBlockValues.LongLength < _nonEasyBlockValuesLength)
+            {
+                _nonEasyBlockValues = new long[_nonEasyBlockValuesLength];
+            }
+
+            if (_nonEasyBlockValuesLength > 0)
+            {
+                Native.XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(_blockMinRange, _blockMaxRange, Unsafe.AsRef(_easyBlockValues[0]), _easyBlockValuesLength, Unsafe.AsRef(_nonEasyBlockValues[0]));
             }
         }
         finally
@@ -147,23 +189,42 @@ internal partial class XenophyteCentralizedAlgorithm
             index = current.IndexOf('#');
             if (index < 0) return false;
 
-            _blockAesSize = int.Parse(current[..index]);
+            _blockAesKeySize = int.Parse(current[..index]);
+
+            if (_blockAesKey.Length < _blockAesKeySize)
+            {
+                _blockAesKey = new byte[_blockAesKeySize];
+            }
 
             current = current[(index + 1)..];
 
             index = current.IndexOf('#');
             if (index < 0) return false;
 
-            if (!current[..index].SequenceEqual(_blockAesKey))
+            var aesSaltLength = Encoding.ASCII.GetByteCount(current[..index]);
+
+            if (_blockAesSalt.Length < aesSaltLength)
             {
-                _blockAesKey = current[..index].ToString();
+                _blockAesSalt = new byte[aesSaltLength];
             }
-            
+
+            _blockAesSaltLength = Encoding.ASCII.GetBytes(current[..index], _blockAesSalt);
+
             current = current[(index + 1)..];
 
-            if (!current.SequenceEqual(_blockXorKey))
+            var xorKeyLength = Encoding.ASCII.GetByteCount(current);
+
+            if (_blockXorKey.Length < xorKeyLength)
             {
-                _blockXorKey = current.ToString();
+                _blockXorKey = new byte[xorKeyLength];
+            }
+
+            _blockXorKeyLength = Encoding.ASCII.GetBytes(current, _blockXorKey);
+
+            using (var pbkdf1 = new PBKDF1(_blockAesPassword.AsSpan(0, _blockAesPasswordLength), _blockAesSalt.AsSpan(0, _blockAesSaltLength)))
+            {
+                pbkdf1.FillBytes(_blockAesKey.AsSpan(0, _blockAesKeySize / 8));
+                pbkdf1.FillBytes(_blockAesIv);
             }
 
             if (_currentBlockIndication != _blockIndication)
@@ -171,7 +232,7 @@ internal partial class XenophyteCentralizedAlgorithm
                 _currentBlockIndication = _blockIndication;
                 _isBlockFound = 0;
 
-                Logger.PrintJob(_logger, "new job", $"{_pools[_poolIndex].Url}:{SeedNodePort}", _blockDifficulty, _blockMethod, _blockId);
+                Logger.PrintJob(_logger, "new job", $"{_pools[_poolIndex].Url}:{SeedNodePort}", _blockDifficulty, _blockMethod, _blockHeight);
             }
         }
         finally

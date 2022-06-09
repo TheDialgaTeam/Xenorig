@@ -59,7 +59,7 @@ internal readonly struct PacketData
             else
             {
                 Span<byte> encryptedPacket = stackalloc byte[_packetLength + (16 - _packetLength % 16)];
-   
+
                 if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key, iv, _packet.AsSpan(0, _packetLength), encryptedPacket) == 0)
                 {
                     exception = new Exception("Error encrypting packet.");
