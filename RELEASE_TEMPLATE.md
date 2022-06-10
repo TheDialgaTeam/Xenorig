@@ -1,6 +1,8 @@
-Change Logs from v1.0.1
+Change Logs from v1.0.2.0
 
 - Fixed a bug where a forced disconnection can crash the miner.
+- Better randomization for each block.
+- Some optimizations for generating block template.
 
 Update classification: mandatory
 
