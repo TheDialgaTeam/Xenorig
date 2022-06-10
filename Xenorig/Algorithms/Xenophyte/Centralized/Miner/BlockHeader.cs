@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using Xenorig.Utilities.KeyDerivationFunction;
 
@@ -7,16 +6,7 @@ namespace Xenorig.Algorithms.Xenophyte.Centralized;
 
 internal partial class XenophyteCentralizedAlgorithm
 {
-    private static partial class Native
-    {
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(long minValue, long maxValue, in long output);
-
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(long minValue, long maxvalue, in long easyBlockValues, int easyBlockValuesLength, in long output);
-    }
-
-    private readonly ReaderWriterLockSlim _blockHeaderLock = new();
+    private readonly object _blockHeaderLock = new();
 
     private int _blockHeight;
     private long _blockTimestampCreate;
@@ -42,15 +32,10 @@ internal partial class XenophyteCentralizedAlgorithm
     private byte[] _blockXorKey = Array.Empty<byte>();
     private int _blockXorKeyLength;
 
-    private readonly long[] _easyBlockValues = new long[256];
-    private int _easyBlockValuesLength;
-
-    private long[] _nonEasyBlockValues = Array.Empty<long>();
-    private long _nonEasyBlockValuesLength;
-
     private string _currentBlockIndication = string.Empty;
     private int _isBlockFound;
 
+    [SkipLocalsInit]
     private bool UpdateBlockHeader(ReadOnlySpan<byte> packet)
     {
         // SEND-CURRENT-BLOCK-MINING|
@@ -68,10 +53,8 @@ internal partial class XenophyteCentralizedAlgorithm
         // NETWORK_HASHRATE=12128&
         // LIFETIME=360
 
-        try
+        lock (_blockHeaderLock)
         {
-            _blockHeaderLock.EnterWriteLock();
-
             Span<char> packetString = stackalloc char[Encoding.ASCII.GetCharCount(packet)];
             Encoding.ASCII.GetChars(packet, packetString);
 
@@ -124,7 +107,7 @@ internal partial class XenophyteCentralizedAlgorithm
 
                     if (_blockAesPassword.Length < aesPasswordLength)
                     {
-                        _blockAesPassword = new byte[aesPasswordLength];
+                        _blockAesPassword = GC.AllocateUninitializedArray<byte>(aesPasswordLength);
                     }
 
                     _blockAesPasswordLength = Encoding.ASCII.GetBytes(value, _blockAesPassword);
@@ -141,37 +124,19 @@ internal partial class XenophyteCentralizedAlgorithm
                     _blockMaxRange = long.Parse(value[(index + 1)..]);
                 }
             }
-
-            _easyBlockValuesLength = Native.XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(_blockMinRange, _blockMaxRange, Unsafe.AsRef(_easyBlockValues[0]));
-            _nonEasyBlockValuesLength = _blockMaxRange - _blockMinRange + 1 - _easyBlockValuesLength;
-
-            if (_nonEasyBlockValuesLength > 0 && _nonEasyBlockValues.LongLength < _nonEasyBlockValuesLength)
-            {
-                _nonEasyBlockValues = new long[_nonEasyBlockValuesLength];
-            }
-
-            if (_nonEasyBlockValuesLength > 0)
-            {
-                Native.XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(_blockMinRange, _blockMaxRange, Unsafe.AsRef(_easyBlockValues[0]), _easyBlockValuesLength, Unsafe.AsRef(_nonEasyBlockValues[0]));
-            }
-        }
-        finally
-        {
-            _blockHeaderLock.ExitWriteLock();
         }
 
         return true;
     }
 
+    [SkipLocalsInit]
     private bool UpdateBlockMethod(ReadOnlySpan<byte> packet)
     {
         // SEND-CONTENT-BLOCK-METHOD|
         // 1#128#128#128
 
-        try
+        lock (_blockHeaderLock)
         {
-            _blockHeaderLock.EnterWriteLock();
-
             Span<char> packetString = stackalloc char[Encoding.ASCII.GetCharCount(packet)];
             Encoding.ASCII.GetChars(packet, packetString);
 
@@ -193,7 +158,7 @@ internal partial class XenophyteCentralizedAlgorithm
 
             if (_blockAesKey.Length < _blockAesKeySize)
             {
-                _blockAesKey = new byte[_blockAesKeySize];
+                _blockAesKey = GC.AllocateUninitializedArray<byte>(_blockAesKeySize);
             }
 
             current = current[(index + 1)..];
@@ -205,7 +170,7 @@ internal partial class XenophyteCentralizedAlgorithm
 
             if (_blockAesSalt.Length < aesSaltLength)
             {
-                _blockAesSalt = new byte[aesSaltLength];
+                _blockAesSalt = GC.AllocateUninitializedArray<byte>(aesSaltLength);
             }
 
             _blockAesSaltLength = Encoding.ASCII.GetBytes(current[..index], _blockAesSalt);
@@ -216,7 +181,7 @@ internal partial class XenophyteCentralizedAlgorithm
 
             if (_blockXorKey.Length < xorKeyLength)
             {
-                _blockXorKey = new byte[xorKeyLength];
+                _blockXorKey = GC.AllocateUninitializedArray<byte>(xorKeyLength);
             }
 
             _blockXorKeyLength = Encoding.ASCII.GetBytes(current, _blockXorKey);
@@ -227,17 +192,12 @@ internal partial class XenophyteCentralizedAlgorithm
                 pbkdf1.FillBytes(_blockAesIv);
             }
 
-            if (_currentBlockIndication != _blockIndication)
-            {
-                _currentBlockIndication = _blockIndication;
-                _isBlockFound = 0;
+            if (_currentBlockIndication == _blockIndication) return true;
 
-                Logger.PrintJob(_logger, "new job", $"{_pools[_poolIndex].Url}:{SeedNodePort}", _blockDifficulty, _blockMethod, _blockHeight);
-            }
-        }
-        finally
-        {
-            _blockHeaderLock.ExitWriteLock();
+            _currentBlockIndication = _blockIndication;
+            _isBlockFound = 0;
+
+            Logger.PrintJob(_logger, "new job", $"{_pools[_poolIndex].Url}:{SeedNodePort}", _blockDifficulty, _blockMethod, _blockHeight);
         }
 
         return true;

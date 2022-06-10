@@ -98,7 +98,7 @@ DOTNET_INT XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(DOTNET_LONG mi
 DOTNET_INT XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(DOTNET_LONG minValue, DOTNET_LONG maxValue, DOTNET_READ_ONLY_SPAN_LONG easyBlockValues, DOTNET_INT easyBlockValuesLength, DOTNET_SPAN_LONG output) {
     DOTNET_LONG range = maxValue - minValue + 1 - easyBlockValuesLength;
 
-    if (range == 0) {
+    if (range == 0 || range >= DOTNET_INT_MAX) {
         return 0;
     }
 

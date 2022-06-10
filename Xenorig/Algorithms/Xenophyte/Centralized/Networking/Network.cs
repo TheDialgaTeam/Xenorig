@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -146,6 +147,7 @@ internal partial class XenophyteCentralizedAlgorithm
         _packetDataCollection?.Add(packetData);
     }
 
+    [SkipLocalsInit]
     private void DoConnectionCertificate(Pool selectedPool)
     {
         Span<byte> certificate = stackalloc byte[NETWORK_GENESIS_SECONDARY_KEY.Length + MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE_ITEM];
@@ -188,7 +190,7 @@ internal partial class XenophyteCentralizedAlgorithm
         while (!_packetDataCollection.IsCompleted)
         {
             var packetHandler = _packetDataCollection.Take();
-            if (packetHandler.Execute(_tcpClient.GetStream(), _networkAesKey, _networkAesIv, out var exception)) continue;
+            if (packetHandler.Execute(_tcpClient.GetStream(), _networkAesKey, _networkAesIv, out var _)) continue;
 
             DisconnectFromSeedNetworkAsync(true).GetAwaiter().GetResult();
             break;
@@ -213,7 +215,6 @@ internal partial class XenophyteCentralizedAlgorithm
                     return;
                 }
 
-                Thread.Sleep(1000);
                 GetNewBlockHeader();
             }));
         }));

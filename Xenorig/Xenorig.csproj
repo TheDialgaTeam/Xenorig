@@ -8,6 +8,7 @@
 
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 
 		<PackageId>TheDialgaTeam.Xenophyte.Xenorig</PackageId>
 		<Version>1.0.0.0</Version>

@@ -1,4 +1,6 @@
-﻿namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
+﻿using System.Runtime.InteropServices;
+
+namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 
 internal ref struct JobTemplate
 {
@@ -22,13 +24,15 @@ internal ref struct JobTemplate
 
     public int AesRound { get; set; } = 0;
 
-    public Span<long> EasyBlockValues { get; set; } = Span<long>.Empty;
+    public Span<long> EasyBlockValues { get; } = new long[256];
 
-    public long[] NonEasyBlockValues { get; set; } = Array.Empty<long>();
+    public int EasyBlockValuesLength { get; set; } = 0;
 
-    public long NonEasyBlockValuesLength { get; set; } = 0;
+    public Span<long> NonEasyBlockValues { get; set; } = Span<long>.Empty;
 
-    public long[] TempNonEasyBlockValues { get; set; } = Array.Empty<long>();
+    public int NonEasyBlockValuesLength { get; set; } = 0;
+
+    public Span<long> TempNonEasyBlockValues { get; set; } = Span<long>.Empty;
 
     public JobTemplate()
     {

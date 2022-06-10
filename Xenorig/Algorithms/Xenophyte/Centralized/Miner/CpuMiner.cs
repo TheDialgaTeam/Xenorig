@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Xenorig.Algorithms.Xenophyte.Centralized.Miner;
@@ -16,6 +17,12 @@ internal partial class XenophyteCentralizedAlgorithm
 
         [DllImport(Program.XenoNativeLibrary)]
         public static extern bool XenophyteCentralizedAlgorithm_MakeEncryptedShare(in byte input, int inputLength, in byte encryptedShare, in byte hashEncryptedShare, in byte xorKey, int xorKeyLength, int aesKeySize, in byte aesKey, in byte aesIv, int aesRound);
+
+        [DllImport(Program.XenoNativeLibrary)]
+        public static extern int XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(long minValue, long maxValue, in long output);
+
+        [DllImport(Program.XenoNativeLibrary)]
+        public static extern int XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(long minValue, long maxvalue, in long easyBlockValues, int easyBlockValuesLength, in long output);
     }
 
     private const string JobTypeEasy = "Easy Block";
@@ -34,14 +41,6 @@ internal partial class XenophyteCentralizedAlgorithm
     private readonly long[] _totalHashCalculatedIn15Minutes;
 
     private static (int startIndex, int size) GetJobChunk(int totalSize, int numberOfChunks, int threadId)
-    {
-        var (quotient, remainder) = Math.DivRem(totalSize, numberOfChunks);
-        var startIndex = threadId * quotient + Math.Min(threadId, remainder);
-        var nextIndex = (threadId + 1) * quotient + Math.Min(threadId + 1, remainder);
-        return (startIndex, nextIndex - startIndex);
-    }
-
-    private static (long startIndex, long size) GetJobChunk(long totalSize, int numberOfChunks, int threadId)
     {
         var (quotient, remainder) = Math.DivRem(totalSize, numberOfChunks);
         var startIndex = threadId * quotient + Math.Min(threadId, remainder);
@@ -90,7 +89,7 @@ internal partial class XenophyteCentralizedAlgorithm
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    var _ = Native.SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
+                    Native.SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
                 }
             }
 
@@ -104,10 +103,8 @@ internal partial class XenophyteCentralizedAlgorithm
                 {
                     if (_isCpuMinerActive == 0) break;
 
-                    try
+                    lock (_blockHeaderLock)
                     {
-                        _blockHeaderLock.EnterReadLock();
-
                         if (_currentBlockIndication != jobTemplate.BlockIndication)
                         {
                             ref var writableJobTemplate = ref jobTemplate;
@@ -122,15 +119,8 @@ internal partial class XenophyteCentralizedAlgorithm
                             writableJobTemplate.AesKey = _blockAesKey.AsSpan(0, _blockAesKeySize);
                             writableJobTemplate.AesIv = _blockAesIv;
                             writableJobTemplate.AesRound = _blockAesRound;
-                            writableJobTemplate.EasyBlockValues = _easyBlockValues.AsSpan(0, _easyBlockValuesLength);
-                            writableJobTemplate.NonEasyBlockValues = _nonEasyBlockValues;
-                            writableJobTemplate.NonEasyBlockValuesLength = _nonEasyBlockValuesLength;
                             break;
                         }
-                    }
-                    finally
-                    {
-                        _blockHeaderLock.ExitReadLock();
                     }
 
                     Thread.Sleep(1);
@@ -144,7 +134,17 @@ internal partial class XenophyteCentralizedAlgorithm
                 if (_isBlockFound == 1) continue;
                 if (_currentBlockIndication != jobTemplate.BlockIndication) continue;
 
-                DoNonEasyBlocksCalculations(threadId, options, ref jobTemplate);
+                try
+                {
+                    DoNonEasyBlocksCalculations(threadId, options, ref jobTemplate);
+                }
+                catch (OutOfMemoryException)
+                {
+                    jobTemplate.NonEasyBlockValues = Span<long>.Empty;
+                    jobTemplate.TempNonEasyBlockValues = Span<long>.Empty;
+
+                    GC.Collect();
+                }
             }
         }
         finally
@@ -153,26 +153,36 @@ internal partial class XenophyteCentralizedAlgorithm
         }
     }
 
+    [SkipLocalsInit]
     private void DoEasyBlocksCalculations(int threadId, CpuMiner options, ref JobTemplate jobTemplate)
     {
-        var (startIndex, size) = GetJobChunk(jobTemplate.EasyBlockValues.Length, options.GetNumberOfThreads(), threadId);
+        jobTemplate.EasyBlockValuesLength = Native.XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(jobTemplate.BlockMinRange, jobTemplate.BlockMaxRange, MemoryMarshal.GetReference(jobTemplate.EasyBlockValues));
+
+        var (startIndex, size) = GetJobChunk(jobTemplate.EasyBlockValuesLength, options.GetNumberOfThreads(), threadId);
         if (size == 0) return;
 
-        Span<long> temp = stackalloc long[size];
-        jobTemplate.EasyBlockValues.Slice(startIndex, size).CopyTo(temp);
+        Span<long> easyBlockValues = stackalloc long[jobTemplate.EasyBlockValuesLength];
+        Span<long> chunkData = stackalloc long[size];
 
-        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeEasy, jobTemplate.EasyBlockValues.Length, startIndex, startIndex + size - 1, size);
+        BufferUtility.MemoryCopy(jobTemplate.EasyBlockValues, easyBlockValues, jobTemplate.EasyBlockValuesLength);
+        BufferUtility.MemoryCopy(jobTemplate.EasyBlockValues.Slice(startIndex, size), chunkData, size);
+
+        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeEasy, jobTemplate.EasyBlockValuesLength, startIndex, startIndex + size - 1, size);
 
         for (var i = size - 1; i >= 0; i--)
         {
             var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
 
-            for (var j = jobTemplate.EasyBlockValues.Length - 1; j >= 0; j--)
+            for (var j = jobTemplate.EasyBlockValuesLength - 1; j >= 0; j--)
             {
-                DoMathCalculations(threadId, jobTemplate, temp[choseRandom], jobTemplate.EasyBlockValues[j], JobTypeEasy);
+                var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
+
+                DoMathCalculations(threadId, jobTemplate, chunkData[choseRandom], easyBlockValues[choseRandom2], JobTypeEasy);
+
+                (easyBlockValues[j], easyBlockValues[choseRandom2]) = (easyBlockValues[choseRandom2], easyBlockValues[j]);
             }
 
-            temp[choseRandom] = temp[i];
+            chunkData[choseRandom] = chunkData[i];
 
             if (_isBlockFound == 1) return;
             if (_currentBlockIndication != jobTemplate.BlockIndication) return;
@@ -181,15 +191,25 @@ internal partial class XenophyteCentralizedAlgorithm
 
     private void DoNonEasyBlocksCalculations(int threadId, CpuMiner options, ref JobTemplate jobTemplate)
     {
+        var nonEasyBlockSize = jobTemplate.BlockMaxRange - jobTemplate.BlockMinRange + 1 - jobTemplate.EasyBlockValuesLength;
+        if (nonEasyBlockSize > int.MaxValue) return;
+
+        if (jobTemplate.NonEasyBlockValues.Length < nonEasyBlockSize)
+        {
+            jobTemplate.NonEasyBlockValues = GC.AllocateUninitializedArray<long>((int) nonEasyBlockSize);
+        }
+
+        jobTemplate.NonEasyBlockValuesLength = Native.XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(jobTemplate.BlockMinRange, jobTemplate.BlockMaxRange, MemoryMarshal.GetReference(jobTemplate.EasyBlockValues), jobTemplate.EasyBlockValuesLength, MemoryMarshal.GetReference(jobTemplate.NonEasyBlockValues));
+
         var (startIndex, size) = GetJobChunk(jobTemplate.NonEasyBlockValuesLength, options.GetNumberOfThreads(), threadId);
         if (size == 0) return;
 
         if (jobTemplate.TempNonEasyBlockValues.Length < size)
         {
-            jobTemplate.TempNonEasyBlockValues = new long[size];
+            jobTemplate.TempNonEasyBlockValues = GC.AllocateUninitializedArray<long>(size);
         }
 
-        BufferUtility.MemoryCopy(jobTemplate.NonEasyBlockValues, 0, jobTemplate.TempNonEasyBlockValues, 0, size);
+        BufferUtility.MemoryCopy(jobTemplate.NonEasyBlockValues.Slice(startIndex, size), jobTemplate.TempNonEasyBlockValues, size);
 
         Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeSemiRandom, jobTemplate.NonEasyBlockValuesLength, startIndex, startIndex + size - 1, size);
 
@@ -199,8 +219,12 @@ internal partial class XenophyteCentralizedAlgorithm
 
             for (var j = jobTemplate.EasyBlockValues.Length - 1; j >= 0; j--)
             {
-                DoMathCalculations(threadId, jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.EasyBlockValues[j], JobTypeSemiRandom);
-                DoMathCalculations(threadId, jobTemplate, jobTemplate.EasyBlockValues[j], jobTemplate.TempNonEasyBlockValues[choseRandom], JobTypeSemiRandom);
+                var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
+
+                DoMathCalculations(threadId, jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.EasyBlockValues[choseRandom2], JobTypeSemiRandom);
+                DoMathCalculations(threadId, jobTemplate, jobTemplate.EasyBlockValues[choseRandom2], jobTemplate.TempNonEasyBlockValues[choseRandom], JobTypeSemiRandom);
+
+                (jobTemplate.EasyBlockValues[j], jobTemplate.EasyBlockValues[choseRandom2]) = (jobTemplate.EasyBlockValues[choseRandom2], jobTemplate.EasyBlockValues[j]);
             }
 
             (jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.TempNonEasyBlockValues[i]) = (jobTemplate.TempNonEasyBlockValues[i], jobTemplate.TempNonEasyBlockValues[choseRandom]);
@@ -220,8 +244,14 @@ internal partial class XenophyteCentralizedAlgorithm
 
             for (var j = jobTemplate.NonEasyBlockValuesLength - 1; j >= 0; j--)
             {
-                DoMathCalculations(threadId, jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.NonEasyBlockValues[j], JobTypeRandom);
-                DoMathCalculations(threadId, jobTemplate, jobTemplate.NonEasyBlockValues[j], jobTemplate.TempNonEasyBlockValues[choseRandom], JobTypeRandom);
+                var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
+
+                DoMathCalculations(threadId, jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.NonEasyBlockValues[choseRandom2], JobTypeRandom);
+
+                (jobTemplate.NonEasyBlockValues[j], jobTemplate.NonEasyBlockValues[choseRandom2]) = (jobTemplate.NonEasyBlockValues[choseRandom2], jobTemplate.NonEasyBlockValues[j]);
+
+                if (_isBlockFound == 1) break;
+                if (_currentBlockIndication != jobTemplate.BlockIndication) break;
             }
 
             (jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.TempNonEasyBlockValues[i]) = (jobTemplate.TempNonEasyBlockValues[i], jobTemplate.TempNonEasyBlockValues[choseRandom]);
@@ -268,6 +298,7 @@ internal partial class XenophyteCentralizedAlgorithm
         }
     }
 
+    [SkipLocalsInit]
     private void ValidateAndSubmitShare(int threadId, in JobTemplate jobTemplate, long firstNumber, long secondNumber, long solution, char op, string jobType)
     {
         Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19 + 1];

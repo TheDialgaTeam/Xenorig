@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Xenorig.Utilities;
 
@@ -45,9 +46,19 @@ internal readonly struct PacketData
     public bool Execute(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, out Exception? exception)
     {
         var executeTimestamp = DateTime.Now;
-        return TryExecuteWrite(networkStream, key, iv, out exception) && TryExecuteRead(networkStream, key, iv, executeTimestamp, out exception);
+
+        try
+        {
+            return TryExecuteWrite(networkStream, key, iv, out exception) && TryExecuteRead(networkStream, key, iv, executeTimestamp, out exception);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            return false;
+        }
     }
 
+    [SkipLocalsInit]
     private bool TryExecuteWrite(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, out Exception? exception)
     {
         try
@@ -89,6 +100,7 @@ internal readonly struct PacketData
         }
     }
 
+    [SkipLocalsInit]
     private bool TryExecuteRead(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, DateTime executeTimestamp, out Exception? exception)
     {
         if (_receivePacketHandler == null)

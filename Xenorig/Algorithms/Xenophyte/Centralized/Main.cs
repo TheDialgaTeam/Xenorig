@@ -10,7 +10,7 @@ internal partial class XenophyteCentralizedAlgorithm : IAlgorithm, IDisposable
     private readonly XenorigOptions _options;
     private readonly ILogger _logger;
 
-    private readonly object _lock = new();
+    private readonly object _calculateHashrateLock = new();
 
     private readonly double[] _averageHashCalculatedIn10Seconds;
     private readonly double[] _averageHashCalculatedIn60Seconds;
@@ -87,7 +87,7 @@ internal partial class XenophyteCentralizedAlgorithm : IAlgorithm, IDisposable
 
     public void PrintHashrate()
     {
-        lock (_lock)
+        lock (_calculateHashrateLock)
         {
             double average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
 
@@ -123,7 +123,7 @@ internal partial class XenophyteCentralizedAlgorithm : IAlgorithm, IDisposable
 
     private void CalculateAverageHashTimerOnElapsed(object? sender, ElapsedEventArgs e)
     {
-        lock (_lock)
+        lock (_calculateHashrateLock)
         {
             if (!_printAverageHashTimer.Enabled) _printAverageHashTimer.Start();
 
@@ -159,7 +159,7 @@ internal partial class XenophyteCentralizedAlgorithm : IAlgorithm, IDisposable
 
     private void PrintAverageHashTimerOnElapsed(object? sender, ElapsedEventArgs e)
     {
-        lock (_lock)
+        lock (_calculateHashrateLock)
         {
             if (!_calculateAverageHashTimer.Enabled)
             {
@@ -184,6 +184,5 @@ internal partial class XenophyteCentralizedAlgorithm : IAlgorithm, IDisposable
     public void Dispose()
     {
         _calculateAverageHashTimer.Dispose();
-        _blockHeaderLock.Dispose();
     }
 }
