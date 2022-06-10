@@ -338,5 +338,5 @@ jobs:
           name: Xenorig ${{ steps.get_version.outputs.version }}
           body_path: ${{ github.workspace }}/RELEASE_TEMPLATE.md
           files: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}/*
-          draft: true
+          draft: false
           fail_on_unmatched_files: true
