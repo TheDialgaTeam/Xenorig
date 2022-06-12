@@ -5,8 +5,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "xeno_native_export.h"
+
 #define DOTNET_PRIVATE static
-#define DOTNET_PUBLIC
+#define DOTNET_PUBLIC XENO_NATIVE_EXPORT
 
 #define DOTNET_TRUE 1
 #define DOTNET_FALSE 0

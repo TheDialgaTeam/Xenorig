@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using JetBrains.Annotations;
 using Xenorig.Utilities;
 
 namespace Xenorig.Options;
@@ -8,6 +9,8 @@ namespace Xenorig.Options;
 internal class XenorigOptions
 {
     public int? PrintTime { get; set; }
+
+    public int? TimeoutDuration { get; set; }
 
     public int? MaxRetryCount { get; set; }
 
@@ -19,7 +22,13 @@ internal class XenorigOptions
 
     public int GetPrintTime()
     {
+        if (PrintTime <= 0) PrintTime = 10;
         return PrintTime ?? 10;
+    }
+
+    public int GetTimeoutDuration()
+    {
+        return TimeoutDuration ?? 5;
     }
 
     public int GetMaxRetryCount()
@@ -34,7 +43,7 @@ internal class XenorigOptions
 
     public Pool[] GetPools()
     {
-        return Pools ?? throw new JsonException($"{nameof(Pools)} is null.");
+        return Pools ?? Array.Empty<Pool>();
     }
 
     public CpuMiner GetCpuMiner()
@@ -43,6 +52,8 @@ internal class XenorigOptions
     }
 }
 
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+[UsedImplicitly]
 internal class Pool
 {
     private static readonly string DefaultUserAgent = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
@@ -97,6 +108,7 @@ internal class Pool
     }
 }
 
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 internal class CpuMiner
 {
     public int? Threads { get; set; }
@@ -133,6 +145,8 @@ internal class CpuMiner
     }
 }
 
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+[UsedImplicitly]
 internal class CpuMinerThreadConfiguration
 {
     public ulong? ThreadAffinity { get; set; }

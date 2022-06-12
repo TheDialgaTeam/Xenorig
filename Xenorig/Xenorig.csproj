@@ -36,6 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
 		<PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.5.0" />
 	</ItemGroup>

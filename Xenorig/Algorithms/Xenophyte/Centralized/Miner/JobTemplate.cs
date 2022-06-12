@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
+﻿namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 
 internal ref struct JobTemplate
 {

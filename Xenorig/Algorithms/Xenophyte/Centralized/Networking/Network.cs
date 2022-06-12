@@ -73,6 +73,8 @@ internal partial class XenophyteCentralizedAlgorithm
                 var selectedPool = _pools[_poolIndex];
 
                 _tcpClient = new TcpClient();
+                _tcpClient.ReceiveTimeout = (int) TimeSpan.FromSeconds(_options.GetTimeoutDuration()).TotalMilliseconds;
+                _tcpClient.SendTimeout = (int) TimeSpan.FromSeconds(_options.GetTimeoutDuration()).TotalMilliseconds;
                 await _tcpClient.ConnectAsync(selectedPool.GetUrl(), SeedNodePort, cancellationToken);
 
                 using (var httpClient = new HttpClient { DefaultRequestHeaders = { UserAgent = { ProductInfoHeaderValue.Parse(selectedPool.GetUserAgent()) } } })
@@ -142,7 +144,7 @@ internal partial class XenophyteCentralizedAlgorithm
         }
     }
 
-    private void SendPacketToNetwork(PacketData packetData)
+    private void SendPacketToNetwork(in PacketData packetData)
     {
         _packetDataCollection?.Add(packetData);
     }
