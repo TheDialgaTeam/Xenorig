@@ -43,23 +43,22 @@ internal readonly struct PacketData
         _receivePacketHandler = receivePacketHandler;
     }
 
-    public bool Execute(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, out Exception? exception)
+    public bool Execute(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
         var executeTimestamp = DateTime.Now;
 
         try
         {
-            return TryExecuteWrite(networkStream, key, iv, out exception) && TryExecuteRead(networkStream, key, iv, executeTimestamp, out exception);
+            return TryExecuteWrite(networkStream, key, iv) && TryExecuteRead(networkStream, key, iv, executeTimestamp);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            exception = ex;
             return false;
         }
     }
 
     [SkipLocalsInit]
-    private bool TryExecuteWrite(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, out Exception? exception)
+    private bool TryExecuteWrite(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
         try
         {
@@ -73,8 +72,7 @@ internal readonly struct PacketData
 
                 if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key, iv, _packet.AsSpan(0, _packetLength), encryptedPacket) == 0)
                 {
-                    exception = new Exception("Error encrypting packet.");
-                    return false;
+                    throw new Exception("Error encrypting packet.");
                 }
 
                 Span<byte> base64EncryptedPacket = stackalloc byte[Base64Utility.EncodeLength(encryptedPacket) + 1];
@@ -82,8 +80,7 @@ internal readonly struct PacketData
 
                 if (bytesWritten == 0)
                 {
-                    exception = new Exception("Error encoding packet.");
-                    return false;
+                    throw new Exception("Error encoding packet.");
                 }
 
                 base64EncryptedPacket[bytesWritten] = PaddingCharacter;
@@ -91,7 +88,6 @@ internal readonly struct PacketData
                 networkStream.Write(base64EncryptedPacket);
             }
 
-            exception = null;
             return true;
         }
         finally
@@ -101,29 +97,19 @@ internal readonly struct PacketData
     }
 
     [SkipLocalsInit]
-    private bool TryExecuteRead(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, DateTime executeTimestamp, out Exception? exception)
+    private bool TryExecuteRead(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, DateTime executeTimestamp)
     {
-        if (_receivePacketHandler == null)
-        {
-            exception = null;
-            return true;
-        }
+        if (_receivePacketHandler == null) return true;
 
         Span<byte> receivedPacket = stackalloc byte[networkStream.Socket.ReceiveBufferSize];
         var bytesRead = networkStream.Read(receivedPacket);
-
-        if (bytesRead < 0)
-        {
-            exception = new EndOfStreamException();
-            return false;
-        }
-
+        if (bytesRead < 0) throw new EndOfStreamException();
+        
         ReadOnlySpan<byte> base64EncryptedPacket = receivedPacket[..bytesRead];
 
         if (base64EncryptedPacket[bytesRead - 1] != PaddingCharacter)
         {
-            exception = new Exception("Invalid packet received.");
-            return false;
+            throw new Exception("Invalid packet received.");
         }
 
         base64EncryptedPacket = base64EncryptedPacket[..(bytesRead - 1)];
@@ -133,8 +119,7 @@ internal readonly struct PacketData
 
         if (decodedBytes == 0)
         {
-            exception = new Exception("Error decoding packet.");
-            return false;
+            throw new Exception("Error decoding packet.");
         }
 
         Span<byte> decryptedPacket = stackalloc byte[encryptedPacket.Length];
@@ -142,13 +127,11 @@ internal readonly struct PacketData
 
         if (bytesWritten == 0)
         {
-            exception = new Exception("Error decrypting packet.");
-            return false;
+            throw new Exception("Error decrypting packet.");
         }
 
         _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], (DateTime.Now - executeTimestamp).TotalMilliseconds);
-
-        exception = null;
+        
         return true;
     }
 }

@@ -11,19 +11,11 @@
     <projectFile pubXmlPath="Xenorig/Properties/PublishProfiles/netcoreapp-win-x86.pubxml">Xenorig/Xenorig.csproj</projectFile>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="77afc266-8f2a-4519-80f7-e6a5eda0ffa1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/CMakePresets.json" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/CMakePresets.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/global.h" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/global.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/vcpkg.json" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/vcpkg.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/JobTemplate.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/JobTemplate.cs" afterDir="false" />
+    <list default="true" id="77afc266-8f2a-4519-80f7-e6a5eda0ffa1" name="Changes" comment="Update">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/Network.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/Network.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/Base64Utility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/Base64Utility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/BufferUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/BufferUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/SymmetricAlgorithmUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/SymmetricAlgorithmUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/PacketData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/PacketData.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.Development.json" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/appsettings.Development.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/appsettings.json" afterDir="false" />
     </list>
@@ -32,25 +24,58 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="Git.Settings">
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/1af51483c9bf18871cce649b9f966dd7be686536f998c33bba3c5fc4adea4a0/Task.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/28fccfd5e1d8d7c5f25d3ffbf447ee36dfe584fddeb9420efe012cfc4c6bd/LingerOption.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/2de7c614de1a49ec39c68974de572dcd77cdb7713a6dacf56d3b5a14e0e8d1/Interlocked.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5558bbdfdedb58e139db69e8964f9b8de14236e5d4ab3a738e99be1db57505f/Thread.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5932d54a8a74e05ce8bd51a1ed4c68638352de69f283f12ae446bba9e32df3cb/TCPClient.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/992277cdfee51f288c33a1178fdf15f722dfc3e96a1152f98f6c3a111f9/Span.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/b0dd2a4cc84ee37a4fe7c6c76c157e5dee266f3a47fff24df5c8bc9b155e11dd/NetworkStream.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/bcca8464a3a24f8a906c24121e8123ad7ba98/_678d9/SocketFlags.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/c7ddcc9d9866d75c921193ffae7f8ad2d3be6663aebe113cc48d4f042a750/ManualResetEventSlim.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/d6f95382468b317a172feb667db83ae826247df59838f7f780cef897689bd83/TaskAwaiter.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f4708639776589f5ac2739f6fcbfc67343b1f9dac51cc1dbfdb003eef77cc1c/Monitor.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://D:/Git/TheDialgaTeam/Xeno/XenoLibNative/src/global.h" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://D:/Git/TheDialgaTeam/Xeno/Xenorig/Options/XenorigOptions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://D:/Git/TheDialgaTeam/Xeno/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://D:/Git/TheDialgaTeam/Xeno/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://D:/Git/TheDialgaTeam/Xeno/Xenorig/Utilities/SymmetricAlgorithmUtility.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="2AQPxUGbYlKJZsB5yXzzVbSqZgo" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;RiderNuGetOptionsPageId&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "SymbolServersPageId",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected=".NET Launch Settings Profile.Xenorig">
+    <configuration name="Xenorig: netcoreapp-win-x64" type="DotNetFolderPublish" factoryName="Publish to folder">
+      <riderPublish configuration="Release" delete_existing_files="true" platform="Any CPU" ready_to_run="true" runtime="win-x64" self_contained="true" target_folder="$PROJECT_DIR$/Xenorig/bin/Release/net6.0/win-x64/publish" target_framework="net6.0" trim_unused_assemblies="true" uuid_high="160350314947953388" uuid_low="-4662978002527628691" />
+      <method v="2" />
+    </configuration>
     <configuration name="Xenorig: netcoreapp-linux-arm" type="DotNetMsBuildPublish" factoryName="Publish to IIS">
       <riderPublish publish_profile="netcoreapp-linux-arm.pubxml" pubxml_path="$PROJECT_DIR$/Xenorig/Properties/PublishProfiles/netcoreapp-linux-arm.pubxml" uuid_high="160350314947953388" uuid_low="-4662978002527628691" />
       <method v="2" />
@@ -60,7 +85,7 @@
       <method v="2" />
     </configuration>
     <configuration name="Xenorig: netcoreapp-osx-x64" type="DotNetMsBuildPublish" factoryName="Publish to IIS">
-      <riderPublish publish_profile="netcoreapp-osx-x64.pubxml" pubxml_path="$PROJECT_DIR$/Xenorig/Properties/PublishProfiles/netcoreapp-osx-x64.pubxml" uuid_high="160350314947953388" uuid_low="-4662978002527628691" />
+      <riderPublish configuration="Release" platform="Any CPU" pubxml_path="$PROJECT_DIR$/Xenorig/Properties/PublishProfiles/netcoreapp-osx-x64.pubxml" />
       <method v="2" />
     </configuration>
     <configuration name="Xenorig: netcoreapp-win-arm64" type="DotNetMsBuildPublish" factoryName="Publish to IIS">
@@ -68,7 +93,7 @@
       <method v="2" />
     </configuration>
     <configuration name="Xenorig: netcoreapp-win-x64" type="DotNetMsBuildPublish" factoryName="Publish to IIS">
-      <riderPublish publish_profile="netcoreapp-win-x64.pubxml" pubxml_path="$PROJECT_DIR$/Xenorig/Properties/PublishProfiles/netcoreapp-win-x64.pubxml" uuid_high="160350314947953388" uuid_low="-4662978002527628691" />
+      <riderPublish configuration="Release" platform="Any CPU" pubxml_path="$PROJECT_DIR$/Xenorig/Properties/PublishProfiles/netcoreapp-win-x64.pubxml" />
       <method v="2" />
     </configuration>
     <configuration name="Xenorig: netcoreapp-win-x86" type="DotNetMsBuildPublish" factoryName="Publish to IIS">
@@ -90,6 +115,16 @@
         <option name="Build" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue=".NET Launch Settings Profile.Xenorig" />
+      <item itemvalue="Publish to folder.Xenorig: netcoreapp-win-x64" />
+      <item itemvalue="Publish to IIS.Xenorig: netcoreapp-linux-arm" />
+      <item itemvalue="Publish to IIS.Xenorig: netcoreapp-linux-x64" />
+      <item itemvalue="Publish to IIS.Xenorig: netcoreapp-osx-x64" />
+      <item itemvalue="Publish to IIS.Xenorig: netcoreapp-win-arm64" />
+      <item itemvalue="Publish to IIS.Xenorig: netcoreapp-win-x64" />
+      <item itemvalue="Publish to IIS.Xenorig: netcoreapp-win-x86" />
+    </list>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -102,8 +137,16 @@
       <workItem from="1654939091357" duration="38000" />
       <workItem from="1654940797657" duration="1296000" />
       <workItem from="1655007100485" duration="277000" />
-      <workItem from="1655014553993" duration="1069000" />
+      <workItem from="1655014553993" duration="7315000" />
     </task>
+    <task id="LOCAL-00001" summary="Update">
+      <created>1655015961872</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1655015961872</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -111,7 +154,37 @@
   </component>
   <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="true" />
+                </map>
+              </option>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/xenorig_future" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="Update" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update" />
   </component>
 </project>

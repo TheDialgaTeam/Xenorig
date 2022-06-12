@@ -16,7 +16,7 @@ internal partial class XenophyteCentralizedAlgorithm
         public static extern int SetThreadAffinityMask_Linux(int pid, int cpuSetSize, in ulong mask);
 
         [DllImport(Program.XenoNativeLibrary)]
-        public static extern bool XenophyteCentralizedAlgorithm_MakeEncryptedShare(in byte input, int inputLength, in byte encryptedShare, in byte hashEncryptedShare, in byte xorKey, int xorKeyLength, int aesKeySize, in byte aesKey, in byte aesIv, int aesRound);
+        public static extern bool XenophyteCentralizedAlgorithm_MakeEncryptedShare(in byte input, int inputLength, ref byte encryptedShare, ref byte hashEncryptedShare, in byte xorKey, int xorKeyLength, int aesKeySize, in byte aesKey, in byte aesIv, int aesRound);
 
         [DllImport(Program.XenoNativeLibrary)]
         public static extern int XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(long minValue, long maxValue, in long output);
@@ -177,7 +177,7 @@ internal partial class XenophyteCentralizedAlgorithm
             {
                 var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
 
-                DoMathCalculations(threadId, jobTemplate, chunkData[choseRandom], easyBlockValues[choseRandom2], JobTypeEasy);
+                DoMathCalculations(threadId, in jobTemplate, chunkData[choseRandom], easyBlockValues[choseRandom2], JobTypeEasy);
 
                 (easyBlockValues[j], easyBlockValues[choseRandom2]) = (easyBlockValues[choseRandom2], easyBlockValues[j]);
             }
@@ -221,8 +221,8 @@ internal partial class XenophyteCentralizedAlgorithm
             {
                 var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
 
-                DoMathCalculations(threadId, jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.EasyBlockValues[choseRandom2], JobTypeSemiRandom);
-                DoMathCalculations(threadId, jobTemplate, jobTemplate.EasyBlockValues[choseRandom2], jobTemplate.TempNonEasyBlockValues[choseRandom], JobTypeSemiRandom);
+                DoMathCalculations(threadId, in jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.EasyBlockValues[choseRandom2], JobTypeSemiRandom);
+                DoMathCalculations(threadId, in jobTemplate, jobTemplate.EasyBlockValues[choseRandom2], jobTemplate.TempNonEasyBlockValues[choseRandom], JobTypeSemiRandom);
 
                 (jobTemplate.EasyBlockValues[j], jobTemplate.EasyBlockValues[choseRandom2]) = (jobTemplate.EasyBlockValues[choseRandom2], jobTemplate.EasyBlockValues[j]);
             }
@@ -246,7 +246,7 @@ internal partial class XenophyteCentralizedAlgorithm
             {
                 var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
 
-                DoMathCalculations(threadId, jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.NonEasyBlockValues[choseRandom2], JobTypeRandom);
+                DoMathCalculations(threadId, in jobTemplate, jobTemplate.TempNonEasyBlockValues[choseRandom], jobTemplate.NonEasyBlockValues[choseRandom2], JobTypeRandom);
 
                 (jobTemplate.NonEasyBlockValues[j], jobTemplate.NonEasyBlockValues[choseRandom2]) = (jobTemplate.NonEasyBlockValues[choseRandom2], jobTemplate.NonEasyBlockValues[j]);
 
@@ -266,7 +266,7 @@ internal partial class XenophyteCentralizedAlgorithm
         // Addition Rule:
         if (secondNumber <= jobTemplate.BlockMaxRange - firstNumber)
         {
-            ValidateAndSubmitShare(threadId, jobTemplate, firstNumber, secondNumber, firstNumber + secondNumber, '+', jobType);
+            ValidateAndSubmitShare(threadId, in jobTemplate, firstNumber, secondNumber, firstNumber + secondNumber, '+', jobType);
         }
 
         // Subtraction Rule:
@@ -274,13 +274,13 @@ internal partial class XenophyteCentralizedAlgorithm
 
         if (subtractionResult >= jobTemplate.BlockMinRange)
         {
-            ValidateAndSubmitShare(threadId, jobTemplate, firstNumber, secondNumber, subtractionResult, '-', jobType);
+            ValidateAndSubmitShare(threadId, in jobTemplate, firstNumber, secondNumber, subtractionResult, '-', jobType);
         }
 
         // Multiplication Rule:
         if (secondNumber <= jobTemplate.BlockMaxRange / firstNumber)
         {
-            ValidateAndSubmitShare(threadId, jobTemplate, firstNumber, secondNumber, firstNumber * secondNumber, '*', jobType);
+            ValidateAndSubmitShare(threadId, in jobTemplate, firstNumber, secondNumber, firstNumber * secondNumber, '*', jobType);
         }
 
         // Division Rule:
@@ -288,13 +288,13 @@ internal partial class XenophyteCentralizedAlgorithm
 
         if (integerDivideRemainder == 0 && integerDivideResult >= jobTemplate.BlockMinRange)
         {
-            ValidateAndSubmitShare(threadId, jobTemplate, firstNumber, secondNumber, integerDivideResult, '/', jobType);
+            ValidateAndSubmitShare(threadId, in jobTemplate, firstNumber, secondNumber, integerDivideResult, '/', jobType);
         }
 
         // Modulo Rule:
         if (integerDivideRemainder >= jobTemplate.BlockMinRange)
         {
-            ValidateAndSubmitShare(threadId, jobTemplate, firstNumber, secondNumber, integerDivideRemainder, '%', jobType);
+            ValidateAndSubmitShare(threadId, in jobTemplate, firstNumber, secondNumber, integerDivideRemainder, '%', jobType);
         }
     }
 
@@ -318,7 +318,7 @@ internal partial class XenophyteCentralizedAlgorithm
         Span<byte> encryptedShare = stackalloc byte[64 * 2];
         Span<byte> hashEncryptedShare = stackalloc byte[64 * 2];
 
-        if (!Native.XenophyteCentralizedAlgorithm_MakeEncryptedShare(MemoryMarshal.GetReference(bytesToEncrypt), firstNumberWritten + 3 + secondNumberWritten + finalWritten, MemoryMarshal.GetReference(encryptedShare), MemoryMarshal.GetReference(hashEncryptedShare), MemoryMarshal.GetReference(jobTemplate.XorKey), jobTemplate.XorKey.Length, jobTemplate.AesKey.Length, MemoryMarshal.GetReference(jobTemplate.AesKey), MemoryMarshal.GetReference(jobTemplate.AesIv), jobTemplate.AesRound))
+        if (!Native.XenophyteCentralizedAlgorithm_MakeEncryptedShare(in MemoryMarshal.GetReference(bytesToEncrypt), firstNumberWritten + 3 + secondNumberWritten + finalWritten, ref MemoryMarshal.GetReference(encryptedShare), ref MemoryMarshal.GetReference(hashEncryptedShare), in MemoryMarshal.GetReference(jobTemplate.XorKey), jobTemplate.XorKey.Length, jobTemplate.AesKey.Length, in MemoryMarshal.GetReference(jobTemplate.AesKey), in MemoryMarshal.GetReference(jobTemplate.AesIv), jobTemplate.AesRound))
         {
             return;
         }

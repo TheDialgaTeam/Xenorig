@@ -73,6 +73,7 @@ internal partial class XenophyteCentralizedAlgorithm
                 var selectedPool = _pools[_poolIndex];
 
                 _tcpClient = new TcpClient();
+                _tcpClient.NoDelay = true;
                 _tcpClient.ReceiveTimeout = (int) TimeSpan.FromSeconds(_options.GetTimeoutDuration()).TotalMilliseconds;
                 _tcpClient.SendTimeout = (int) TimeSpan.FromSeconds(_options.GetTimeoutDuration()).TotalMilliseconds;
                 await _tcpClient.ConnectAsync(selectedPool.GetUrl(), SeedNodePort, cancellationToken);
@@ -185,16 +186,28 @@ internal partial class XenophyteCentralizedAlgorithm
         }));
     }
 
-    private void HandlePacketData()
+    private async void HandlePacketData()
     {
         if (_packetDataCollection == null || _tcpClient == null) return;
-
+        
         while (!_packetDataCollection.IsCompleted)
         {
             var packetHandler = _packetDataCollection.Take();
-            if (packetHandler.Execute(_tcpClient.GetStream(), _networkAesKey, _networkAesIv, out var _)) continue;
 
-            DisconnectFromSeedNetworkAsync(true).GetAwaiter().GetResult();
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(_options.GetTimeoutDuration()));
+            var executeTask = Task.Run(() => packetHandler.Execute(_tcpClient.GetStream(), _networkAesKey, _networkAesIv));
+
+            var completedTask = await Task.WhenAny(timeoutTask, executeTask);
+
+            if (completedTask == timeoutTask)
+            {
+                await DisconnectFromSeedNetworkAsync(true);
+                break;
+            }
+
+            if (await executeTask) continue;
+            
+            await DisconnectFromSeedNetworkAsync(true);
             break;
         }
     }
