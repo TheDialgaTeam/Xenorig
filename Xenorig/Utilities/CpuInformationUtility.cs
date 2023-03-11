@@ -1,24 +1,26 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 
 namespace Xenorig.Utilities;
 
-public static class CpuInformationUtility
+public static partial class CpuInformationUtility
 {
-    private static class Native
+    private static partial class Native
     {
-        [DllImport(Program.XenoNativeLibrary)]
+        [LibraryImport(Program.XenoNativeLibrary)]
         [return: MarshalAs(UnmanagedType.LPStr)]
-        public static extern string CpuInformationUtility_GetProcessorName();
+        public static partial string CpuInformationUtility_GetProcessorName();
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int CpuInformationUtility_GetProcessorL2Cache();
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int CpuInformationUtility_GetProcessorL2Cache();
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int CpuInformationUtility_GetProcessorL3Cache();
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int CpuInformationUtility_GetProcessorL3Cache();
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int CpuInformationUtility_GetProcessorCoreCount();
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int CpuInformationUtility_GetProcessorCoreCount();
     }
 
     public static string ProcessorName { get; }

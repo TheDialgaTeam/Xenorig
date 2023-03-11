@@ -1,4 +1,6 @@
-﻿namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
+﻿using System;
+
+namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 
 internal ref struct JobTemplate
 {

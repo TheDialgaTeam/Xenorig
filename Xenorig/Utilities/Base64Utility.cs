@@ -1,22 +1,23 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Xenorig.Utilities;
 
-internal static class Base64Utility
+public static partial class Base64Utility
 {
-    private static class Native
+    private static partial class Native
     {
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int Base64Utility_EncodeLength(int inputLength);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int Base64Utility_EncodeLength(int inputLength);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int Base64Utility_DecodeLength(in byte input, int inputLength);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int Base64Utility_DecodeLength(in byte input, int inputLength);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int Base64Utility_Encode(in byte input, int inputLength, ref byte output);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int Base64Utility_Encode(in byte input, int inputLength, ref byte output);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int Base64Utility_Decode(in byte input, int inputLength, ref byte output);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int Base64Utility_Decode(in byte input, int inputLength, ref byte output);
     }
 
     public static int EncodeLength(ReadOnlySpan<byte> value)

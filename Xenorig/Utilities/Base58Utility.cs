@@ -1,9 +1,10 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Xenorig.Utilities;
 
-internal static class Base58Utility
+public static class Base58Utility
 {
     private static readonly char[] Characters =
     {

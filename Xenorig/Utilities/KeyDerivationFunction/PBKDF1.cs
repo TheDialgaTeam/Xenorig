@@ -1,25 +1,26 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Xenorig.Utilities.KeyDerivationFunction;
 
-internal class PBKDF1 : IDisposable
+public partial class PBKDF1 : IDisposable
 {
-    private static class Native
+    private static partial class Native
     {
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern IntPtr KeyDerivationFunctionUtility_CreatePBKDF1(in byte password, int passwordLength, in byte salt, int saltLength, int iterations, [MarshalAs(UnmanagedType.LPStr)] string hashName);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial nint KeyDerivationFunctionUtility_CreatePBKDF1(in byte password, int passwordLength, in byte salt, int saltLength, int iterations, [MarshalAs(UnmanagedType.LPStr)] string hashName);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int KeyDerivationFunctionUtility_GetBytes(IntPtr ctx, ref byte rgbOut, int cb);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int KeyDerivationFunctionUtility_GetBytes(nint ctx, ref byte rgbOut, int cb);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern void KeyDerivationFunctionUtility_Reset(IntPtr ctx);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial void KeyDerivationFunctionUtility_Reset(nint ctx);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern void KeyDerivationFunctionUtility_Free(IntPtr ctx);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial void KeyDerivationFunctionUtility_Free(nint ctx);
     }
 
-    private readonly IntPtr _context;
+    private readonly nint _context;
 
     public PBKDF1(ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt, int iterations = 100, string hashName = "SHA1")
     {

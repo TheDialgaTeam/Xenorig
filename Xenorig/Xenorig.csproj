@@ -2,16 +2,11 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
-
+		<TargetFramework>net7.0</TargetFramework>
 		<ApplicationIcon>Logo.ico</ApplicationIcon>
-
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-
+		
 		<PackageId>TheDialgaTeam.Xenophyte.Xenorig</PackageId>
-		<Version>1.0.0.0</Version>
+		<Version>1.0.0</Version>
 		<Authors>Yong Jian Ming</Authors>
 		<Company>The Dialga Team</Company>
 		<Product>Xenorig</Product>
@@ -19,6 +14,14 @@
 		<PackageProjectUrl>https://github.com/TheDialgaTeam/Xenorig</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/TheDialgaTeam/Xenorig</RepositoryUrl>
 
+		<PublishRelease>true</PublishRelease>
+		<PublishTrimmed>false</PublishTrimmed>
+		<PublishReadyToRun>false</PublishReadyToRun>
+		<PublishSingleFile>true</PublishSingleFile>
+		
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		
 		<IlcOptimizationPreference>Speed</IlcOptimizationPreference>
 		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
@@ -36,12 +39,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
-		<PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.5.0" />
+		<PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="7.0.0" />
+		<PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.8.0" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(Configuration)'=='Debug'">
+	<ItemGroup Condition="'$(RuntimeIdentifier)'==''">
 		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
@@ -55,7 +59,7 @@
 
 		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.dll.a" />
 
-		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="libxeno_native.dll">
+		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
@@ -119,7 +123,7 @@
 		<None Update="appsettings.Development.json" Condition="'$(Configuration)'=='Debug'">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="appsettings.json" Condition="'$(Configuration)'=='Release'">
+		<None Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

@@ -1,4 +1,7 @@
-﻿namespace Xenorig.Algorithms;
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace Xenorig.Algorithms;
 
 public interface IAlgorithm
 {

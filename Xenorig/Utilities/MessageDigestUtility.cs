@@ -1,19 +1,20 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Xenorig.Utilities;
 
-internal static class MessageDigestUtility
+public static partial class MessageDigestUtility
 {
-    private static class Native
+    private static partial class Native
     {
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int MessageDigestUtility_ComputeSha2_256Hash(in byte source, int length, in byte destination);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int MessageDigestUtility_ComputeSha2_256Hash(in byte source, int length, in byte destination);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int MessageDigestUtility_ComputeSha2_512Hash(in byte source, int length, in byte destination);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int MessageDigestUtility_ComputeSha2_512Hash(in byte source, int length, in byte destination);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int MessageDigestUtility_ComputeSha3_512Hash(in byte source, int length, in byte destination);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int MessageDigestUtility_ComputeSha3_512Hash(in byte source, int length, in byte destination);
     }
 
     public static int ComputeSha2_256Hash(ReadOnlySpan<byte> source, Span<byte> destination)

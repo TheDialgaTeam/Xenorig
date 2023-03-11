@@ -1,16 +1,17 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Xenorig.Utilities;
 
-internal static class SymmetricAlgorithmUtility
+public static partial class SymmetricAlgorithmUtility
 {
-    private static class Native
+    private static partial class Native
     {
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int SymmetricAlgorithmUtility_Encrypt_AES_256_CFB_8(in byte key, in byte iv, in byte source, int sourceLength, ref byte destination, bool padding);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int SymmetricAlgorithmUtility_Encrypt_AES_256_CFB_8(in byte key, in byte iv, in byte source, int sourceLength, ref byte destination, [MarshalAs(UnmanagedType.Bool)] bool padding);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern int SymmetricAlgorithmUtility_Decrypt_AES_256_CFB_8(in byte key, in byte iv, in byte source, int sourceLength, ref byte destination);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial int SymmetricAlgorithmUtility_Decrypt_AES_256_CFB_8(in byte key, in byte iv, in byte source, int sourceLength, ref byte destination);
     }
 
     public static int Encrypt_AES_256_CFB_8(ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, ReadOnlySpan<byte> source, Span<byte> destination)

@@ -1,61 +1,61 @@
-﻿namespace Xenorig.Algorithms.Xenophyte.Centralized;
+﻿namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 
-internal partial class XenophyteCentralizedAlgorithm
+public static class NetworkConstants
 {
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSetting" />
-    private const string NETWORK_GENESIS_SECONDARY_KEY = "XENOPHYTESEED";
+    public const string NETWORK_GENESIS_SECONDARY_KEY = "XENOPHYTESEED";
 
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSetting" />
-    private const int MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE_ITEM = 256;
+    public const int MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE_ITEM = 256;
 
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSetting" />
-    private const int SeedNodePort = 18000;
+    public const int SeedNodePort = 18000;
 
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSetting" />
-    private const int SeedNodeTokenPort = 18003;
+    public const int SeedNodeTokenPort = 18003;
 
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSettingEnumeration" />
-    private const string WalletTokenType = "WALLET-TOKEN";
+    public const string WalletTokenType = "WALLET-TOKEN";
 
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSettingEnumeration" />
-    private const string MinerLoginType = "MINER";
+    public const string MinerLoginType = "MINER";
 
     /// <see cref="Xenophyte_Connector_All.RPC.ClassRpcWalletCommand" />
-    private const string TokenCheckWalletAddressExist = "TOKEN-CHECK-WALLET-ADDRESS-EXIST";
+    public const string TokenCheckWalletAddressExist = "TOKEN-CHECK-WALLET-ADDRESS-EXIST";
 
     /// <see cref="Xenophyte_Connector_All.RPC.ClassRpcWalletCommand" />
-    private const string SendTokenCheckWalletAddressInvalid = "SEND-TOKEN-CHECK-WALLET-ADDRESS-INVALID";
+    public const string SendTokenCheckWalletAddressInvalid = "SEND-TOKEN-CHECK-WALLET-ADDRESS-INVALID";
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string SendLoginAccepted = "SEND-LOGIN-ACCEPTED";
+    public const string SendLoginAccepted = "SEND-LOGIN-ACCEPTED";
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string SendJobStatus = "SEND-JOB-STATUS";
+    public const string SendJobStatus = "SEND-JOB-STATUS";
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string SendCurrentBlockMining = "SEND-CURRENT-BLOCK-MINING";
+    public const string SendCurrentBlockMining = "SEND-CURRENT-BLOCK-MINING";
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string SendContentBlockMethod = "SEND-CONTENT-BLOCK-METHOD";
+    public const string SendContentBlockMethod = "SEND-CONTENT-BLOCK-METHOD";
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string ShareWrong = "WRONG"; // Block not accepted, only for solo mining and pool request.
+    public const string ShareWrong = "WRONG"; // Block not accepted, only for solo mining and pool request.
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string ShareUnlock = "UNLOCK"; // Block accepted, only for solo mining and pool request.
+    public const string ShareUnlock = "UNLOCK"; // Block accepted, only for solo mining and pool request.
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string ShareAleady = "ALREADY"; // Block already mined, only for solo mining and pool request.
+    public const string ShareAleady = "ALREADY"; // Block already mined, only for solo mining and pool request.
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningRecvPacketEnumeration" />
-    private const string ShareNotExist = "NOTEXIST"; // Block height not exist, only for solo mining and pool request.
+    public const string ShareNotExist = "NOTEXIST"; // Block height not exist, only for solo mining and pool request.
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration" />
-    private const string ReceiveJob = "RECEIVE-JOB";
+    public const string ReceiveJob = "RECEIVE-JOB";
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration" />
-    private const string ReceiveAskCurrentBlockMining = "RECEIVE-ASK-CURRENT-BLOCK-MINING";
+    public const string ReceiveAskCurrentBlockMining = "RECEIVE-ASK-CURRENT-BLOCK-MINING";
 
     /// <see cref="Xenophyte_Connector_All.SoloMining.ClassSoloMiningPacketEnumeration.SoloMiningSendPacketEnumeration" />
-    private const string ReceiveAskContentBlockMethod = "RECEIVE-ASK-CONTENT-BLOCK-METHOD";
+    public const string ReceiveAskContentBlockMethod = "RECEIVE-ASK-CONTENT-BLOCK-METHOD";
 }

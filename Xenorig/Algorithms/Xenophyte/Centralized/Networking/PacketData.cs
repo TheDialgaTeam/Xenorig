@@ -1,44 +1,41 @@
-﻿using System.Buffers;
+﻿using System;
+using System.Buffers;
+using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Xenorig.Utilities;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized;
+namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 
-internal delegate void ReceivePacketHandler(ReadOnlySpan<byte> packet, double roundTripTime);
+public delegate void ReceivePacketHandler(ReadOnlySpan<byte> packet, double roundTripTime);
 
-internal readonly struct PacketData
+public sealed class PacketData
 {
     private const byte PaddingCharacter = (byte) '*';
 
-    private readonly byte[] _packet;
+    private readonly byte[] _packetBuffer;
     private readonly int _packetLength;
 
     private readonly bool _isEncrypted;
 
     private readonly ReceivePacketHandler? _receivePacketHandler;
 
+    private ReadOnlySpan<byte> Packet => _packetBuffer.AsSpan(0, _packetLength);
+
     public PacketData(ReadOnlySpan<byte> packet, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
     {
-        _packet = ArrayPool<byte>.Shared.Rent(packet.Length);
+        _packetBuffer = ArrayPool<byte>.Shared.Rent(packet.Length);
         _packetLength = packet.Length;
-
-        packet.CopyTo(_packet);
-
+        BufferUtility.MemoryCopy(packet, _packetBuffer.AsSpan(), packet.Length);
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
 
     public PacketData(string packet, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
     {
-        var byteCount = Encoding.ASCII.GetByteCount(packet);
-
-        _packet = ArrayPool<byte>.Shared.Rent(byteCount);
-        _packetLength = byteCount;
-
-        Encoding.ASCII.GetBytes(packet, _packet);
-
+        _packetBuffer = ArrayPool<byte>.Shared.Rent(Encoding.ASCII.GetByteCount(packet));
+        _packetLength = Encoding.ASCII.GetBytes(packet, _packetBuffer);
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
@@ -46,92 +43,77 @@ internal readonly struct PacketData
     public bool Execute(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
         var executeTimestamp = DateTime.Now;
-
-        try
-        {
-            return TryExecuteWrite(networkStream, key, iv) && TryExecuteRead(networkStream, key, iv, executeTimestamp);
-        }
-        catch (Exception)
-        {
-            return false;
-        }
+        return TryExecuteWrite(networkStream, key, iv) && TryExecuteRead(networkStream, key, iv, executeTimestamp);
     }
 
     [SkipLocalsInit]
-    private bool TryExecuteWrite(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
+    private bool TryExecuteWrite(Stream stream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
         try
         {
             if (!_isEncrypted)
             {
-                networkStream.Write(_packet.AsSpan(0, _packetLength));
+                stream.Write(Packet);
             }
             else
             {
                 Span<byte> encryptedPacket = stackalloc byte[_packetLength + (16 - _packetLength % 16)];
 
-                if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key, iv, _packet.AsSpan(0, _packetLength), encryptedPacket) == 0)
+                if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key, iv, Packet, encryptedPacket) == 0)
                 {
-                    throw new Exception("Error encrypting packet.");
+                    return false;
                 }
 
                 Span<byte> base64EncryptedPacket = stackalloc byte[Base64Utility.EncodeLength(encryptedPacket) + 1];
                 var bytesWritten = Base64Utility.Encode(encryptedPacket, base64EncryptedPacket);
-
-                if (bytesWritten == 0)
-                {
-                    throw new Exception("Error encoding packet.");
-                }
+                if (bytesWritten == 0) return false;
 
                 base64EncryptedPacket[bytesWritten] = PaddingCharacter;
-
-                networkStream.Write(base64EncryptedPacket);
+                stream.Write(base64EncryptedPacket);
             }
 
             return true;
         }
+        catch
+        {
+            return false;
+        }
         finally
         {
-            ArrayPool<byte>.Shared.Return(_packet);
+            ArrayPool<byte>.Shared.Return(_packetBuffer);
         }
     }
 
     [SkipLocalsInit]
     private bool TryExecuteRead(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, DateTime executeTimestamp)
     {
-        if (_receivePacketHandler == null) return true;
-
-        Span<byte> receivedPacket = stackalloc byte[networkStream.Socket.ReceiveBufferSize];
-        var bytesRead = networkStream.Read(receivedPacket);
-        if (bytesRead < 0) throw new EndOfStreamException();
-        
-        ReadOnlySpan<byte> base64EncryptedPacket = receivedPacket[..bytesRead];
-
-        if (base64EncryptedPacket[bytesRead - 1] != PaddingCharacter)
+        try
         {
-            throw new Exception("Invalid packet received.");
+            if (_receivePacketHandler == null) return true;
+            
+            Span<byte> receivedPacket = stackalloc byte[networkStream.Socket.ReceiveBufferSize];
+            var bytesRead = networkStream.Read(receivedPacket);
+            if (bytesRead < 0) return false;
+
+            ReadOnlySpan<byte> base64EncryptedPacket = receivedPacket[..bytesRead];
+            if (base64EncryptedPacket[bytesRead - 1] != PaddingCharacter) return false;
+
+            base64EncryptedPacket = base64EncryptedPacket[..(bytesRead - 1)];
+
+            Span<byte> encryptedPacket = stackalloc byte[Base64Utility.DecodeLength(base64EncryptedPacket)];
+            var decodedBytes = Base64Utility.Decode(base64EncryptedPacket, encryptedPacket);
+            if (decodedBytes == 0) return false;
+
+            Span<byte> decryptedPacket = stackalloc byte[encryptedPacket.Length];
+            var bytesWritten = SymmetricAlgorithmUtility.Decrypt_AES_256_CFB_8(key, iv, encryptedPacket, decryptedPacket);
+            if (bytesWritten == 0) return false;
+
+            _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], (DateTime.Now - executeTimestamp).TotalMilliseconds);
+            return true;
         }
-
-        base64EncryptedPacket = base64EncryptedPacket[..(bytesRead - 1)];
-
-        Span<byte> encryptedPacket = stackalloc byte[Base64Utility.DecodeLength(base64EncryptedPacket)];
-        var decodedBytes = Base64Utility.Decode(base64EncryptedPacket, encryptedPacket);
-
-        if (decodedBytes == 0)
+        catch
         {
-            throw new Exception("Error decoding packet.");
+            return false;
         }
-
-        Span<byte> decryptedPacket = stackalloc byte[encryptedPacket.Length];
-        var bytesWritten = SymmetricAlgorithmUtility.Decrypt_AES_256_CFB_8(key, iv, encryptedPacket, decryptedPacket);
-
-        if (bytesWritten == 0)
-        {
-            throw new Exception("Error decrypting packet.");
-        }
-
-        _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], (DateTime.Now - executeTimestamp).TotalMilliseconds);
-        
-        return true;
     }
 }

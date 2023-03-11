@@ -1,18 +1,27 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Xenorig.Utilities;
 
-internal static class BufferUtility
+public static partial class BufferUtility
 {
-    private static class Native
+    private static partial class Native
     {
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern void BufferUtility_MemoryCopy_Int(ref int destination, in int source, int length);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial void BufferUtility_MemoryCopy_Byte(ref byte destination, in byte source, int length);
+        
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial void BufferUtility_MemoryCopy_Int(ref int destination, in int source, int length);
 
-        [DllImport(Program.XenoNativeLibrary)]
-        public static extern void BufferUtility_MemoryCopy_Long(ref long destination, in long source, int length);
+        [LibraryImport(Program.XenoNativeLibrary)]
+        public static partial void BufferUtility_MemoryCopy_Long(ref long destination, in long source, int length);
     }
 
+    public static void MemoryCopy(ReadOnlySpan<byte> source, Span<byte> destination, int length)
+    {
+        Native.BufferUtility_MemoryCopy_Byte(ref MemoryMarshal.GetReference(destination), in MemoryMarshal.GetReference(source), length);
+    }
+    
     public static void MemoryCopy(ReadOnlySpan<int> source, Span<int> destination, int length)
     {
         Native.BufferUtility_MemoryCopy_Int(ref MemoryMarshal.GetReference(destination), in MemoryMarshal.GetReference(source), length);

@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 
 namespace Xenorig.Utilities;
 
-internal static class ApplicationUtility
+public static class ApplicationUtility
 {
     public static string Name { get; } = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>()!.Product;
 

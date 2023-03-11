@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TheDialgaTeam.Core.Logging.Microsoft;
@@ -6,72 +8,42 @@ using Xenorig.Options;
 
 namespace Xenorig;
 
-internal static class Program
+public static class Program
 {
-    private static class Native
-    {
-        public const int StandardOutputHandleId = -11;
-        public const int EnableVirtualTerminalProcessingMode = 4;
-        public const long InvalidHandleValue = -1;
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern IntPtr GetStdHandle(int handleId);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool GetConsoleMode(IntPtr handle, out int mode);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool SetConsoleMode(IntPtr handle, int mode);
-    }
-
     public const string XenoNativeLibrary = "xeno_native";
+
+    private static string _contentRootPath = Environment.CurrentDirectory;
 
     public static async Task Main(string[] args)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var stdout = Native.GetStdHandle(Native.StandardOutputHandleId);
-
-            if (stdout != (IntPtr) Native.InvalidHandleValue && Native.GetConsoleMode(stdout, out var mode))
-            {
-                Native.SetConsoleMode(stdout, mode | Native.EnableVirtualTerminalProcessingMode);
-            }
-        }
-
         var host = Host.CreateDefaultBuilder(args)
-            .ConfigureServices((context, collection) =>
+            .ConfigureServices(collection =>
             {
-                collection.Configure<XenorigOptions>(context.Configuration.GetSection("Xenorig"));
-                collection.AddHostedService<ProgramHostedService>();
+                collection.AddOptions<XenorigOptions>().BindConfiguration("Xenorig").ValidateDataAnnotations();
+                collection.AddHostedService<ConsoleService>();
             })
             .ConfigureLogging(builder =>
             {
                 builder.AddLoggerTemplateFormatter(options =>
                 {
-                    options.SetDefaultTemplate(template => template.Global.SetPrefix((in LoggerTemplateEntry _) => $"{AnsiEscapeCodeConstants.GrayForegroundColor}{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss}{AnsiEscapeCodeConstants.Reset} "));
-                    options.SetTemplate<ProgramHostedService>();
+                    options.SetDefaultTemplate(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss}{AnsiEscapeCodeConstants.Reset} ")));
+                    options.SetTemplate<ConsoleService>(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix(string.Empty)));
                 });
             })
             .UseConsoleLifetime()
             .Build();
 
-        var contentRootPath = host.Services.GetService<IHostEnvironment>()?.ContentRootPath ?? Environment.CurrentDirectory;
+        _contentRootPath = host.Services.GetService<IHostEnvironment>()?.ContentRootPath ?? Environment.CurrentDirectory;
 
-        try
-        {
-            AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
-            {
-                if (!eventArgs.IsTerminating) return;
-                var crashFileLocation = Path.Combine(contentRootPath, $"{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_crash.log");
-                File.WriteAllText(crashFileLocation, ((Exception) eventArgs.ExceptionObject).ToString());
-            };
+        AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainOnUnhandledException;
 
-            await host.RunAsync();
-        }
-        catch (Exception ex)
-        {
-            var crashFileLocation = Path.Combine(contentRootPath, $"{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_crash.log");
-            await File.WriteAllTextAsync(crashFileLocation, ex.ToString());
-        }
+        await host.RunAsync();
+    }
+
+    private static void OnCurrentDomainOnUnhandledException(object _, UnhandledExceptionEventArgs eventArgs)
+    {
+        if (!eventArgs.IsTerminating) return;
+        var crashFileLocation = Path.Combine(_contentRootPath, $"{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_crash.log");
+        File.WriteAllText(crashFileLocation, eventArgs.ExceptionObject.ToString());
     }
 }

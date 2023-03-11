@@ -3,7 +3,7 @@ using static TheDialgaTeam.Core.Logging.Microsoft.AnsiEscapeCodeConstants;
 
 namespace Xenorig;
 
-internal static partial class Logger
+public static partial class Logger
 {
     [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = $" {GreenForegroundColor}* {WhiteForegroundColor}{{category,-12}} {CyanForegroundColor}{{applicationName}}/{{version}} {DarkGrayForegroundColor}{{frameworkVersion}}{Reset}")]
     public static partial void PrintAbout(ILogger logger, string category, string applicationName, string version, string frameworkVersion);
@@ -22,6 +22,9 @@ internal static partial class Logger
 
     [LoggerMessage(EventId = 6, Level = LogLevel.Information, Message = $" {GreenForegroundColor}* {WhiteForegroundColor}{{category,-12:l}} {{url}} algo {{algorithm}}")]
     public static partial void PrintPool(ILogger logger, string category, string url, string algorithm);
+
+    [LoggerMessage(EventId = 22, Level = LogLevel.Information, Message = "")]
+    public static partial void PrintEmpty(ILogger logger);
 
     [LoggerMessage(EventId = 7, Level = LogLevel.Information, Message = $"{DarkRedForegroundColor}[{{host}}] Login failed. Reason: {{reason}}{Reset}")]
     public static partial void PrintLoginFailed(ILogger logger, string host, string reason);
@@ -57,10 +60,10 @@ internal static partial class Logger
     public static partial void PrintXenophyteCentralizedStatsHeader(ILogger logger);
 
     [LoggerMessage(EventId = 18, Level = LogLevel.Information, Message = $"| {GreenForegroundColor}Good{Reset} | {{easy,-11}} | {{semi,-11}} | {{random,-13}} | {{total,-12}} |")]
-    public static partial void PrintXenophyteCentralizedStatsGood(ILogger logger, ulong easy, ulong semi, ulong random, ulong total);
+    public static partial void PrintXenophyteCentralizedStatsGood(ILogger logger, int easy, int semi, int random, int total);
 
     [LoggerMessage(EventId = 19, Level = LogLevel.Information, Message = $"| {RedForegroundColor}Bad{Reset}  | {{easy,-11}} | {{semi,-11}} | {{random,-13}} | {{total,-12}} |")]
-    public static partial void PrintXenophyteCentralizedStatsBad(ILogger logger, ulong easy, ulong semi, ulong random, ulong total);
+    public static partial void PrintXenophyteCentralizedStatsBad(ILogger logger, int easy, int semi, int random, int total);
 
     [LoggerMessage(EventId = 20, Level = LogLevel.Information, Message = "| THREAD |  10s H/s  |  60s H/s  |  15m H/s  |")]
     public static partial void PrintCpuMinerSpeedHeader(ILogger logger);

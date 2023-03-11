@@ -1,172 +1,97 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using JetBrains.Annotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.Threading;
 using Xenorig.Utilities;
 
 namespace Xenorig.Options;
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-internal class XenorigOptions
+public class XenorigOptions
 {
-    public int? PrintTime { get; set; }
+    [Range(0, int.MaxValue)]
+    public int PrintSpeedDuration { get; set; } = 10;
 
-    public int? TimeoutDuration { get; set; }
+    [Range(0, int.MaxValue)]
+    public int NetworkTimeoutDuration { get; set; } = 5000;
 
-    public int? MaxRetryCount { get; set; }
+    [Range(0, int.MaxValue)]
+    public int MaxRetryCount { get; set; } = 5;
 
-    public int? DonatePercentage { get; set; }
-
-    public Pool[]? Pools { get; set; }
-
-    public CpuMiner? CpuMiner { get; set; }
-
-    public int GetPrintTime()
-    {
-        if (PrintTime <= 0) PrintTime = 10;
-        return PrintTime ?? 10;
-    }
-
-    public int GetTimeoutDuration()
-    {
-        return TimeoutDuration ?? 5;
-    }
-
-    public int GetMaxRetryCount()
-    {
-        return MaxRetryCount ?? 10;
-    }
-
-    public int GetDonatePercentage()
-    {
-        return DonatePercentage ?? 0;
-    }
-
-    public Pool[] GetPools()
-    {
-        return Pools ?? Array.Empty<Pool>();
-    }
-
-    public CpuMiner GetCpuMiner()
-    {
-        return CpuMiner ?? new CpuMiner();
-    }
+    [Range(0, 100)]
+    public int DonatePercentage { get; set; }
+    
+    public Pool[] Pools { get; set; } = Array.Empty<Pool>();
+    
+    public CpuMiner CpuMiner { get; set; } = new();
 }
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-[UsedImplicitly]
-internal class Pool
+public class Pool
 {
-    private static readonly string DefaultUserAgent = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
+    [Required]
+    public string Algorithm { get; set; } = string.Empty;
 
-    public string? Algorithm { get; set; }
+    public string Coin { get; set; } = string.Empty;
 
-    public string? Coin { get; set; }
+    [Required]
+    public string Url { get; set; } = string.Empty;
 
-    public string? Url { get; set; }
+    [Required]
+    public string Username { get; set; } = string.Empty;
 
-    public string? Username { get; set; }
+    public string Password { get; set; } = string.Empty;
 
-    public string? Password { get; set; }
-
-    public string? UserAgent { get; set; }
-
-    public bool? Daemon { get; set; }
-
-    public string GetAlgorithm()
-    {
-        return string.IsNullOrWhiteSpace(Algorithm) ? throw new JsonException($"{nameof(Algorithm)} is null or empty.") : Algorithm;
-    }
-
-    public string GetCoin()
-    {
-        return Coin ?? string.Empty;
-    }
-
-    public string GetUrl()
-    {
-        return string.IsNullOrWhiteSpace(Url) ? throw new JsonException($"{nameof(Url)} is null or empty.") : Url;
-    }
-
-    public string GetUsername()
-    {
-        return string.IsNullOrWhiteSpace(Username) ? throw new JsonException($"{nameof(Username)} is null or empty.") : Username;
-    }
-
-    public string GetPassword()
-    {
-        return Password ?? string.Empty;
-    }
+    public string UserAgent { get; set; }
+    
+    public bool Daemon { get; set; } = false;
 
     public string GetUserAgent()
     {
-        return string.IsNullOrWhiteSpace(UserAgent) ? DefaultUserAgent : UserAgent;
-    }
-
-    public bool GetIsDaemon()
-    {
-        return Daemon ?? false;
+        return string.IsNullOrEmpty(UserAgent) ? $"{ApplicationUtility.Name}/{ApplicationUtility.Version}" : UserAgent;
     }
 }
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-internal class CpuMiner
+public class CpuMiner
 {
-    public int? Threads { get; set; }
+    [Range(1, int.MaxValue)]
+    public int Threads { get; set; } = Environment.ProcessorCount;
 
-    public ThreadPriority? ThreadPriority { get; set; }
+    public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
 
-    public string? ExtraParams { get; set; }
+    public string ExtraParams { get; set; } = string.Empty;
 
-    public CpuMinerThreadConfiguration[]? ThreadConfigs { get; set; }
+    public CpuMinerThreadConfiguration[] ThreadConfigs { get; set; } = Array.Empty<CpuMinerThreadConfiguration>();
 
     public int GetNumberOfThreads()
     {
-        return Math.Max(Threads ?? 0, ThreadConfigs?.Length ?? 0);
+        return Math.Max(Threads, ThreadConfigs.Length);
     }
 
     public ulong GetThreadAffinity(int thread)
     {
-        return GetThreadConfig(thread)?.GetThreadAffinity() ?? 0;
+        return GetThreadConfig(thread)?.ThreadAffinity ?? 0;
     }
 
     public ThreadPriority GetThreadPriority(int thread)
     {
-        return GetThreadConfig(thread)?.GetThreadPriority() ?? ThreadPriority ?? System.Threading.ThreadPriority.Normal;
+        return GetThreadConfig(thread)?.ThreadPriority ?? ThreadPriority;
     }
 
     public string GetExtraParams(int thread)
     {
-        return GetThreadConfig(thread)?.GetExtraParams() ?? ExtraParams ?? string.Empty;
+        return GetThreadConfig(thread)?.ExtraParams ?? ExtraParams;
     }
 
     private CpuMinerThreadConfiguration? GetThreadConfig(int thread)
     {
-        return thread < ThreadConfigs?.Length ? ThreadConfigs[thread] : null;
+        return thread < ThreadConfigs.Length ? ThreadConfigs[thread] : null;
     }
 }
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-[UsedImplicitly]
-internal class CpuMinerThreadConfiguration
+public class CpuMinerThreadConfiguration
 {
-    public ulong? ThreadAffinity { get; set; }
+    [Range(0, ulong.MaxValue)]
+    public ulong ThreadAffinity { get; set; }
 
-    public ThreadPriority? ThreadPriority { get; set; }
+    public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
 
-    public string? ExtraParams { get; set; }
-
-    public ulong GetThreadAffinity()
-    {
-        return ThreadAffinity ?? 0;
-    }
-
-    public ThreadPriority GetThreadPriority()
-    {
-        return ThreadPriority ?? System.Threading.ThreadPriority.Normal;
-    }
-
-    public string GetExtraParams()
-    {
-        return ExtraParams ?? string.Empty;
-    }
+    public string ExtraParams { get; set; } = string.Empty;
 }
