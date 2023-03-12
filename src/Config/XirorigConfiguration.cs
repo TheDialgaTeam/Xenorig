@@ -34,7 +34,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
 
                 foreach (var defaultSeedNodeIpAddress in defaultSeedNodeIpAddresses)
                 {
-                    seedNodeIpAddresses.Add(defaultSeedNodeIpAddress);
+                    seedNodeIpAddresses.Add(defaultSeedNodeIpAddress.ToString());
                 }
             }
 
@@ -42,10 +42,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
 
             var defaultNumberOfThreads = configuration.GetValue("Xirorig:NumberOfThreads", 1);
             var defaultThreadPriority = configuration.GetValue("Xirorig:ThreadPriority", ThreadPriority.Normal);
-            var defaultMinMiningRangePercentage = configuration.GetValue("Xirorig:MinMiningRangePercentage", 0);
-            var defaultMaxMiningRangePercentage = configuration.GetValue("Xirorig:MaxMiningRangePercentage", 100);
             var defaultEasyBlockOnly = configuration.GetValue("Xirorig:EasyBlockOnly", false);
-            var defaultMinerThreadConfiguration = new MinerThreadConfiguration(defaultThreadPriority, defaultMinMiningRangePercentage, defaultMaxMiningRangePercentage, defaultEasyBlockOnly);
+            var defaultMinerThreadConfiguration = new MinerThreadConfiguration(defaultThreadPriority, defaultEasyBlockOnly);
 
             var minerThreadConfigurationsSection = configuration.GetSection("Xirorig:Threads").GetChildren();
             var minerThreadConfigurations = new List<MinerThreadConfiguration>();

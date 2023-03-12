@@ -19,8 +19,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         private readonly XirorigConfiguration _xirorigConfiguration;
         private readonly XirorigToSeedNetwork _xirorigToSeedNetwork;
         private readonly ILogger<MinerHostedService> _logger;
-
-        private readonly RNGCryptoServiceProvider _rngCryptoServiceProvider = new RNGCryptoServiceProvider();
+        
         private readonly CpuSoloMiner[] _cpuSoloMiners;
 
         private string? _jobHost;
@@ -36,7 +35,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         private long _totalBadSemiRandomBlocksSubmitted;
         private long _totalBadRandomBlocksSubmitted;
 
-        private readonly ConcurrentDictionary<string, string> _blocksFound = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _blocksFound = new();
 
         private readonly long[] _averageHashCalculatedIn10Seconds;
         private readonly long[] _averageHashCalculatedIn60Seconds;
@@ -71,7 +70,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         {
             _consoleOutputTask = Task.Factory.StartNew(async state =>
             {
-                if (!(state is (MinerHostedService minerHostedService, CancellationToken cancellationTokenState))) return;
+                if (state is not (MinerHostedService minerHostedService, CancellationToken cancellationTokenState)) return;
 
                 var cpuSoloMiners = minerHostedService._cpuSoloMiners;
                 var threadCount = cpuSoloMiners.Length;
@@ -128,7 +127,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
             for (var i = 0; i < minerThreadConfigurations.Length; i++)
             {
-                var cpuSoloMiner = new CpuSoloMiner(_rngCryptoServiceProvider, minerThreadConfigurations[i], i);
+                var cpuSoloMiner = new CpuSoloMiner(minerThreadConfigurations[i], i, minerThreadConfigurations.Length);
                 cpuSoloMiner.Log += CpuSoloMinerOnLog;
                 cpuSoloMiner.BlockFound += CpuSoloMinerOnBlockFound;
                 cpuSoloMiner.StartMining();
@@ -322,7 +321,6 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
         public void Dispose()
         {
-            _rngCryptoServiceProvider.Dispose();
             _averageHashCalculatedIn10SecondsTimer?.Dispose();
             _averageHashCalculatedIn60SecondsTimer?.Dispose();
             _averageHashCalculatedIn15MinutesTimer?.Dispose();

@@ -150,7 +150,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
             _checkConnectionNetworkTask = Task.Factory.StartNew(async state =>
             {
-                if (!(state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState))) return;
+                if (state is not (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState)) return;
 
                 while (xirorigToSeedNetwork._isActive)
                 {
@@ -223,7 +223,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             lock (_connectionStatusLock)
             {
                 var connectionStatus = _connectionStatus;
-                if (connectionStatus == ConnectionStatus.Connecting || connectionStatus == ConnectionStatus.Connected) return;
+                if (connectionStatus is ConnectionStatus.Connecting or ConnectionStatus.Connected) return;
                 _connectionStatus = ConnectionStatus.Connecting;
             }
 

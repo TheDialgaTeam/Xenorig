@@ -2,160 +2,159 @@
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Miner
+namespace TheDialgaTeam.Xiropht.Xirorig.Miner;
+
+internal class RandomNumberGeneratorUtility
 {
-    internal class RandomNumberGeneratorUtility
+    public static unsafe int GetRandomBetween(int minimumValue, int maximumValue)
     {
-        public static unsafe int GetRandomBetween(int minimumValue, int maximumValue)
+        var range = (uint) (maximumValue - minimumValue);
+        if (range == 0) return minimumValue;
+
+        switch (range)
         {
-            var range = (uint) maximumValue - (uint) minimumValue;
-            if (range == 0) return minimumValue;
-
-            switch (range)
+            case <= byte.MaxValue:
             {
-                case <= byte.MaxValue:
+                var maxValue = (byte) (range | (range >> 1));
+                maxValue |= (byte) (maxValue >> 2);
+                maxValue |= (byte) (maxValue >> 4);
+
+                Span<byte> span = stackalloc byte[1];
+                byte result;
+
+                do
                 {
-                    var maxValue = (byte) (range | (range >> 1));
-                    maxValue |= (byte) (maxValue >> 2);
-                    maxValue |= (byte) (maxValue >> 4);
+                    RandomNumberGenerator.Fill(span);
+                    result = (byte) (maxValue & span[0]);
+                } while (result > range);
 
-                    Span<byte> span = stackalloc byte[1];
-                    byte result;
+                return result + minimumValue;
+            }
 
-                    do
-                    {
-                        RandomNumberGenerator.Fill(span);
-                        result = (byte) (maxValue & span[0]);
-                    } while (result > range);
+            case <= ushort.MaxValue:
+            {
+                var maxValue = (ushort) (range | (range >> 1));
+                maxValue |= (ushort) (maxValue >> 2);
+                maxValue |= (ushort) (maxValue >> 4);
+                maxValue |= (ushort) (maxValue >> 8);
 
-                    return result + minimumValue;
-                }
+                Span<ushort> span = stackalloc ushort[1];
+                ushort result;
 
-                case <= ushort.MaxValue:
+                do
                 {
-                    var maxValue = (ushort) (range | (range >> 1));
-                    maxValue |= (ushort) (maxValue >> 2);
-                    maxValue |= (ushort) (maxValue >> 4);
-                    maxValue |= (ushort) (maxValue >> 8);
+                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
+                    result = (ushort) (maxValue & span[0]);
+                } while (result > range);
 
-                    Span<ushort> span = stackalloc ushort[1];
-                    ushort result;
+                return result + minimumValue;
+            }
 
-                    do
-                    {
-                        RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                        result = (ushort) (maxValue & span[0]);
-                    } while (result > range);
+            default:
+            {
+                var maxValue = range | (range >> 1);
+                maxValue |= maxValue >> 2;
+                maxValue |= maxValue >> 4;
+                maxValue |= maxValue >> 8;
+                maxValue |= maxValue >> 16;
 
-                    return result + minimumValue;
-                }
+                Span<uint> span = stackalloc uint[1];
+                uint result;
 
-                default:
+                do
                 {
-                    var maxValue = range | (range >> 1);
-                    maxValue |= maxValue >> 2;
-                    maxValue |= maxValue >> 4;
-                    maxValue |= maxValue >> 8;
-                    maxValue |= maxValue >> 16;
+                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
+                    result = maxValue & span[0];
+                } while (result > range);
 
-                    Span<uint> span = stackalloc uint[1];
-                    uint result;
-
-                    do
-                    {
-                        RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                        result = maxValue & span[0];
-                    } while (result > range);
-
-                    return (int) result + minimumValue;
-                }
+                return (int) result + minimumValue;
             }
         }
+    }
 
-        public static unsafe long GetRandomBetween(long minimumValue, long maximumValue)
+    public static unsafe long GetRandomBetween(long minimumValue, long maximumValue)
+    {
+        var range = (ulong) (maximumValue - minimumValue);
+        if (range == 0) return minimumValue;
+
+        switch (range)
         {
-            var range = (ulong) maximumValue - (ulong) minimumValue;
-            if (range == 0) return minimumValue;
-
-            switch (range)
+            case <= byte.MaxValue:
             {
-                case <= byte.MaxValue:
+                var maxValue = (byte) (range | (range >> 1));
+                maxValue |= (byte) (maxValue >> 2);
+                maxValue |= (byte) (maxValue >> 4);
+
+                Span<byte> span = stackalloc byte[1];
+                byte result;
+
+                do
                 {
-                    var maxValue = (byte) (range | (range >> 1));
-                    maxValue |= (byte) (maxValue >> 2);
-                    maxValue |= (byte) (maxValue >> 4);
+                    RandomNumberGenerator.Fill(span);
+                    result = (byte) (maxValue & span[0]);
+                } while (result > range);
 
-                    Span<byte> span = stackalloc byte[1];
-                    byte result;
+                return result + minimumValue;
+            }
 
-                    do
-                    {
-                        RandomNumberGenerator.Fill(span);
-                        result = (byte) (maxValue & span[0]);
-                    } while (result > range);
+            case <= ushort.MaxValue:
+            {
+                var maxValue = (ushort) (range | (range >> 1));
+                maxValue |= (ushort) (maxValue >> 2);
+                maxValue |= (ushort) (maxValue >> 4);
+                maxValue |= (ushort) (maxValue >> 8);
 
-                    return result + minimumValue;
-                }
+                Span<ushort> span = stackalloc ushort[1];
+                ushort result;
 
-                case <= ushort.MaxValue:
+                do
                 {
-                    var maxValue = (ushort) (range | (range >> 1));
-                    maxValue |= (ushort) (maxValue >> 2);
-                    maxValue |= (ushort) (maxValue >> 4);
-                    maxValue |= (ushort) (maxValue >> 8);
+                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
+                    result = (ushort) (maxValue & span[0]);
+                } while (result > range);
 
-                    Span<ushort> span = stackalloc ushort[1];
-                    ushort result;
+                return result + minimumValue;
+            }
 
-                    do
-                    {
-                        RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                        result = (ushort) (maxValue & span[0]);
-                    } while (result > range);
+            case <= uint.MaxValue:
+            {
+                var maxValue = (uint) (range | (range >> 1));
+                maxValue |= maxValue >> 2;
+                maxValue |= maxValue >> 4;
+                maxValue |= maxValue >> 8;
+                maxValue |= maxValue >> 16;
 
-                    return result + minimumValue;
-                }
+                Span<uint> span = stackalloc uint[1];
+                uint result;
 
-                case <= uint.MaxValue:
+                do
                 {
-                    var maxValue = (uint) (range | (range >> 1));
-                    maxValue |= maxValue >> 2;
-                    maxValue |= maxValue >> 4;
-                    maxValue |= maxValue >> 8;
-                    maxValue |= maxValue >> 16;
+                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
+                    result = maxValue & span[0];
+                } while (result > range);
 
-                    Span<uint> span = stackalloc uint[1];
-                    uint result;
+                return result + minimumValue;
+            }
 
-                    do
-                    {
-                        RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                        result = maxValue & span[0];
-                    } while (result > range);
+            default:
+            {
+                var maxValue = range | (range >> 1);
+                maxValue |= maxValue >> 2;
+                maxValue |= maxValue >> 4;
+                maxValue |= maxValue >> 8;
+                maxValue |= maxValue >> 16;
+                maxValue |= maxValue >> 32;
 
-                    return result + minimumValue;
-                }
+                Span<ulong> span = stackalloc ulong[1];
+                ulong result;
 
-                default:
+                do
                 {
-                    var maxValue = range | (range >> 1);
-                    maxValue |= maxValue >> 2;
-                    maxValue |= maxValue >> 4;
-                    maxValue |= maxValue >> 8;
-                    maxValue |= maxValue >> 16;
-                    maxValue |= maxValue >> 32;
+                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
+                    result = maxValue & span[0];
+                } while (result > range);
 
-                    Span<ulong> span = stackalloc ulong[1];
-                    ulong result;
-
-                    do
-                    {
-                        RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                        result = maxValue & span[0];
-                    } while (result > range);
-
-                    return (long) result + minimumValue;
-                }
+                return (long) result + minimumValue;
             }
         }
     }

@@ -3,10 +3,10 @@
   <PropertyGroup>
     <AssemblyName>Xirorig</AssemblyName>
     <RootNamespace>TheDialgaTeam.Xiropht.Xirorig</RootNamespace>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <StartupObject>TheDialgaTeam.Xiropht.Xirorig.Program</StartupObject>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
+    
     <PackageId>TheDialgaTeam.Xiropht.Xirorig</PackageId>
     <Version>0.2.3.0</Version>
     <Authors>Yong Jian Ming</Authors>
@@ -15,8 +15,13 @@
     <Description>Enhanced Xiropht Solo Miner.</Description>
     <PackageProjectUrl>https://github.com/TheDialgaTeam/Xirorig</PackageProjectUrl>
     <RepositoryUrl>https://github.com/TheDialgaTeam/Xirorig</RepositoryUrl>
+
+    <PublishRelease>true</PublishRelease>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishSingleFile>true</PublishSingleFile>
+    
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Platforms>AnyCPU;x64;x86</Platforms>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -43,10 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="appsettings.json">
+    <Content Include="appsettings.json" >
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>
