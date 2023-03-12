@@ -14,8 +14,7 @@ env:
   XENORIG_CSPROJ_FILE: "Xenorig/Xenorig.csproj"
   XENORIG_PUBLISH_ROOT: "Xenorig/publish"
 
-  DOTNET_VERSION: "6.0.x"
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_VERSION: "7.0.x"
 
   VCPKG_NUGET_REPOSITORY: "https://github.com/${{ github.repository }}"
   VCPKG_BINARY_SOURCES: clear;nuget,github/${{ github.repository_owner }},readwrite;default,readwrite
@@ -65,9 +64,7 @@ jobs:
                 mingw-w64-x86_64-cmake
                 mingw-w64-x86_64-ninja
             Xenorig:
-              configuration: Release
               arch: win-x64
-              target_framework: net6.0
 
           - os: windows-2022
             arch: x86
@@ -82,9 +79,7 @@ jobs:
                 mingw-w64-i686-cmake
                 mingw-w64-i686-ninja
             Xenorig:
-              configuration: Release
               arch: win-x86
-              target_framework: net6.0
 
           - os: ubuntu-20.04
             arch: x64
@@ -99,9 +94,7 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
             Xenorig:
-              configuration: Release
               arch: linux-x64
-              target_framework: net6.0
 
           - os: ubuntu-20.04
             arch: arm
@@ -116,9 +109,7 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
             Xenorig:
-              configuration: Release
               arch: linux-arm
-              target_framework: net6.0
 
           - os: ubuntu-20.04
             arch: arm64
@@ -133,9 +124,7 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
             Xenorig:
-              configuration: Release
               arch: linux-arm64
-              target_framework: net6.0
 
           - os: macos-11
             arch: x64
@@ -150,9 +139,7 @@ jobs:
               msys2_environment: ""
               msys2_install: ""
             Xenorig:
-              configuration: Release
               arch: osx-x64
-              target_framework: net6.0
 
     steps:
       - name: Checkout
@@ -233,11 +220,6 @@ jobs:
             cmake --install build
           }
 
-      - name: Patch Xenorig Target Framework 
-        run: |
-          $csproj_file = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_CSPROJ_FILE }}"
-          ((Get-Content "$csproj_file") -replace '^(\s*)<TargetFramework>.+?<\/TargetFramework>(\s*)$', "`$1<TargetFramework>${{ matrix.Xenorig.target_framework }}</TargetFramework>`$2") | Set-Content "$csproj_file"
-
       - name: Patch Xenorig Version
         if: startsWith(github.ref, 'refs/tags/')
         run: |
@@ -248,7 +230,7 @@ jobs:
       - name: Build Xenorig
         run: |
           $output = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_PUBLISH_ROOT }}" "${{ matrix.output_folder }}"
-          Invoke-Expression "dotnet publish -c ${{ matrix.Xenorig.configuration }} --runtime ${{ matrix.Xenorig.arch }} -o `"$output`" --self-contained -p:PublishTrimmed=true -p:PublishReadyToRun=true"
+          Invoke-Expression "dotnet publish --runtime ${{ matrix.Xenorig.arch }} -o `"$output`""
 
       - name: Package Xenorig
         run: |

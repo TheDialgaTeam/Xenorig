@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,14 +13,14 @@ public static class Program
 {
     public const string XenoNativeLibrary = "xeno_native";
 
-    private static string _contentRootPath = Environment.CurrentDirectory;
+    private static IHost? _host;
 
     public static async Task Main(string[] args)
     {
-        var host = Host.CreateDefaultBuilder(args)
+        _host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(collection =>
             {
-                collection.AddOptions<XenorigOptions>().BindConfiguration("Xenorig").ValidateDataAnnotations();
+                collection.AddOptions<XenorigOptions>().BindConfiguration("Xenorig");
                 collection.AddHostedService<ConsoleService>();
             })
             .ConfigureLogging(builder =>
@@ -32,18 +33,20 @@ public static class Program
             })
             .UseConsoleLifetime()
             .Build();
-
-        _contentRootPath = host.Services.GetService<IHostEnvironment>()?.ContentRootPath ?? Environment.CurrentDirectory;
-
+        
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainOnUnhandledException;
 
-        await host.RunAsync();
+        await _host.RunAsync();
     }
 
     private static void OnCurrentDomainOnUnhandledException(object _, UnhandledExceptionEventArgs eventArgs)
     {
         if (!eventArgs.IsTerminating) return;
-        var crashFileLocation = Path.Combine(_contentRootPath, $"{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_crash.log");
+        
+        Debug.Assert(_host != null, nameof(_host) + " != null");
+        
+        var contentRootPath = _host.Services.GetService<IHostEnvironment>()?.ContentRootPath ?? Environment.CurrentDirectory;
+        var crashFileLocation = Path.Combine(contentRootPath, $"{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_crash.log");
         File.WriteAllText(crashFileLocation, eventArgs.ExceptionObject.ToString());
     }
 }

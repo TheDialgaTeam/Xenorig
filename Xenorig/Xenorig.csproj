@@ -39,9 +39,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="7.0.0" />
 		<PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.8.0" />
 	</ItemGroup>
 
@@ -120,12 +118,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="appsettings.Development.json" Condition="'$(Configuration)'=='Debug'">
+		<Content Update="appsettings.Development.json" Condition="'$(Configuration)'=='Debug'">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="appsettings.json">
+		</Content>
+		<Content Update="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+		</Content>
 	</ItemGroup>
 
 </Project>

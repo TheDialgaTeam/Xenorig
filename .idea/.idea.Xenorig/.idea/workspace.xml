@@ -16,46 +16,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="77afc266-8f2a-4519-80f7-e6a5eda0ffa1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.run/Xenorig.run.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.run/XenorigBenchmark.run.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.run/Xenorig_ netcoreapp-win-x64.run.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/BlockHeader.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/XenorigBenchmark/Program.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/XenorigBenchmark/Utilities/BufferUtilityBenchmark.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/XenorigBenchmark/Utilities/RandomNumberGeneratorUtilityBenchmark.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/XenorigBenchmark/XenorigBenchmark.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitmodules" beforeDir="false" afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Utilities/RandomNumberGeneratorUtility.c" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Utilities/RandomNumberGeneratorUtility.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/vcpkg" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/vcpkg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig.sln" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig.sln" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/IAlgorithm.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/IAlgorithm.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Main.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/BlockHeader.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/JobTemplate.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/JobTemplate.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/Network.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/Network.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/NetworkConstants.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/NetworkConstants.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/PacketData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/PacketData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Logger.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Logger.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/build_xenorig.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build_xenorig.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/ProgramHostedService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/ConsoleService.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/ApplicationUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/ApplicationUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/Base58Utility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/Base58Utility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/Base64Utility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/Base64Utility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/BufferUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/BufferUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/CpuInformationUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/CpuInformationUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/MessageDigestUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/MessageDigestUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/RandomNumberGeneratorUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/RandomNumberGeneratorUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/SymmetricAlgorithmUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/SymmetricAlgorithmUtility.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.Development.json" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/appsettings.Development.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/appsettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nuget.config" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,11 +58,16 @@
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/127c327fea07aada2d88d4392afeff6a0980a55cf9fd2867cf249fea2e84e/Dns.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/15dc23f1d4f2cea44963bb63bc144b9e3e14983614da399c4ff84348c9b1e6c/IPAddress.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/18683722e1c2b2ebec2d4d34a28350723bb9ebee96f317a7fe83d44d6d3f9a/GeneratedRegexAttribute.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/1c2566eaef22827350f24b8c66c713b953c75a3d95c89ffe449f3fb31c9f42/IOptionsChangeTokenSource.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/20c8244b3bbfa2e3eb6d0ea44fd16d474215e77163be45371936f895fcc71/ConfigurationBinder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/279dd33dc1e16d18a8dfd65e1baf134c72411f7dd1a0bb407b678af493fb7ce/Timer.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/2a5cc194fee19ec98ae1c3a8395d4f42f3d0dc84adbe34dcc08c28eec6bc9b1/TaskAwaiter.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/39dff3caf7a78b1d317b833979b38b2da8c855c59c6ce4557c4e223d3bc/BlockingCollection.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/485da50d43321b81edc28153271bdedb84943a243743e2deaa67a981587968/IConfiguration.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/4f895532b9b3c8e2ed55658c80c256fec026d871b0222127428a9533a646/Random.Net5CompatImpl.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5162dcef9ff38f5edc8c81f80f94afbc8848d6536cb6cd8a9f0db26b3a7b1/OptionsServiceCollectionExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/54e61fc479554ef3893bb7c3f6f12764f739993030a41e6992844a74a6445d/OptionsBuilderDataAnnotationsExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/56d16f45b8a41fd0d648218d958793203ed861f0e4cfad1e9241532242580/IValidateOptions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5d971971f4d8d6da4ed2fbe8bfed963f1583d395c7964cabb1fdfd7a844e/IPEndPoint.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5fc0c87cafa7ba9c1e336bbca7f59e182fbf9b44be973972fb51c3dac4814a/DnsEndPoint.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/6bfb5caa34a165fe407ffb9d2b7285ffa682b2e3eb1f4f18fb6a945a576c4/Random.cs" root0="SKIP_HIGHLIGHTING" />
@@ -107,16 +76,25 @@
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/794bcfedceb3c6d957fbddf0e1c9a04afca77f9b5470c6859466cfba35e1ddb1/Task.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/7c4783383ec96c91b89479ced68cfa1c502a74f4eab14828d47c093ceb481/EndPoint.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/7cb6b7c72d108583c026611357d59eb9c29fc5a452d33c863a5a1678613153/Array.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/7f4ffc2de39c271a812247a7a07add3a5b584f1b838644779f76a32343ee0/ConfigurationChangeTokenSource.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/87629731af04bb03578c1b6aa46c564e8e7e4647ea8f1b844cfd9e658ab30/BackgroundService.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/8f2a15e16b626a3ea75b66bf5abaff5a2519b6e42f058a7123f49d7baab2feb/MemoryMarshal.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/9378ba3d87989ef95471da32121cc574913f567bfb8a6b234e2b5b4e8bf5/NetworkStream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/939d19470bf2797b6eab6523ee90dfad72d78dcc591d4c2a7af664c01c18b9/ReadOnlySpan.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/941c35876d687ca2eb427d27ae8b49cbb5a85b0c95fb73ed73147e6faff3/DataAnnotationValidateOptions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/999cdaadc75536d58983a9f4e0db6aa26367941d1bb72b22102b2ad3afcc/UrlAttribute.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/a011aeca7c3a84e9769f896f04c2b61916e9dbb13d561a3ee119e74b2d78e87/OptionsBuilder.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/a148b69b23decbabddf4bcf2533ebc2183c6687ad6734bf8e5d667b3ea2961/IHostEnvironment.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/a298e0276cd16e82a8c4ccc81257bc7af5e15d863243fa955edf2df1a2a7c5/AsyncTaskMethodBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ad8b6491936769d7fc26ad9a8203e3597c1d8c63798d7a592f39b784c3827/TCPClient.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/af9ea6f1cc5e79fc868c6fc312a6b423a23d21797d2163065cf548bb19bd6/OptionsBuilderConfigurationExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/baea74d7885b5f8d727f09283cbf4cbb8c68125e13f1f056fdb38ff43b5b6e/RandomNumberGenerator.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/bb1c9215e0897268602d42e692303ee1f557d3fb9335c7a30faacfeb416871d/UnnamedOptionsManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/bd1d5c50194fea68ff3559c160230b0ab50f5acf4ce3061bffd6d62958e2182/ExceptionDispatchInfo.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ca76d58ce03c65bdcf1972283f41e7e88e3f97bc3c53a6af3d38b9b13b687b4/UnhandledExceptionEventArgs.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/d447e1f212196c76f7f17427b0354de47d661a93362dfc4112e243afb4c718/DataTypeAttribute.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/dfd1adae495176f5e6ece32aaf55911f4fd52eb91a0d11477c54e46d46425fc/NameResolutionPal.Windows.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ef4d7ab83a8b9da99eefc5378d7a62bea110e35fa45785cc91bed33e916d0b2/ValidationContext.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f369ace511b6e7f4f7762d6b922aebc2cfb4a5c7e29bd30a3f994745b46f/BigInteger.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f9749fe3576a687c3c42f3794cefe8f8d91e62f939c66c0a32dbb3f74255/ManualResetEventSlim.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/fb643aeff3db18a0c8fc3f6dec4c87a694229c8c871b5f71d8a852177e473d7f/Random.Xoshiro256StarStarImpl.cs" root0="SKIP_HIGHLIGHTING" />
@@ -163,7 +141,6 @@
     <list>
       <item itemvalue=".NET Project.XenorigBenchmark" />
       <item itemvalue=".NET Project.Xenorig" />
-      <item itemvalue="Publish to folder.Xenorig: netcoreapp-win-x64" />
     </list>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -204,6 +181,7 @@
       <workItem from="1678518188696" duration="8189000" />
       <workItem from="1678534274844" duration="3830000" />
       <workItem from="1678539717805" duration="11207000" />
+      <workItem from="1678598384661" duration="4550000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1655015961872</created>
@@ -277,19 +255,6 @@
             </endOffsets>
           </properties>
           <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/Network.cs</url>
-          <line>139</line>
-          <properties documentPath="D:\Git\TheDialgaTeam\Xeno\Xenorig\Algorithms\Xenophyte\Centralized\Networking\Network.cs" initialLine="139" containingFunctionPresentation="method 'ConnectAsync'">
-            <startOffsets>
-              <option value="4369" />
-            </startOffsets>
-            <endOffsets>
-              <option value="4498" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="16" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
