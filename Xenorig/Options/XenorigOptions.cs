@@ -1,47 +1,37 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using Xenorig.Utilities;
 
 namespace Xenorig.Options;
 
-public class XenorigOptions
+public sealed class XenorigOptions
 {
-    [Range(0, int.MaxValue)]
     public int PrintSpeedDuration { get; set; } = 10;
 
-    [Range(0, int.MaxValue)]
-    public int NetworkTimeoutDuration { get; set; } = 5000;
+    public int NetworkTimeoutDuration { get; set; } = 5;
 
-    [Range(0, int.MaxValue)]
     public int MaxRetryCount { get; set; } = 5;
 
-    [Range(0, 100)]
-    public int DonatePercentage { get; set; }
+    public int DonatePercentage { get; set; } = 0;
     
     public Pool[] Pools { get; set; } = Array.Empty<Pool>();
     
-    public CpuMiner CpuMiner { get; set; } = new();
+    public XenophyteCentralizedSolo Xenophyte_Centralized_Solo { get; set; } = new();
 }
 
-public class Pool
+public sealed class Pool
 {
-    [Required]
     public string Algorithm { get; set; } = string.Empty;
 
     public string Coin { get; set; } = string.Empty;
-
-    [Required]
+    
     public string Url { get; set; } = string.Empty;
-
-    [Required]
+    
     public string Username { get; set; } = string.Empty;
 
     public string Password { get; set; } = string.Empty;
 
-    public string UserAgent { get; set; }
-    
-    public bool Daemon { get; set; } = false;
+    public string UserAgent { get; set; } = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
 
     public string GetUserAgent()
     {
@@ -49,16 +39,18 @@ public class Pool
     }
 }
 
-public class CpuMiner
+public sealed class XenophyteCentralizedSolo
 {
-    [Range(1, int.MaxValue)]
-    public int Threads { get; set; } = Environment.ProcessorCount;
+    public CpuMiner CpuMiner { get; set; } = new();
+}
 
-    public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
+public sealed class CpuMiner
+{
+    public int Threads { get; } = Environment.ProcessorCount;
 
-    public string ExtraParams { get; set; } = string.Empty;
-
-    public CpuMinerThreadConfiguration[] ThreadConfigs { get; set; } = Array.Empty<CpuMinerThreadConfiguration>();
+    public ThreadPriority ThreadPriority { get; } = ThreadPriority.Normal;
+    
+    public CpuMinerThreadConfiguration[] ThreadConfigs { get; } = Array.Empty<CpuMinerThreadConfiguration>();
 
     public int GetNumberOfThreads()
     {
@@ -75,23 +67,15 @@ public class CpuMiner
         return GetThreadConfig(thread)?.ThreadPriority ?? ThreadPriority;
     }
 
-    public string GetExtraParams(int thread)
-    {
-        return GetThreadConfig(thread)?.ExtraParams ?? ExtraParams;
-    }
-
     private CpuMinerThreadConfiguration? GetThreadConfig(int thread)
     {
         return thread < ThreadConfigs.Length ? ThreadConfigs[thread] : null;
     }
 }
 
-public class CpuMinerThreadConfiguration
+public sealed class CpuMinerThreadConfiguration
 {
-    [Range(0, ulong.MaxValue)]
     public ulong ThreadAffinity { get; set; }
 
     public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
-
-    public string ExtraParams { get; set; } = string.Empty;
 }

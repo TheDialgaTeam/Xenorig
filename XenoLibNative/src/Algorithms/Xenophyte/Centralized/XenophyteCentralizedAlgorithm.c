@@ -83,10 +83,12 @@ DOTNET_INT XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(DOTNET_LONG mi
 
         return index;
     } else {
-        for (DOTNET_INT i = 255; i >= 0; i--) {
-            if (range <= MAX_FLOAT_PRECISION) {
+        if (range <= MAX_FLOAT_PRECISION) {
+            for (DOTNET_INT i = 255; i >= 0; i--) {
                 output[i] = minValue + (DOTNET_LONG) (Max_Float(0, i / 255.0f - 0.0000001f) * range);
-            } else {
+            }
+        } else {
+            for (DOTNET_INT i = 255; i >= 0; i--) {
                 output[i] = minValue + (DOTNET_LONG) (Max_Double(0, i / 255.0 - 0.00000000001) * range);
             }
         }

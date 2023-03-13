@@ -85,7 +85,7 @@ public sealed partial class CpuMiner
 
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) continue;
 
-            var threadAffinity = (long) _options.CpuMiner.GetThreadAffinity(i);
+            var threadAffinity = (long) _options.Xenophyte_Centralized_Solo.CpuMiner.GetThreadAffinity(i);
 
             if (threadAffinity > 0)
             {

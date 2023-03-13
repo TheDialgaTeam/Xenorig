@@ -16,10 +16,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="77afc266-8f2a-4519-80f7-e6a5eda0ffa1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/build_xenorig.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build_xenorig.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.c" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/ConsoleService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/ConsoleService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Program.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.Development.json" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/appsettings.Development.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.Development.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/appsettings.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,9 +96,12 @@
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/baea74d7885b5f8d727f09283cbf4cbb8c68125e13f1f056fdb38ff43b5b6e/RandomNumberGenerator.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/bb1c9215e0897268602d42e692303ee1f557d3fb9335c7a30faacfeb416871d/UnnamedOptionsManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/bd1d5c50194fea68ff3559c160230b0ab50f5acf4ce3061bffd6d62958e2182/ExceptionDispatchInfo.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/c4df319e7a6b4eafe890fea08520cf9412a8d289df8bfa8057fc4621f45f6892/ValidationResult.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ca76d58ce03c65bdcf1972283f41e7e88e3f97bc3c53a6af3d38b9b13b687b4/UnhandledExceptionEventArgs.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/d447e1f212196c76f7f17427b0354de47d661a93362dfc4112e243afb4c718/DataTypeAttribute.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/dfd1adae495176f5e6ece32aaf55911f4fd52eb91a0d11477c54e46d46425fc/NameResolutionPal.Windows.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/e52ee4bf2e0b72bbb60d19a16a0d83fe6133e2c372baa3dde81b2a2c5aabba/TypeDescriptor.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ebf2f0407ae5ccb7785c61442dbb2f77fa91b08e585c8c49e37d3ef4c24/HostingHostBuilderExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ef4d7ab83a8b9da99eefc5378d7a62bea110e35fa45785cc91bed33e916d0b2/ValidationContext.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f369ace511b6e7f4f7762d6b922aebc2cfb4a5c7e29bd30a3f994745b46f/BigInteger.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f9749fe3576a687c3c42f3794cefe8f8d91e62f939c66c0a32dbb3f74255/ManualResetEventSlim.cs" root0="SKIP_HIGHLIGHTING" />
@@ -182,6 +190,7 @@
       <workItem from="1678534274844" duration="3830000" />
       <workItem from="1678539717805" duration="11207000" />
       <workItem from="1678598384661" duration="4550000" />
+      <workItem from="1678717218916" duration="8315000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1655015961872</created>

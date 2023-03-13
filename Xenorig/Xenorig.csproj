@@ -15,14 +15,15 @@
 		<RepositoryUrl>https://github.com/TheDialgaTeam/Xenorig</RepositoryUrl>
 
 		<PublishRelease>true</PublishRelease>
-		<PublishTrimmed>false</PublishTrimmed>
+		<PublishTrimmed>true</PublishTrimmed>
 		<PublishReadyToRun>false</PublishReadyToRun>
 		<PublishSingleFile>true</PublishSingleFile>
 		
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+
+		<TrimMode>partial</TrimMode>
 		
-		<IlcOptimizationPreference>Speed</IlcOptimizationPreference>
 		<InvariantGlobalization>true</InvariantGlobalization>
 	</PropertyGroup>
 
@@ -32,6 +33,11 @@
 
 	<PropertyGroup Condition="'$(Configuration)'=='Release'">
 		<DebugType>none</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
+		<PublishAot>true</PublishAot>
+		<PublishSingleFile>false</PublishSingleFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -50,14 +56,12 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
-		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-
 		<DirectPInvoke Include="kernel32" />
 		<DirectPInvoke Include="xeno_native" />
 
 		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.dll.a" />
 
-		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
+		<Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="libxeno_native.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
@@ -81,8 +85,6 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
-		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-
 		<DirectPInvoke Include="libc" />
 		<DirectPInvoke Include="libxeno_native" />
 
@@ -106,8 +108,6 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
-		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" />
-
 		<DirectPInvoke Include="libxeno_native" />
 
 		<NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a" />
@@ -118,10 +118,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Update="appsettings.Development.json" Condition="'$(Configuration)'=='Debug'">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-		<Content Update="appsettings.json">
+		<Content Include="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

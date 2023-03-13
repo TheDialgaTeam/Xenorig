@@ -35,7 +35,7 @@ public class ConsoleService : BackgroundService
         Logger.PrintAbout(_logger, "About", ApplicationUtility.Name, ApplicationUtility.Version, ApplicationUtility.FrameworkVersion);
         Logger.PrintCpu(_logger, "CPU", CpuInformationUtility.ProcessorName, CpuInformationUtility.ProcessorInstructionSetsSupported);
         Logger.PrintCpuCont(_logger, string.Empty, CpuInformationUtility.ProcessorL2Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorL3Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorCoreCount, CpuInformationUtility.ProcessorThreadCount);
-        Logger.PrintDonatePercentage(_logger, "DONATE", 0);
+        Logger.PrintDonatePercentage(_logger, "DONATE", _options.DonatePercentage);
         Logger.PrintCommand(_logger, "COMMANDS");
 
         _minerInstances = CreateMinerInstances();
@@ -103,8 +103,8 @@ public class ConsoleService : BackgroundService
     {
         if (pools.Length == 0) throw new Exception("Unable to create miner instances.");
 
-        if (pools[0].Algorithm.Equals("Xiropht_Centralized", StringComparison.OrdinalIgnoreCase) ||
-            pools[0].Algorithm.Equals("Xenophyte_Centralized", StringComparison.OrdinalIgnoreCase))
+        if (pools[0].Algorithm.Equals("Xiropht_Centralized_Solo", StringComparison.OrdinalIgnoreCase) ||
+            pools[0].Algorithm.Equals("Xenophyte_Centralized_Solo", StringComparison.OrdinalIgnoreCase))
         {
             return new XenophyteCentralizedAlgorithm(_loggerFactory.CreateLogger(nameof(XenophyteCentralizedAlgorithm)), _options, pools);
         }
