@@ -9,7 +9,6 @@ Xenorig is a high performance Xenorig (XENOP) miner, with official support for W
 
 #### Table of contents
 - [Xenorig Project](#xenorig-project)
-      - [Table of contents](#table-of-contents)
   - [Features](#features)
   - [Downloads](#downloads)
   - [Other information](#other-information)
