@@ -1,0 +1,5 @@
+﻿<linker>
+    <assembly fullname="Xenorig">
+        <type fullname="Xenorig.Options.*" preserve="all" />
+    </assembly>
+</linker>

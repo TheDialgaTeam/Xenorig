@@ -2,39 +2,32 @@
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 
-internal ref struct JobTemplate
+public sealed class JobTemplate
 {
-    public int BlockHeight { get; set; } = 0;
-
-    public long BlockTimestampCreate { get; set; } = 0;
+    public int BlockHeight { get; set; }
+    public long BlockTimestampCreate { get; set; }
 
     public string BlockIndication { get; set; } = string.Empty;
 
-    public long BlockDifficulty { get; set; } = 0;
+    public long BlockDifficulty { get; set; }
+    public long BlockMinRange { get; set; }
+    public long BlockMaxRange { get; set; }
 
-    public long BlockMinRange { get; set; } = 0;
+    public byte[] XorKey { get; set; } = Array.Empty<byte>();
+    public int XorKeyLength { get; set; }
 
-    public long BlockMaxRange { get; set; } = 0;
+    public byte[] AesKey { get; set; } = Array.Empty<byte>();
+    public byte[] AesIv { get; set; } = Array.Empty<byte>();
+    
+    public int AesRound { get; set; }
 
-    public Span<byte> XorKey { get; set; } = Span<byte>.Empty;
+    public long[] EasyBlockValues { get; set; }
 
-    public Span<byte> AesKey { get; set; } = Span<byte>.Empty;
+    public int EasyBlockValuesLength { get; set; }
 
-    public Span<byte> AesIv { get; set; } = Span<byte>.Empty;
+    public long[] NonEasyBlockValues { get; set; }
 
-    public int AesRound { get; set; } = 0;
+    public int NonEasyBlockValuesLength { get; set; }
 
-    public Span<long> EasyBlockValues { get; } = new long[256];
-
-    public int EasyBlockValuesLength { get; set; } = 0;
-
-    public Span<long> NonEasyBlockValues { get; set; } = Span<long>.Empty;
-
-    public int NonEasyBlockValuesLength { get; set; } = 0;
-
-    public Span<long> TempNonEasyBlockValues { get; set; } = Span<long>.Empty;
-
-    public JobTemplate()
-    {
-    }
+    public long[] TempNonEasyBlockValues { get; set; }
 }

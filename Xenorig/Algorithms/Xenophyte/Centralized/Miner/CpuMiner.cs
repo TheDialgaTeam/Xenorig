@@ -70,16 +70,39 @@ public sealed partial class CpuMiner
         _logger = logger;
         _options = options;
         _network = network;
+
+        var totalThreads = options.Xenophyte_Centralized_Solo.CpuMiner.GetNumberOfThreads();
+        
+        _cpuMiningThreads = new Thread[totalThreads];
         
         _calculateAverageHashTimer = new Timer(CalculateAverageHashTimerOnElapsed, null, TimeSpan.Zero, TimeSpan.Zero);
+
+        _averageHashCalculatedIn10Seconds = new double[totalThreads];
+        _averageHashCalculatedIn60Seconds = new double[totalThreads];
+        _averageHashCalculatedIn15Minutes = new double[totalThreads];
+
+        _totalHashCalculatedIn10Seconds = new long[totalThreads];
+        _totalHashCalculatedIn60Seconds = new long[totalThreads];
+        _totalHashCalculatedIn15Minutes = new long[totalThreads];
     }
     
     private void StartCpuMiner()
     {
         if (Interlocked.CompareExchange(ref _isCpuMinerActive, 1, 0) == 1) return;
 
-        for (var i = 0; i < _cpuMiningThreads.Length; i++)
+        var totalThreads = _options.Xenophyte_Centralized_Solo.CpuMiner.GetNumberOfThreads();
+
+        for (var i = 0; i < totalThreads; i++)
         {
+            var threadId = i;
+            
+            _cpuMiningThreads[i] = new Thread(() => ExecuteCpuMinerThread(threadId, _options.Xenophyte_Centralized_Solo.CpuMiner))
+            {
+                Name = $"Mining Thread {i}",
+                IsBackground = true,
+                Priority = _options.Xenophyte_Centralized_Solo.CpuMiner.GetThreadPriority(i)
+            };
+            
             var thread = _cpuMiningThreads[i];
             thread.Start();
 
@@ -120,7 +143,58 @@ public sealed partial class CpuMiner
             }
 
             // Thread Variable
+            var newJobTemplateTokenSource = new CancellationTokenSource();
             var jobTemplate = new JobTemplate();
+
+            void UpdateJobTemplate(in BlockHeader header)
+            {
+                newJobTemplateTokenSource.Cancel();
+
+                jobTemplate.BlockHeight = header.Height;
+                jobTemplate.BlockTimestampCreate = header.TimestampCreate;
+
+                jobTemplate.BlockIndication = header.Indication;
+
+                jobTemplate.BlockDifficulty = header.Difficulty;
+                jobTemplate.BlockMinRange = header.MinRange;
+                jobTemplate.BlockMaxRange = header.MaxRange;
+
+                if (jobTemplate.XorKey.Length < header.XorKey.Length)
+                {
+                    jobTemplate.XorKey = GC.AllocateUninitializedArray<byte>(header.XorKey.Length);
+                    BufferUtility.MemoryCopy(header.XorKey, jobTemplate.XorKey, header.XorKey.Length);
+                    jobTemplate.XorKeyLength = header.XorKey.Length;
+                }
+                else
+                {
+                    BufferUtility.MemoryCopy(header.XorKey, jobTemplate.XorKey, header.XorKey.Length);
+                    jobTemplate.XorKeyLength = header.XorKey.Length;
+                }
+
+                if (jobTemplate.AesKey.Length < header.AesKey.Length)
+                {
+                    jobTemplate.AesKey = GC.AllocateUninitializedArray<byte>(header.AesKey.Length);
+                    BufferUtility.MemoryCopy(header.AesKey, jobTemplate.AesKey, header.AesKey.Length);
+                }
+                else
+                {
+                    BufferUtility.MemoryCopy(header.AesKey, jobTemplate.AesKey, header.AesKey.Length);
+                }
+                
+                if (jobTemplate.AesIv.Length < header.AesIv.Length)
+                {
+                    jobTemplate.AesIv = GC.AllocateUninitializedArray<byte>(header.AesIv.Length);
+                    BufferUtility.MemoryCopy(header.AesIv, jobTemplate.AesIv, header.AesIv.Length);
+                }
+                else
+                {
+                    BufferUtility.MemoryCopy(header.AesIv, jobTemplate.AesIv, header.AesIv.Length);
+                }
+
+                jobTemplate.AesRound = header.AesRound;
+            }
+
+            _network.HasNewBlock += UpdateJobTemplate;
 
             while (_isCpuMinerActive == 1)
             {
@@ -128,27 +202,9 @@ public sealed partial class CpuMiner
                 while (true)
                 {
                     if (_isCpuMinerActive == 0) break;
-/*
-                    lock (_blockHeaderLock)
-                    {
-                        if (_currentBlockIndication != jobTemplate.BlockIndication)
-                        {
-                            ref var writableJobTemplate = ref jobTemplate;
 
-                            writableJobTemplate.BlockHeight = _blockHeight;
-                            writableJobTemplate.BlockTimestampCreate = _blockTimestampCreate;
-                            writableJobTemplate.BlockIndication = _blockIndication;
-                            writableJobTemplate.BlockDifficulty = _blockDifficulty;
-                            writableJobTemplate.BlockMinRange = _blockMinRange;
-                            writableJobTemplate.BlockMaxRange = _blockMaxRange;
-                            writableJobTemplate.XorKey = _blockXorKey.AsSpan(0, _blockXorKeyLength);
-                            writableJobTemplate.AesKey = _blockAesKey.AsSpan(0, _blockAesKeySize);
-                            writableJobTemplate.AesIv = _blockAesIv;
-                            writableJobTemplate.AesRound = _blockAesRound;
-                            break;
-                        }
-                    }
-*/
+                    if (newJobTemplateTokenSource.IsCancellationRequested)
+                    
                     Thread.Sleep(1);
                 }
 

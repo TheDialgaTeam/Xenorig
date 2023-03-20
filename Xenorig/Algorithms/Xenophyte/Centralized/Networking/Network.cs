@@ -22,7 +22,7 @@ public delegate void NewBlockEventHandler(in BlockHeader blockHeader);
 public sealed partial class Network : IDisposable
 {
     public event NewBlockEventHandler? HasNewBlock;
-
+    
     public bool IsNetworkActive => _isNetworkActive == 1;
 
     public bool IsNetworkConnected => _isNetworkConnected == 1;
@@ -31,21 +31,19 @@ public sealed partial class Network : IDisposable
 
     private readonly ILogger _logger;
     private readonly XenorigOptions _options;
-    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+    private readonly SemaphoreSlim _connectionSemaphoreSlim = new(1, 1);
 
     private int _isNetworkActive;
     private int _isNetworkConnected;
 
     private CancellationTokenSource? _networkActiveCts;
-
-    private readonly Pool[] _poolCollection;
-    private Pool? _pool;
-    private int _poolSelectedIndex;
+    
+    private readonly Pool _pool;
     private int _poolRetryCount;
 
     private TcpClient? _tcpClient;
 
-    private readonly byte[] _networkAesKey = new byte[NetworkConstants.MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE_ITEM / 8];
+    private readonly byte[] _networkAesKey = new byte[NetworkConstants.MajorUpdate1SecurityCertificateSizeItem / 8];
     private readonly byte[] _networkAesIv = new byte[16];
 
     private BlockingCollection<PacketData>? _packetDataCollection;
@@ -79,20 +77,21 @@ public sealed partial class Network : IDisposable
 
     private string _currentBlockIndication = string.Empty;
 
-    public Network(ILogger logger, XenorigOptions options, Pool[] pools)
+    public Network(ILogger logger, XenorigOptions options, Pool pool)
     {
         _logger = logger;
         _options = options;
-        _poolCollection = pools;
+        _pool = pool;
     }
 
     private static void GenerateCertificate(Span<byte> output)
     {
-        var index = Encoding.ASCII.GetBytes(NetworkConstants.NETWORK_GENESIS_SECONDARY_KEY, output);
+        var index = Encoding.ASCII.GetBytes(NetworkConstants.NetworkGenesisSecondaryKey, output);
+        var upperbound = CertificateSupportedCharacters.Length - 1;
 
-        for (var i = NetworkConstants.MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE_ITEM - 1; i >= 0; i--)
+        for (var i = NetworkConstants.MajorUpdate1SecurityCertificateSizeItem - 1; i >= 0; i--)
         {
-            output[index + i] = CertificateSupportedCharacters[RandomNumberGeneratorUtility.GetRandomBetween(0, CertificateSupportedCharacters.GetUpperBound(0))];
+            output.GetRef(index + i) = CertificateSupportedCharacters.GetRef(RandomNumberGeneratorUtility.GetRandomBetween(0, upperbound));
         }
     }
     
@@ -141,84 +140,73 @@ public sealed partial class Network : IDisposable
 
         try
         {
-            await _semaphoreSlim.WaitAsync(cancellationTokenSource.Token);
+            await _connectionSemaphoreSlim.WaitAsync(cancellationTokenSource.Token);
 
             if (!IsNetworkActive || IsNetworkConnected) return;
 
             do
             {
-                if (_poolSelectedIndex > _poolCollection.GetUpperBound(0))
+                _tcpClient = new TcpClient();
+                _tcpClient.NoDelay = true;
+
+                using (var networkTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.NetworkTimeoutDuration)))
+                using (var connectionTimeoutTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, networkTimeoutCts.Token))
                 {
-                    _poolSelectedIndex = 0;
-                }
-
-                _pool = _poolCollection[_poolSelectedIndex++];
-
-                do
-                {
-                    _tcpClient = new TcpClient();
-                    _tcpClient.NoDelay = true;
-
-                    using (var networkTimeoutCts = new CancellationTokenSource(_options.NetworkTimeoutDuration))
-                    using (var connectionTimeoutTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, networkTimeoutCts.Token))
+                    try
                     {
-                        try
+                        if (IPEndPoint.TryParse(_pool.Url, out var ipEndPoint))
                         {
-                            if (IPEndPoint.TryParse(_pool.Url, out var ipEndPoint))
+                            await _tcpClient.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port == 0 ? NetworkConstants.SeedNodePort : ipEndPoint.Port, connectionTimeoutTokenSource.Token);
+                                
+                            using var httpClient = new HttpClient { DefaultRequestHeaders = { UserAgent = { ProductInfoHeaderValue.Parse(_pool.GetUserAgent()) } } };
+
+                            var tokenNetwork = IPEndPoint.Parse(_pool.Url);
+                            tokenNetwork.Port = NetworkConstants.SeedNodeTokenPort;
+                                
+                            var json = JsonNode.Parse(await httpClient.GetStreamAsync($"http://{tokenNetwork}/{NetworkConstants.WalletTokenType}|{NetworkConstants.TokenCheckWalletAddressExist}|{_pool.Username}", connectionTimeoutTokenSource.Token));
+
+                            if (json?["result"]?.GetValue<string>().Equals(NetworkConstants.SendTokenCheckWalletAddressInvalid, StringComparison.Ordinal) ?? true)
                             {
-                                await _tcpClient.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port == 0 ? NetworkConstants.SeedNodePort : ipEndPoint.Port, connectionTimeoutTokenSource.Token);
-                                
-                                using var httpClient = new HttpClient { DefaultRequestHeaders = { UserAgent = { ProductInfoHeaderValue.Parse(_pool.GetUserAgent()) } } };
-
-                                var tokenNetwork = IPEndPoint.Parse(_pool.Url);
-                                tokenNetwork.Port = NetworkConstants.SeedNodeTokenPort;
-                                
-                                var json = JsonNode.Parse(await httpClient.GetStreamAsync($"http://{tokenNetwork}/{NetworkConstants.WalletTokenType}|{NetworkConstants.TokenCheckWalletAddressExist}|{_pool.Username}", connectionTimeoutTokenSource.Token));
-
-                                if (json?["result"]?.GetValue<string>().Equals(NetworkConstants.SendTokenCheckWalletAddressInvalid, StringComparison.Ordinal) ?? true)
-                                {
-                                    _tcpClient.Dispose();
-                                    Logger.PrintLoginFailed(_logger, _pool.Url, "Invalid wallet address.");
-                                    return;
-                                }
-                            }
-                            else
-                            {
-                                var hostAndPortMatch = GetHostnameAndPortRegex().Match(_pool.Url);
-                                var host = await Dns.GetHostAddressesAsync(hostAndPortMatch.Groups["hostname"].Value, connectionTimeoutTokenSource.Token);
-                                await _tcpClient.ConnectAsync(host, hostAndPortMatch.Groups.ContainsKey("port") ? int.Parse(hostAndPortMatch.Groups["port"].Value) : NetworkConstants.SeedNodePort, connectionTimeoutTokenSource.Token);
-                                
-                                using var httpClient = new HttpClient { DefaultRequestHeaders = { UserAgent = { ProductInfoHeaderValue.Parse(_pool.GetUserAgent()) } } };
-
-                                var json = JsonNode.Parse(await httpClient.GetStreamAsync($"{hostAndPortMatch.Groups["hostname"].Value}:{NetworkConstants.SeedNodeTokenPort}/{NetworkConstants.WalletTokenType}|{NetworkConstants.TokenCheckWalletAddressExist}|{_pool.Username}", connectionTimeoutTokenSource.Token));
-
-                                if (json?["result"]?.GetValue<string>().Equals(NetworkConstants.SendTokenCheckWalletAddressInvalid, StringComparison.Ordinal) ?? true)
-                                {
-                                    _tcpClient.Dispose();
-                                    Logger.PrintLoginFailed(_logger, _pool.Url, "Invalid wallet address.");
-                                    return;
-                                }
+                                _tcpClient.Dispose();
+                                Logger.PrintLoginFailed(_logger, _pool.Url, "Invalid wallet address.");
+                                continue;
                             }
                         }
-                        catch
+                        else
                         {
-                            _tcpClient.Dispose();
-                            Logger.PrintLoginFailed(_logger, _pool.Url, "Connect Timeout.");
-                            continue;
+                            var hostAndPortMatch = GetHostnameAndPortRegex().Match(_pool.Url);
+                            var host = await Dns.GetHostAddressesAsync(hostAndPortMatch.Groups["hostname"].Value, connectionTimeoutTokenSource.Token);
+                            await _tcpClient.ConnectAsync(host, hostAndPortMatch.Groups.ContainsKey("port") ? int.Parse(hostAndPortMatch.Groups["port"].Value) : NetworkConstants.SeedNodePort, connectionTimeoutTokenSource.Token);
+                                
+                            using var httpClient = new HttpClient { DefaultRequestHeaders = { UserAgent = { ProductInfoHeaderValue.Parse(_pool.GetUserAgent()) } } };
+
+                            var json = JsonNode.Parse(await httpClient.GetStreamAsync($"{hostAndPortMatch.Groups["hostname"].Value}:{NetworkConstants.SeedNodeTokenPort}/{NetworkConstants.WalletTokenType}|{NetworkConstants.TokenCheckWalletAddressExist}|{_pool.Username}", connectionTimeoutTokenSource.Token));
+
+                            if (json?["result"]?.GetValue<string>().Equals(NetworkConstants.SendTokenCheckWalletAddressInvalid, StringComparison.Ordinal) ?? true)
+                            {
+                                _tcpClient.Dispose();
+                                Logger.PrintLoginFailed(_logger, _pool.Url, "Invalid wallet address.");
+                                continue;
+                            }
                         }
                     }
+                    catch
+                    {
+                        _tcpClient.Dispose();
+                        Logger.PrintLoginFailed(_logger, _pool.Url, "Connect Timeout.");
+                        continue;
+                    }
+                }
 
-                    // Connected
-                    _poolRetryCount = 0;
-                    Interlocked.Exchange(ref _isNetworkConnected, 1);
-                    DoConnectionCertificate();
-                    break;
-                } while (IsNetworkActive && !IsNetworkConnected && ++_poolRetryCount > _options.MaxRetryCount);
-            } while (IsNetworkActive && !IsNetworkConnected);
+                // Connected
+                _poolRetryCount = 0;
+                Interlocked.Exchange(ref _isNetworkConnected, 1);
+                DoConnectionCertificate();
+            } while (IsNetworkActive && !IsNetworkConnected && ++_poolRetryCount < _options.MaxRetryCount);
         }
         finally
         {
-            _semaphoreSlim.Release();
+            _connectionSemaphoreSlim.Release();
         }
     }
 
@@ -228,7 +216,7 @@ public sealed partial class Network : IDisposable
 
         try
         {
-            await _semaphoreSlim.WaitAsync(cancellationTokenSource.Token);
+            await _connectionSemaphoreSlim.WaitAsync(cancellationTokenSource.Token);
             if (!IsNetworkActive || !IsNetworkConnected) return;
 
             _packetDataCollection?.CompleteAdding();
@@ -242,7 +230,7 @@ public sealed partial class Network : IDisposable
         }
         finally
         {
-            _semaphoreSlim.Release();
+            _connectionSemaphoreSlim.Release();
         }
     }
 
@@ -255,7 +243,7 @@ public sealed partial class Network : IDisposable
     [SkipLocalsInit]
     private void DoConnectionCertificate()
     {
-        Span<byte> certificate = stackalloc byte[NetworkConstants.NETWORK_GENESIS_SECONDARY_KEY.Length + NetworkConstants.MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE_ITEM];
+        Span<byte> certificate = stackalloc byte[NetworkConstants.NetworkGenesisSecondaryKey.Length + NetworkConstants.MajorUpdate1SecurityCertificateSizeItem];
         GenerateCertificate(certificate);
 
         var saltHex = Convert.ToHexString(certificate[..8]);
@@ -274,17 +262,17 @@ public sealed partial class Network : IDisposable
 
         SendPacketToNetwork(new PacketData(certificate, false));
 
-        SendPacketToNetwork(new PacketData($"{NetworkConstants.MinerLoginType}|{_pool!.Username}", true, (packet, time) =>
+        SendPacketToNetwork(new PacketData($"{NetworkConstants.MinerLoginType}|{_pool.Username}", true, (packet, time) =>
         {
             if (Encoding.ASCII.GetString(packet).Equals(NetworkConstants.SendLoginAccepted))
             {
-                Logger.PrintConnected(_logger, "SOLO", _pool.Url, time);
+                Logger.PrintConnected(_logger, "SOLO", _pool.Url, time.TotalMilliseconds);
                 GetNewBlockHeader();
             }
             else
             {
                 // Login failed, reconnect.
-                ReconnectAsync(CancellationToken.None);
+                ReconnectAsync(CancellationToken.None).GetAwaiter().GetResult();
             }
         }));
     }
@@ -297,7 +285,7 @@ public sealed partial class Network : IDisposable
             {
                 var packetHandler = _packetDataCollection!.Take(_networkActiveCts!.Token);
 
-                var timeoutTask = Task.Delay(TimeSpan.FromMilliseconds(_options.NetworkTimeoutDuration));
+                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(_options.NetworkTimeoutDuration));
                 var executeTask = Task.Run(() => packetHandler.Execute(_tcpClient!.GetStream(), _networkAesKey, _networkAesIv));
 
                 var completedTask = await Task.WhenAny(timeoutTask, executeTask);
@@ -324,25 +312,29 @@ public sealed partial class Network : IDisposable
 
     private void GetNewBlockHeader()
     {
-        SendPacketToNetwork(new PacketData(NetworkConstants.ReceiveAskCurrentBlockMining, true, (packet, _) =>
+        SendPacketToNetwork(new PacketData(NetworkConstants.ReceiveAskCurrentBlockMining, true, ReceiveBlockHeaderPacketHandler));
+    }
+
+    private void ReceiveBlockHeaderPacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime)
+    {
+        if (!UpdateBlockHeader(packet))
         {
-            if (!UpdateBlockHeader(packet))
-            {
-                ReconnectAsync(CancellationToken.None);
-                return;
-            }
+            ReconnectAsync(CancellationToken.None).GetAwaiter().GetResult();
+            return;
+        }
 
-            SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveAskContentBlockMethod}|{_blockMethod}", true, (innerPacket, _) =>
-            {
-                if (!UpdateBlockMethod(innerPacket))
-                {
-                    ReconnectAsync(CancellationToken.None);
-                    return;
-                }
+        SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveAskContentBlockMethod}|{_blockMethod}", true, ReceiveBlockMethodPacketHandler));
+    }
 
-                GetNewBlockHeader();
-            }));
-        }));
+    private void ReceiveBlockMethodPacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime)
+    {
+        if (!UpdateBlockMethod(packet))
+        {
+            ReconnectAsync(CancellationToken.None).GetAwaiter().GetResult();
+            return;
+        }
+
+        GetNewBlockHeader();
     }
 
     [SkipLocalsInit]
@@ -540,15 +532,15 @@ public sealed partial class Network : IDisposable
 
             AesRound = _blockAesRound
         };
-
-        HasNewBlock?.Invoke(in blockHeader);
-
+        
+        HasNewBlock?.Invoke(blockHeader);
+        
         return true;
     }
 
     public void Dispose()
     {
         _networkActiveCts?.Dispose();
-        _semaphoreSlim.Dispose();
+        _connectionSemaphoreSlim.Dispose();
     }
 }

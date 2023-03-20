@@ -8,7 +8,7 @@ using Xenorig.Utilities;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 
-public delegate void ReceivePacketHandler(ReadOnlySpan<byte> packet, double roundTripTime);
+public delegate void ReceivePacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime);
 
 public sealed class PacketData
 {
@@ -27,7 +27,7 @@ public sealed class PacketData
     {
         _packetBuffer = ArrayPool<byte>.Shared.Rent(packet.Length);
         _packetLength = packet.Length;
-        BufferUtility.MemoryCopy(packet, _packetBuffer.AsSpan(), packet.Length);
+        BufferUtility.MemoryCopy(packet, _packetBuffer, packet.Length);
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
@@ -93,7 +93,7 @@ public sealed class PacketData
             
             Span<byte> receivedPacket = stackalloc byte[networkStream.Socket.ReceiveBufferSize];
             var bytesRead = networkStream.Read(receivedPacket);
-            if (bytesRead < 0) return false;
+            if (bytesRead == 0) return false;
 
             ReadOnlySpan<byte> base64EncryptedPacket = receivedPacket[..bytesRead];
             if (base64EncryptedPacket[bytesRead - 1] != PaddingCharacter) return false;
@@ -108,7 +108,7 @@ public sealed class PacketData
             var bytesWritten = SymmetricAlgorithmUtility.Decrypt_AES_256_CFB_8(key, iv, encryptedPacket, decryptedPacket);
             if (bytesWritten == 0) return false;
 
-            _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], (DateTime.Now - executeTimestamp).TotalMilliseconds);
+            _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], DateTime.Now - executeTimestamp);
             return true;
         }
         catch

@@ -3,10 +3,10 @@
 public static class NetworkConstants
 {
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSetting" />
-    public const string NETWORK_GENESIS_SECONDARY_KEY = "XENOPHYTESEED";
+    public const string NetworkGenesisSecondaryKey = "XENOPHYTESEED";
 
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSetting" />
-    public const int MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE_ITEM = 256;
+    public const int MajorUpdate1SecurityCertificateSizeItem = 256;
 
     /// <see cref="Xenophyte_Connector_All.Setting.ClassConnectorSetting" />
     public const int SeedNodePort = 18000;

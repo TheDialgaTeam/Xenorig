@@ -12,7 +12,7 @@ using Xenorig.Utilities;
 
 namespace Xenorig;
 
-public class ConsoleService : BackgroundService
+public sealed class ConsoleService : BackgroundService
 {
     private readonly ILogger<ConsoleService> _logger;
     private readonly ILoggerFactory _loggerFactory;
@@ -106,7 +106,7 @@ public class ConsoleService : BackgroundService
         if (pools[0].Algorithm.Equals("Xiropht_Centralized_Solo", StringComparison.OrdinalIgnoreCase) ||
             pools[0].Algorithm.Equals("Xenophyte_Centralized_Solo", StringComparison.OrdinalIgnoreCase))
         {
-            return new XenophyteCentralizedAlgorithm(_loggerFactory.CreateLogger(nameof(XenophyteCentralizedAlgorithm)), _options, pools);
+            return new XenophyteCentralizedAlgorithm(_loggerFactory.CreateLogger(nameof(XenophyteCentralizedAlgorithm)), _options, pools[0]);
         }
 
         throw new NotImplementedException("Algorithm not implemented.");

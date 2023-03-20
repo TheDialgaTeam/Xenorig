@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace Xenorig.Utilities;
@@ -27,7 +26,7 @@ public static class RandomNumberGeneratorUtility
                 do
                 {
                     RandomNumberGenerator.Fill(span);
-                    result = (byte) (maxValue & span[0]);
+                    result = (byte) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -45,8 +44,8 @@ public static class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = (ushort) (maxValue & span[0]);
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = (ushort) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -65,8 +64,8 @@ public static class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = maxValue & span[0];
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = maxValue & span.GetRef(0);
                 } while (result > range);
 
                 return (int) result + minimumValue;
@@ -94,7 +93,7 @@ public static class RandomNumberGeneratorUtility
                 do
                 {
                     RandomNumberGenerator.Fill(span);
-                    result = (byte) (maxValue & span[0]);
+                    result = (byte) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -112,8 +111,8 @@ public static class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = (ushort) (maxValue & span[0]);
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = (ushort) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -132,8 +131,8 @@ public static class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = maxValue & span[0];
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = maxValue & span.GetRef(0);
                 } while (result > range);
 
                 return result + minimumValue;
@@ -153,8 +152,8 @@ public static class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = maxValue & span[0];
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = maxValue & span.GetRef(0);
                 } while (result > range);
 
                 return (long) result + minimumValue;

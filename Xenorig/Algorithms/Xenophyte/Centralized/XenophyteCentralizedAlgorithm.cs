@@ -36,11 +36,11 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
     private int TotalGoodBlocksSubmitted => _totalGoodEasyBlocksSubmitted + _totalGoodSemiRandomBlocksSubmitted + _totalGoodRandomBlocksSubmitted;
     private int TotalBadBlocksSubmitted => _totalBadEasyBlocksSubmitted + _totalBadSemiRandomBlocksSubmitted + _totalBadRandomBlocksSubmitted;
 
-    public XenophyteCentralizedAlgorithm(ILogger logger, XenorigOptions options, Pool[] pools)
+    public XenophyteCentralizedAlgorithm(ILogger logger, XenorigOptions options, Pool pool)
     {
         _logger = logger;
         _options = options;
-        _network = new Network(logger, options, pools);
+        _network = new Network(logger, options, pool);
     }
     
     public Task StartAsync(CancellationToken cancellationToken)

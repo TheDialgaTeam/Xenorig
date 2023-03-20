@@ -16,8 +16,8 @@ public readonly ref struct BlockHeader
 
     public required ReadOnlySpan<byte> XorKey { get; init; }
 
-    public required ReadOnlySpan<byte> AesIv { get; init; }
     public required ReadOnlySpan<byte> AesKey { get; init; }
-
+    public required ReadOnlySpan<byte> AesIv { get; init; }
+    
     public required int AesRound { get; init; }
 }

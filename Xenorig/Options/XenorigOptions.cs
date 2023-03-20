@@ -6,32 +6,32 @@ namespace Xenorig.Options;
 
 public sealed class XenorigOptions
 {
-    public int PrintSpeedDuration { get; set; } = 10;
+    public int PrintSpeedDuration { get; init; } = 10;
 
-    public int NetworkTimeoutDuration { get; set; } = 5;
+    public int NetworkTimeoutDuration { get; init; } = 5;
 
-    public int MaxRetryCount { get; set; } = 5;
+    public int MaxRetryCount { get; init; } = 5;
 
-    public int DonatePercentage { get; set; } = 0;
+    public int DonatePercentage { get; init; } = 0;
     
-    public Pool[] Pools { get; set; } = Array.Empty<Pool>();
+    public Pool[] Pools { get; init; } = Array.Empty<Pool>();
     
-    public XenophyteCentralizedSolo Xenophyte_Centralized_Solo { get; set; } = new();
+    public XenophyteCentralizedSolo Xenophyte_Centralized_Solo { get; init; } = new();
 }
 
 public sealed class Pool
 {
-    public string Algorithm { get; set; } = string.Empty;
+    public string Algorithm { get; init; } = string.Empty;
 
-    public string Coin { get; set; } = string.Empty;
+    public string Coin { get; init; } = string.Empty;
     
-    public string Url { get; set; } = string.Empty;
+    public string Url { get; init; } = string.Empty;
     
-    public string Username { get; set; } = string.Empty;
+    public string Username { get; init; } = string.Empty;
 
-    public string Password { get; set; } = string.Empty;
+    public string Password { get; init; } = string.Empty;
 
-    public string UserAgent { get; set; } = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
+    public string UserAgent { get; init; } = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
 
     public string GetUserAgent()
     {
@@ -41,16 +41,16 @@ public sealed class Pool
 
 public sealed class XenophyteCentralizedSolo
 {
-    public CpuMiner CpuMiner { get; set; } = new();
+    public CpuMiner CpuMiner { get; init; } = new();
 }
 
 public sealed class CpuMiner
 {
-    public int Threads { get; } = Environment.ProcessorCount;
+    public int Threads { get; init; } = Environment.ProcessorCount;
 
-    public ThreadPriority ThreadPriority { get; } = ThreadPriority.Normal;
+    public ThreadPriority ThreadPriority { get; init; } = ThreadPriority.Normal;
     
-    public CpuMinerThreadConfiguration[] ThreadConfigs { get; } = Array.Empty<CpuMinerThreadConfiguration>();
+    public CpuMinerThreadConfiguration[] ThreadConfigs { get; init; } = Array.Empty<CpuMinerThreadConfiguration>();
 
     public int GetNumberOfThreads()
     {
@@ -75,7 +75,7 @@ public sealed class CpuMiner
 
 public sealed class CpuMinerThreadConfiguration
 {
-    public ulong ThreadAffinity { get; set; }
+    public ulong ThreadAffinity { get; init; }
 
-    public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
+    public ThreadPriority ThreadPriority { get; init; } = ThreadPriority.Normal;
 }
