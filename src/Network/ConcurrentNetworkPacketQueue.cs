@@ -4,11 +4,11 @@ using System.Threading;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Network
 {
-    public class ConcurrentNetworkPacketQueue : IDisposable
+    public sealed class ConcurrentNetworkPacketQueue : IDisposable
     {
-        private readonly BlockingCollection<PacketToSend> _loginBlockingCollection = new BlockingCollection<PacketToSend>();
-        private readonly BlockingCollection<PacketToSend> _submitBlockBlockingCollection = new BlockingCollection<PacketToSend>();
-        private readonly BlockingCollection<PacketToSend> _receiveBlockBlockingCollection = new BlockingCollection<PacketToSend>();
+        private readonly BlockingCollection<PacketToSend> _loginBlockingCollection = new();
+        private readonly BlockingCollection<PacketToSend> _submitBlockBlockingCollection = new();
+        private readonly BlockingCollection<PacketToSend> _receiveBlockBlockingCollection = new();
 
         private readonly BlockingCollection<PacketToSend>[] _blockingCollections = new BlockingCollection<PacketToSend>[3];
 

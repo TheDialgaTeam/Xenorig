@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
-namespace TheDialgaTeam.Xiropht.Xirorig.Miner;
+namespace TheDialgaTeam.Xiropht.Xirorig.Utilities;
 
-internal class RandomNumberGeneratorUtility
+public static class RandomNumberGeneratorUtility
 {
-    public static unsafe int GetRandomBetween(int minimumValue, int maximumValue)
+    [SkipLocalsInit]
+    public static int GetRandomBetween(int minimumValue, int maximumValue)
     {
         var range = (uint) (maximumValue - minimumValue);
         if (range == 0) return minimumValue;
@@ -25,7 +26,7 @@ internal class RandomNumberGeneratorUtility
                 do
                 {
                     RandomNumberGenerator.Fill(span);
-                    result = (byte) (maxValue & span[0]);
+                    result = (byte) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -43,8 +44,8 @@ internal class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = (ushort) (maxValue & span[0]);
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = (ushort) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -63,8 +64,8 @@ internal class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = maxValue & span[0];
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = maxValue & span.GetRef(0);
                 } while (result > range);
 
                 return (int) result + minimumValue;
@@ -72,7 +73,8 @@ internal class RandomNumberGeneratorUtility
         }
     }
 
-    public static unsafe long GetRandomBetween(long minimumValue, long maximumValue)
+    [SkipLocalsInit]
+    public static long GetRandomBetween(long minimumValue, long maximumValue)
     {
         var range = (ulong) (maximumValue - minimumValue);
         if (range == 0) return minimumValue;
@@ -91,7 +93,7 @@ internal class RandomNumberGeneratorUtility
                 do
                 {
                     RandomNumberGenerator.Fill(span);
-                    result = (byte) (maxValue & span[0]);
+                    result = (byte) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -109,8 +111,8 @@ internal class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = (ushort) (maxValue & span[0]);
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = (ushort) (maxValue & span.GetRef(0));
                 } while (result > range);
 
                 return result + minimumValue;
@@ -129,8 +131,8 @@ internal class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = maxValue & span[0];
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = maxValue & span.GetRef(0);
                 } while (result > range);
 
                 return result + minimumValue;
@@ -150,8 +152,8 @@ internal class RandomNumberGeneratorUtility
 
                 do
                 {
-                    RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(span));
-                    result = maxValue & span[0];
+                    RandomNumberGenerator.Fill(span.AsBytes());
+                    result = maxValue & span.GetRef(0);
                 } while (result > range);
 
                 return (long) result + minimumValue;

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Buffers;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -23,7 +25,7 @@ public static class MiningUtility
         var outputLength = valueLength * 2;
         var output = sharedArrayPool.Rent(outputLength);
 
-        fixed (char* base16CharRepresentationPtr = Base16CharRepresentation, xorKeyPtr = xorKey)
+        fixed (char* xorKeyPtr = xorKey)
         fixed (byte* base16ByteRepresentationPtr = Base16ByteRepresentation)
         {
             var xorKeyIndex = 0;

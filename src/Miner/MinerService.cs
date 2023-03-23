@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -9,16 +9,17 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Xiropht.Xirorig.Config;
 using TheDialgaTeam.Xiropht.Xirorig.Network;
+using TheDialgaTeam.Xiropht.Xirorig.Utilities;
 using Xenophyte_Connector_All.SoloMining;
 using Timer = System.Timers.Timer;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 {
-    public class MinerHostedService : IHostedService, IDisposable
+    public class MinerService : BackgroundService
     {
         private readonly XirorigConfiguration _xirorigConfiguration;
         private readonly XirorigToSeedNetwork _xirorigToSeedNetwork;
-        private readonly ILogger<MinerHostedService> _logger;
+        private readonly ILogger<MinerService> _logger;
         
         private readonly CpuSoloMiner[] _cpuSoloMiners;
 
@@ -41,6 +42,10 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
         private readonly long[] _averageHashCalculatedIn60Seconds;
         private readonly long[] _averageHashCalculatedIn15Minutes;
 
+        private long _totalAverageHashCalculatedIn10Seconds;
+        private long _totalAverageHashCalculatedIn60Seconds;
+        private long _totalAverageHashCalculatedIn15Minutes;
+
         private decimal _maxHash;
 
         private Timer? _averageHashCalculatedIn10SecondsTimer;
@@ -54,7 +59,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
 
         private long TotalBadBlocksSubmitted => _totalBadEasyBlocksSubmitted + _totalBadSemiRandomBlocksSubmitted + _totalBadRandomBlocksSubmitted;
 
-        public MinerHostedService(XirorigConfiguration xirorigConfiguration, XirorigToSeedNetwork xirorigToSeedNetwork, ILogger<MinerHostedService> logger)
+        public MinerService(XirorigConfiguration xirorigConfiguration, XirorigToSeedNetwork xirorigToSeedNetwork, ILogger<MinerService> logger)
         {
             _xirorigConfiguration = xirorigConfiguration;
             _xirorigToSeedNetwork = xirorigToSeedNetwork;
@@ -66,11 +71,74 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             _averageHashCalculatedIn15Minutes = new long[xirorigConfiguration.MinerThreadConfigurations.Length];
         }
 
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            Console.Title = $"{ApplicationUtility.Name} v{ApplicationUtility.Version} ({ApplicationUtility.FrameworkVersion})";
+
+            Logger.PrintAbout(_logger, "About", ApplicationUtility.Name, ApplicationUtility.Version, ApplicationUtility.FrameworkVersion);
+            //Logger.PrintCpu(_logger, "CPU", CpuInformationUtility.ProcessorName, CpuInformationUtility.ProcessorInstructionSetsSupported);
+            //Logger.PrintCpuCont(_logger, string.Empty, CpuInformationUtility.ProcessorL2Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorL3Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorCoreCount, CpuInformationUtility.ProcessorThreadCount);
+            //Logger.PrintDonatePercentage(_logger, "DONATE", _options.DonatePercentage);
+            Logger.PrintCommand(_logger, "COMMANDS");
+            
+            _xirorigToSeedNetwork.Disconnected += XirorigToSeedNetworkOnDisconnected;
+            _xirorigToSeedNetwork.LoginResult += XirorigToSeedNetworkOnLoginResult;
+            _xirorigToSeedNetwork.NewJob += XirorigToSeedNetworkOnNewJob;
+            _xirorigToSeedNetwork.BlockResult += XirorigToSeedNetworkOnBlockResult;
+
+            var minerThreadConfigurations = _xirorigConfiguration.MinerThreadConfigurations;
+
+            for (var i = 0; i < minerThreadConfigurations.Length; i++)
+            {
+                var cpuSoloMiner = new CpuSoloMiner(minerThreadConfigurations[i], i, minerThreadConfigurations.Length);
+                cpuSoloMiner.Log += CpuSoloMinerOnLog;
+                cpuSoloMiner.BlockFound += CpuSoloMinerOnBlockFound;
+                cpuSoloMiner.StartMining();
+
+                _cpuSoloMiners[i] = cpuSoloMiner;
+            }
+
+            await _xirorigToSeedNetwork.StartAsync(stoppingToken).ConfigureAwait(false);
+            
+            //_logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m \u001b[32;1mREADY (CPU)\u001b[0m threads \u001b[36;1m{threadCount}\u001b[0m", DateTimeOffset.Now, minerThreadConfigurations.Length);
+
+            _averageHashCalculatedIn10SecondsTimer = new Timer { Enabled = true, AutoReset = true, Interval = TimeSpan.FromSeconds(10).TotalMilliseconds };
+            _averageHashCalculatedIn60SecondsTimer = new Timer { Enabled = true, AutoReset = true, Interval = TimeSpan.FromSeconds(60).TotalMilliseconds };
+            _averageHashCalculatedIn15MinutesTimer = new Timer { Enabled = true, AutoReset = true, Interval = TimeSpan.FromMinutes(15).TotalMilliseconds };
+            _totalAverageHashCalculatedTimer = new Timer { Enabled = true, AutoReset = true, Interval = TimeSpan.FromSeconds(_xirorigConfiguration.PrintTime).TotalMilliseconds };
+
+            _averageHashCalculatedIn10SecondsTimer.Elapsed += AverageHashCalculatedIn10SecondsTimerOnElapsed;
+            _averageHashCalculatedIn60SecondsTimer.Elapsed += AverageHashCalculatedIn60SecondsTimerOnElapsed;
+            _averageHashCalculatedIn15MinutesTimer.Elapsed += AverageHashCalculatedIn15MinutesTimerOnElapsed;
+            _totalAverageHashCalculatedTimer.Elapsed += TotalAverageHashCalculatedTimerOnElapsed;
+            
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var readKeyTask = Task.Factory.StartNew(() => Console.ReadKey(true), stoppingToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
+                var taskCompleted = await Task.WhenAny(readKeyTask, Task.Delay(Timeout.Infinite, stoppingToken)).ConfigureAwait(false);
+                if (taskCompleted != readKeyTask) return;
+
+                var keyPressed = await readKeyTask.ConfigureAwait(false);
+
+                switch (keyPressed.Key)
+                {
+                    case ConsoleKey.H:
+                        break;
+
+                    case ConsoleKey.S:
+                        break;
+
+                    case ConsoleKey.J:
+                        break;
+                }
+            }
+        }
+
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _consoleOutputTask = Task.Factory.StartNew(async state =>
             {
-                if (state is not (MinerHostedService minerHostedService, CancellationToken cancellationTokenState)) return;
+                if (state is not (MinerService minerHostedService, CancellationToken cancellationTokenState)) return;
 
                 var cpuSoloMiners = minerHostedService._cpuSoloMiners;
                 var threadCount = cpuSoloMiners.Length;
@@ -151,7 +219,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             _totalAverageHashCalculatedTimer.Elapsed += TotalAverageHashCalculatedTimerOnElapsed;
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             await _xirorigToSeedNetwork.StopAsync().ConfigureAwait(false);
 
@@ -176,6 +244,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
             _averageHashCalculatedIn60SecondsTimer!.Elapsed -= AverageHashCalculatedIn60SecondsTimerOnElapsed;
             _averageHashCalculatedIn15MinutesTimer!.Elapsed -= AverageHashCalculatedIn15MinutesTimerOnElapsed;
             _totalAverageHashCalculatedTimer.Elapsed -= TotalAverageHashCalculatedTimerOnElapsed;
+
+            await base.StopAsync(cancellationToken).ConfigureAwait(false);
         }
 
         private void XirorigToSeedNetworkOnDisconnected(string arg)
@@ -273,6 +343,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                 averageHashCalculatedIn10Seconds[i] = (long) (cpuSoloMiner.TotalHashCalculatedIn10Seconds / 10.0m);
                 cpuSoloMiner.TotalHashCalculatedIn10Seconds = 0;
             }
+
+            _totalAverageHashCalculatedIn10Seconds = averageHashCalculatedIn10Seconds.Sum();
         }
 
         private void AverageHashCalculatedIn60SecondsTimerOnElapsed(object sender, ElapsedEventArgs e)
@@ -287,6 +359,8 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                 averageHashCalculatedIn60Seconds[i] = (long) (cpuSoloMiner.TotalHashCalculatedIn60Seconds / 60.0m);
                 cpuSoloMiner.TotalHashCalculatedIn60Seconds = 0;
             }
+
+            _totalAverageHashCalculatedIn60Seconds = averageHashCalculatedIn60Seconds.Sum();
         }
 
         private void AverageHashCalculatedIn15MinutesTimerOnElapsed(object sender, ElapsedEventArgs e)
@@ -301,29 +375,25 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Miner
                 averageHashCalculatedIn15Minutes[i] = (long) (cpuSoloMiner.TotalHashCalculatedIn15Minutes / 900.0m);
                 cpuSoloMiner.TotalHashCalculatedIn15Minutes = 0;
             }
+
+            _totalAverageHashCalculatedIn15Minutes = averageHashCalculatedIn15Minutes.Sum();
         }
 
         private void TotalAverageHashCalculatedTimerOnElapsed(object sender, ElapsedEventArgs e)
         {
-            decimal average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
-            var threadCount = _cpuSoloMiners.Length;
-
-            for (var i = 0; i < threadCount; i++)
-            {
-                average10SecondsSum += _averageHashCalculatedIn10Seconds[i];
-                average60SecondsSum += _averageHashCalculatedIn60Seconds[i];
-                average15MinutesSum += _averageHashCalculatedIn15Minutes[i];
-            }
-
-            _maxHash = Math.Max(_maxHash, average10SecondsSum);
-            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m speed 10s/60s/15m \u001b[36;1m{average10SecondsSum:F0}\u001b[0m \u001b[36m{average60SecondsSum:F0} {average15MinutesSum:F0}\u001b[0m \u001b[36;1mH/s\u001b[0m max \u001b[36;1m{maxHash:F0}\u001b[0m", DateTimeOffset.Now, average10SecondsSum, average60SecondsSum, average15MinutesSum, _maxHash);
+            _maxHash = Math.Max(_maxHash, _totalAverageHashCalculatedIn10Seconds);
+            _logger.LogInformation("\u001b[30;1m{timestamp:yyyy-MM-dd HH:mm:ss}\u001b[0m speed 10s/60s/15m \u001b[36;1m{average10SecondsSum:F0}\u001b[0m \u001b[36m{average60SecondsSum:F0} {average15MinutesSum:F0}\u001b[0m \u001b[36;1mH/s\u001b[0m max \u001b[36;1m{maxHash:F0}\u001b[0m", DateTimeOffset.Now, _totalAverageHashCalculatedIn10Seconds, _totalAverageHashCalculatedIn60Seconds, _totalAverageHashCalculatedIn15Minutes, _maxHash);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            GC.SuppressFinalize(this);
+            
             _averageHashCalculatedIn10SecondsTimer?.Dispose();
             _averageHashCalculatedIn60SecondsTimer?.Dispose();
             _averageHashCalculatedIn15MinutesTimer?.Dispose();
+            
+            base.Dispose();
         }
     }
 }

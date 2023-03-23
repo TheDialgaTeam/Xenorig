@@ -34,7 +34,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Config
 
                 foreach (var defaultSeedNodeIpAddress in defaultSeedNodeIpAddresses)
                 {
-                    seedNodeIpAddresses.Add(defaultSeedNodeIpAddress.ToString());
+                    seedNodeIpAddresses.Add(defaultSeedNodeIpAddress);
                 }
             }
 

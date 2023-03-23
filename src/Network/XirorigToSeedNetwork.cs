@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -16,36 +15,39 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using TheDialgaTeam.Xiropht.Xirorig.Config;
+using TheDialgaTeam.Xiropht.Xirorig.Utilities;
 using Xenophyte_Connector_All.RPC;
 using Xenophyte_Connector_All.Setting;
 using Xenophyte_Connector_All.SoloMining;
 using Xenophyte_Connector_All.Utils;
+using Aes = System.Security.Cryptography.Aes;
 
 namespace TheDialgaTeam.Xiropht.Xirorig.Network
 {
-    public class XirorigToSeedNetwork : IDisposable
+    public sealed class XirorigToSeedNetwork : IDisposable
     {
         public event Action<string>? Disconnected;
         public event Action<string, bool>? LoginResult;
         public event Action<string, JObject>? NewJob;
         public event Action<bool, string, string>? BlockResult;
 
+        private static readonly byte[] CertificateSupportedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&~#@\'(\\)="u8.ToArray();
+        
         private readonly ILogger<XirorigToSeedNetwork> _logger;
-
+        
         private string[] _seedNodeIpAddresses;
         private int _seedNodeIpAddressIndex;
         private int _seedNodeIpAddressRetryCount;
-
-        private readonly object _isActiveLock = new object();
-        private readonly object _connectionStatusLock = new object();
-        private readonly object _lastValidPacketDateTimeOffsetLock = new object();
-
-        private bool _isActive;
+        
+        private readonly object _connectionStatusLock = new();
+        private readonly object _lastValidPacketDateTimeOffsetLock = new();
+        
+        private int _isNetworkActive;
+        private int _isNetworkConnected;
         private ConnectionStatus _connectionStatus = ConnectionStatus.Disconnected;
         private DateTimeOffset _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
-
-        private CancellationTokenSource? _cancellationTokenSource;
-        private CancellationTokenSource? _linkedCancellationTokenSource;
+        
+        private CancellationTokenSource? _networkActiveCancellationTokenSource;
 
         private TcpClient? _tcpClient;
         private StreamReader? _tcpClientReader;
@@ -66,7 +68,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         private Task? _readPacketFromNetworkTask;
         private Task? _writePacketToNetworkTask;
 
-        private readonly ConcurrentNetworkPacketQueue _concurrentNetworkPacketQueue = new ConcurrentNetworkPacketQueue();
+        private readonly ConcurrentNetworkPacketQueue _concurrentNetworkPacketQueue = new();
 
         public XirorigToSeedNetwork(XirorigConfiguration xirorigConfiguration, ILogger<XirorigToSeedNetwork> logger)
         {
@@ -77,11 +79,9 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
             _connectionCertificate = ClassUtils.GenerateCertificate();
 
-            using var password = new PasswordDeriveBytes(_connectionCertificate, Encoding.UTF8.GetBytes(ClassUtils.FromHex(_connectionCertificate.Substring(0, 8))));
-#pragma warning disable 618
+            using var password = new PasswordDeriveBytes(_connectionCertificate, Encoding.UTF8.GetBytes(Convert.ToHexString(Encoding.ASCII.GetBytes(_connectionCertificate[..8]))));
             var aesIvCertificate = password.GetBytes(ClassConnectorSetting.MAJOR_UPDATE_1_SECURITY_CERTIFICATE_SIZE / 8);
             var aesSaltCertificate = password.GetBytes(16);
-#pragma warning restore 618
 
             var aes = Aes.Create();
             aes.Mode = CipherMode.CFB;
@@ -94,97 +94,61 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             _aesDecryptor = aes.CreateDecryptor(aesIvCertificate, aesSaltCertificate);
             _aes = aes;
         }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
+        
+        private static void GenerateCertificate(Span<byte> output)
         {
-            lock (_isActiveLock)
+            var index = Encoding.ASCII.GetBytes(NetworkConstants.NetworkGenesisSecondaryKey, output);
+            var upperbound = CertificateSupportedCharacters.Length - 1;
+
+            for (var i = NetworkConstants.MajorUpdate1SecurityCertificateSizeItem - 1; i >= 0; i--)
             {
-                if (_isActive) return;
-                _isActive = true;
+                output.GetRef(index + i) = CertificateSupportedCharacters.GetRef(RandomNumberGeneratorUtility.GetRandomBetween(0, upperbound));
             }
+        }
 
-            var cancellationTokenSource = new CancellationTokenSource();
-            _cancellationTokenSource = cancellationTokenSource;
-            _linkedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationTokenSource.Token);
-
-            var seedNodeIpAddressesPing = new Dictionary<string, long>();
-
-            using (var ping = new Ping())
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            if (Interlocked.CompareExchange(ref _isNetworkActive, 1, 0) == 1)
             {
-                var seedNodeIpAddresses = _seedNodeIpAddresses;
-
-                foreach (var seedNodeIpAddress in seedNodeIpAddresses)
+                return Task.CompletedTask;
+            }
+            
+            _networkActiveCancellationTokenSource?.Dispose();
+            _networkActiveCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            
+            _checkConnectionNetworkTask = Task.Factory.StartNew(async () =>
+            {
+                while (_isNetworkActive == 1)
                 {
-                    try
+                    if (_connectionStatus == ConnectionStatus.Disconnected)
                     {
-                        var result = await ping.SendPingAsync(seedNodeIpAddress).ConfigureAwait(false);
-
-                        if (result.Status == IPStatus.Success)
-                        {
-                            seedNodeIpAddressesPing.Add(seedNodeIpAddress, result.RoundtripTime);
-                        }
-                    }
-                    catch (PingException)
-                    {
-                        seedNodeIpAddressesPing.Add(seedNodeIpAddress, -1);
-                    }
-                }
-            }
-
-            var sortedSeedNodeIpAddressesPing = seedNodeIpAddressesPing.OrderBy(a => a.Value);
-            var newSeedNodeIpAddresses = new List<string>();
-            var index = 1;
-
-            foreach (var (ipAddress, ping) in sortedSeedNodeIpAddressesPing)
-            {
-                if (ping == -1) continue;
-
-                newSeedNodeIpAddresses.Add(ipAddress);
-                _logger.LogInformation(" \u001b[32;1m*\u001b[0m SOLO #{index,-7:l}\u001b[36;1m{nodeIp:l}\u001b[0m ({nodePing}ms)", index.ToString(), ipAddress, ping);
-                index++;
-            }
-
-            _seedNodeIpAddresses = newSeedNodeIpAddresses.ToArray();
-
-            var linkedCancellationToken = _linkedCancellationTokenSource.Token;
-
-            _checkConnectionNetworkTask = Task.Factory.StartNew(async state =>
-            {
-                if (state is not (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState)) return;
-
-                while (xirorigToSeedNetwork._isActive)
-                {
-                    if (xirorigToSeedNetwork._connectionStatus == ConnectionStatus.Disconnected)
-                    {
-                        await xirorigToSeedNetwork.ConnectToSeedNetworkAsync().ConfigureAwait(false);
+                        await ConnectToSeedNetworkAsync().ConfigureAwait(false);
                     }
 
                     try
                     {
-                        await Task.Delay(1, cancellationTokenState).ConfigureAwait(false);
+                        await Task.Delay(1, _networkActiveCancellationTokenSource.Token).ConfigureAwait(false);
                     }
                     catch (TaskCanceledException)
                     {
                     }
                 }
-            }, (this, linkedCancellationToken), linkedCancellationToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
+            }, _networkActiveCancellationTokenSource.Token, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default).Unwrap();
+            
+            return Task.CompletedTask;
         }
 
         public async Task StopAsync()
         {
-            lock (_isActiveLock)
+            if (Interlocked.CompareExchange(ref _isNetworkActive, 0, 1) == 0)
             {
-                if (!_isActive) return;
-                _isActive = false;
+                return;
             }
 
-            _cancellationTokenSource!.Cancel();
-            _cancellationTokenSource!.Dispose();
-            _linkedCancellationTokenSource!.Dispose();
-
-            _cancellationTokenSource = null;
-            _linkedCancellationTokenSource = null;
-
+            Debug.Assert(_networkActiveCancellationTokenSource != null, nameof(_networkActiveCancellationTokenSource) + " != null");
+            
+            _networkActiveCancellationTokenSource.Cancel();
+            
             if (_checkConnectionNetworkTask != null)
             {
                 await _checkConnectionNetworkTask.ConfigureAwait(false);
@@ -211,8 +175,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         {
             lock (_connectionStatusLock)
             {
-                var connectionStatus = _connectionStatus;
-                if (connectionStatus == ConnectionStatus.Disconnecting || connectionStatus == ConnectionStatus.Disconnected) return;
+                if (_connectionStatus is ConnectionStatus.Disconnecting or ConnectionStatus.Disconnected) return;
             }
 
             _concurrentNetworkPacketQueue.Enqueue(packet, isEncrypted, packetType);
@@ -222,8 +185,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         {
             lock (_connectionStatusLock)
             {
-                var connectionStatus = _connectionStatus;
-                if (connectionStatus is ConnectionStatus.Connecting or ConnectionStatus.Connected) return;
+                if (_connectionStatus is ConnectionStatus.Connecting or ConnectionStatus.Connected) return;
                 _connectionStatus = ConnectionStatus.Connecting;
             }
 
@@ -233,7 +195,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
             }
 
             var seedNodeIpAddress = _seedNodeIpAddresses[_seedNodeIpAddressIndex];
-            var linkedCancellationToken = _linkedCancellationTokenSource!.Token;
+            var linkedCancellationToken = _networkActiveCancellationTokenSource!.Token;
 
             try
             {
@@ -302,8 +264,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
         {
             lock (_connectionStatusLock)
             {
-                var connectionStatus = _connectionStatus;
-                if (connectionStatus == ConnectionStatus.Disconnecting || connectionStatus == ConnectionStatus.Disconnected) return;
+                if (_connectionStatus is ConnectionStatus.Disconnecting or ConnectionStatus.Disconnected) return;
                 _connectionStatus = ConnectionStatus.Disconnecting;
             }
 
@@ -334,7 +295,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
                 _lastValidPacketDateTimeOffset = DateTimeOffset.Now;
             }
 
-            var cancellationToken = _linkedCancellationTokenSource!.Token;
+            var cancellationToken = _networkActiveCancellationTokenSource!.Token;
 
             if (_readPacketFromNetworkTask != null)
             {
@@ -531,16 +492,16 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
         private void StartSendingPacketToNetwork()
         {
-            var cancellationToken = _linkedCancellationTokenSource!.Token;
+            var cancellationToken = _networkActiveCancellationTokenSource!.Token;
             if (_writePacketToNetworkTask != null) return;
 
             _writePacketToNetworkTask = Task.Factory.StartNew(async state =>
             {
-                if (!(state is (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState))) return;
+                if (state is not (XirorigToSeedNetwork xirorigToSeedNetwork, CancellationToken cancellationTokenState)) return;
 
                 var concurrentNetworkPacketQueue = xirorigToSeedNetwork._concurrentNetworkPacketQueue;
 
-                while (xirorigToSeedNetwork._isActive)
+                while (_isNetworkActive == 1)
                 {
                     await xirorigToSeedNetwork.SendPacketToNetworkAsync(concurrentNetworkPacketQueue.Dequeue(cancellationTokenState)).ConfigureAwait(false);
                 }
@@ -595,8 +556,7 @@ namespace TheDialgaTeam.Xiropht.Xirorig.Network
 
         public void Dispose()
         {
-            _cancellationTokenSource?.Dispose();
-            _linkedCancellationTokenSource?.Dispose();
+            _networkActiveCancellationTokenSource?.Dispose();
             _tcpClient?.Dispose();
             _tcpClientReader?.Dispose();
             _tcpClientWriter?.Dispose();
