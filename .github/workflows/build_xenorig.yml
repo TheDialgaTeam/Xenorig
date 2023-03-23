@@ -230,7 +230,8 @@ jobs:
       - name: Build Xenorig
         run: |
           $output = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_PUBLISH_ROOT }}" "${{ matrix.output_folder }}"
-          Invoke-Expression "dotnet publish --runtime ${{ matrix.Xenorig.arch }} -o `"$output`""
+          $csproj_file = Join-Path "${{ github.workspace }}" "${{ env.XENORIG_CSPROJ_FILE }}"
+          Invoke-Expression "dotnet publish --runtime ${{ matrix.Xenorig.arch }} -o `"$output`" `"$csproj_file`""
 
       - name: Package Xenorig
         run: |
