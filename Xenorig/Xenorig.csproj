@@ -57,7 +57,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Logo.ico"/>
+        <Content Include="Logo.ico" />
 
         <Content Include="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -65,10 +65,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
-        <PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.8.0"/>
+        <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+        <PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.8.0" />
 
-        <TrimmerRootDescriptor Include="ILLink.Descriptors.xml"/>
+        <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(RuntimeIdentifier)'==''">
@@ -78,10 +79,10 @@
     </ItemGroup>
 
     <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
-        <DirectPInvoke Include="kernel32"/>
-        <DirectPInvoke Include="xeno_native"/>
+        <DirectPInvoke Include="kernel32" />
+        <DirectPInvoke Include="xeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.dll.a"/>
+        <NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.dll.a" />
 
         <Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="libxeno_native.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -107,10 +108,10 @@
     </ItemGroup>
 
     <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
-        <DirectPInvoke Include="libc"/>
-        <DirectPInvoke Include="libxeno_native"/>
+        <DirectPInvoke Include="libc" />
+        <DirectPInvoke Include="libxeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a"/>
+        <NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a" />
 
         <Content Include="..\XenoLibNative\build\install\lib\libxeno_native.so.1.0.0" Link="libxeno_native.so">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -130,9 +131,9 @@
     </ItemGroup>
 
     <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
-        <DirectPInvoke Include="libxeno_native"/>
+        <DirectPInvoke Include="libxeno_native" />
 
-        <NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a"/>
+        <NativeLibrary Include="..\XenoLibNative\build\install\lib\libxeno_native.a" />
 
         <Content Include="..\XenoLibNative\build\install\lib\libxeno_native.1.0.0.dylib" Link="libxeno_native.dylib">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

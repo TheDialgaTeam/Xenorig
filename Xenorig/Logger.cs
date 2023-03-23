@@ -48,10 +48,10 @@ public static partial class Logger
     public static partial void PrintBlockFound(ILogger logger, int threadId, string jobType, long firstNumber, char operatorSymbol, long secondNumber, long result);
 
     [LoggerMessage(EventId = 14, Level = LogLevel.Information, Message = $"{GreenForegroundColor}accepted {Reset}({{goodTotal}}/{{badTotal}}) {GrayForegroundColor}({{ping}} ms){Reset}")]
-    public static partial void PrintBlockAcceptResult(ILogger logger, ulong goodTotal, ulong badTotal, double ping);
+    public static partial void PrintBlockAcceptResult(ILogger logger, int goodTotal, int badTotal, double ping);
 
     [LoggerMessage(EventId = 15, Level = LogLevel.Information, Message = $"{RedForegroundColor}rejected {Reset}({{goodTotal}}/{{badTotal}}) - {{reason}} {GrayForegroundColor}({{ping}} ms){Reset}")]
-    public static partial void PrintBlockRejectResult(ILogger logger, ulong goodTotal, ulong badTotal, string reason, double ping);
+    public static partial void PrintBlockRejectResult(ILogger logger, int goodTotal, int badTotal, string reason, double ping);
 
     [LoggerMessage(EventId = 16, Level = LogLevel.Information, Message = $"{WhiteForegroundColor}speed {DarkGrayForegroundColor}10s/60s/15m {CyanForegroundColor}{{average10SecondsSum:F1}} {BlueForegroundColor}{{average60SecondsSum:F1}} {{average15MinutesSum:F1}} {CyanForegroundColor}H/s {DarkGrayForegroundColor}max {CyanForegroundColor}{{maxHash:F1}}{Reset}")]
     public static partial void PrintCpuMinerSpeed(ILogger logger, double average10SecondsSum, double average60SecondsSum, double average15MinutesSum, double maxHash);
@@ -70,4 +70,7 @@ public static partial class Logger
 
     [LoggerMessage(EventId = 21, Level = LogLevel.Information, Message = "| {threadId,-6} | {hash,-9:F1} | {hash2,-9:F1} | {hash3,-9:F1} |")]
     public static partial void PrintCpuMinerSpeedBreakdown(ILogger logger, int threadId, double hash, double hash2, double hash3);
+    
+    [LoggerMessage(EventId = 22, Level = LogLevel.Information, Message = $"{BlueForegroundColor}Thread: {{threadId,-2}} | Thread has finished all the possible combinations.{Reset}")]
+    public static partial void PrintCurrentThreadJobDone(ILogger logger, int threadId);
 }

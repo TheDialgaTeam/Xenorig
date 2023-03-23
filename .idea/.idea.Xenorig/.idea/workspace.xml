@@ -16,28 +16,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="77afc266-8f2a-4519-80f7-e6a5eda0ffa1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Xenorig/ILLink.Descriptors.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Xenorig/Utilities/UnsafeUtility.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Xenorig/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Utilities/MessageDigestUtility.c" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Utilities/MessageDigestUtility.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Utilities/MessageDigestUtility.h" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Utilities/MessageDigestUtility.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Utilities/SymmetricAlgorithmUtility.c" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Utilities/SymmetricAlgorithmUtility.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Utilities/SymmetricAlgorithmUtility.h" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Utilities/SymmetricAlgorithmUtility.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.c" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/XenoLibNative/src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.h" beforeDir="false" afterPath="$PROJECT_DIR$/XenoLibNative/src/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/CpuMiner.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/JobTemplate.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Miner/JobTemplate.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/BlockHeader.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/BlockHeader.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/Network.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/Network.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/NetworkConstants.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/NetworkConstants.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/PacketData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/Networking/PacketData.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Algorithms/Xenophyte/Centralized/XenophyteCentralizedAlgorithm.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/ConsoleService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/ConsoleService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/Logger.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Logger.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Options/XenorigOptions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/Base64Utility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/Base64Utility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/BufferUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/BufferUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/KeyDerivationFunction/PBKDF1.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/MessageDigestUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/MessageDigestUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/RandomNumberGeneratorUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/RandomNumberGeneratorUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/SymmetricAlgorithmUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/SymmetricAlgorithmUtility.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Xenorig/Utilities/UnsafeUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Utilities/UnsafeUtility.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/Xenorig.csproj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Xenorig/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/Xenorig/appsettings.json" afterDir="false" />
     </list>
@@ -76,6 +67,7 @@
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/55018ac292de4a5d8a5d331470632c3030400/38/2248eba5/0200001BLow.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/5e03bbe6e75346da9c743176975885213a200/53/6c0e9a35/0200001Fpdb5Low.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/70f617fc68cf47c4af27e06f2b56f801b1c8a8/d5/763582b1/020005D5pdb817Low.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/8fd823e533de462382d4ae6325292edb100a8/01/dbd81006/02000013pdb8.il" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/9d84ca4646a34de3be0723a159cc6d7638400/5d/a5af50a1/0200001Cpdb7High.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/9d84ca4646a34de3be0723a159cc6d7638400/5d/a5af50a1/0200001Cpdb7Low.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/cae1bed165eb4055bf02a8159bbc7f5a31200/98/6079cf3d/02000011High.cs" root0="SKIP_HIGHLIGHTING" />
@@ -83,8 +75,18 @@
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/d642c3b39389443794ab5b92868d3e7630a00/04/3e459e1c/0200000FHigh.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/d642c3b39389443794ab5b92868d3e7630a00/04/3e459e1c/0200000FLow.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/ILViewer/d9de8a2797e946de97ebf34e233ec92f31000/bd/741b84b7/02000011High.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/06e6b5e410594922af54f5731fb38a29b1c8b0/a9/60461525/Action`1.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/2a/6c3f165c/LoggerTemplateFormatterOptions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/59/3169a769/LoggerTemplateExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/89/459ddad9/LoggerTemplateEntry.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/8b/9d65f28d/MessageTemplate.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/ac/a70f064f/MessageFormattingBuilder.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/d9/616d4083/MessageFormatting.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/e0/55092a4d/LoggerTemplateFormatter.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/4d7fa3a1503c4c099fb38d273ed1afc33e00/ef/fa262154/LogLevelFormattingBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/70f617fc68cf47c4af27e06f2b56f801b1c8a8/70/3da608b2/TimerCallback.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/DecompilerCache/decompiler/73f58a70a76e491eb4bcf9d90ef5628b378a8/91/1842d971/AddressFamily.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/06e6b5e410594922af54f5731fb38a29b1c8b0/_e8a20/ThreadPriority.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/126a70c991cfa98bfd869572a0bcaa7f1749972df73de5a443bf167a10c7e5/IPAddressParser.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/127c327fea07aada2d88d4392afeff6a0980a55cf9fd2867cf249fea2e84e/Dns.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/14761ffdfea7237fc1f91b103af840c898174f851543f9ebd1aa73a42e58/SocketPal.Windows.cs" root0="SKIP_HIGHLIGHTING" />
@@ -95,57 +97,84 @@
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/279dd33dc1e16d18a8dfd65e1baf134c72411f7dd1a0bb407b678af493fb7ce/Timer.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/2a5cc194fee19ec98ae1c3a8395d4f42f3d0dc84adbe34dcc08c28eec6bc9b1/TaskAwaiter.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/2b25845d6452361ed239f2bec3cd760f672bdd0f7548ab198186b74bcd9ad/UIntPtr.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/2f2b6b5791e92814ac2c29cb07c245e43c0b3814fc0456cb1433e9d8e1f8b/TaskExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/36e740b59df23626d207e72ea77e34298e53dd99db463eee529f8c416b5664/ThrowHelper.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/39dff3caf7a78b1d317b833979b38b2da8c855c59c6ce4557c4e223d3bc/BlockingCollection.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/3a23d4569d27e7df6e723e8ee72e5c659e9e82ccd92c5b5e5a0d99125827cc/CancellationTokenSource.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/3ab621a475ad1855b32c8fb94315b33ee28b6996ed15846c8c5651a4fd81dbb1/Sum.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/3af66eb5177e1b9abe8cf6bc844ef2f8a9eadcfdc9f2d9a4ac2a2dd3dc6b7a56/JsonStreamConfigurationProvider.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/485da50d43321b81edc28153271bdedb84943a243743e2deaa67a981587968/IConfiguration.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/4f895532b9b3c8e2ed55658c80c256fec026d871b0222127428a9533a646/Random.Net5CompatImpl.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5162dcef9ff38f5edc8c81f80f94afbc8848d6536cb6cd8a9f0db26b3a7b1/OptionsServiceCollectionExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/54e61fc479554ef3893bb7c3f6f12764f739993030a41e6992844a74a6445d/OptionsBuilderDataAnnotationsExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/55aace5114c7cd3f34188c997e4963c2124a09990711a964c7fc27de62783a1/Thread.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/56d16f45b8a41fd0d648218d958793203ed861f0e4cfad1e9241532242580/IValidateOptions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5d971971f4d8d6da4ed2fbe8bfed963f1583d395c7964cabb1fdfd7a844e/IPEndPoint.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5f334841c5c3023c056d4154b6959bcad20bc41af41cddf17807d453643f5/Debug.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/5fc0c87cafa7ba9c1e336bbca7f59e182fbf9b44be973972fb51c3dac4814a/DnsEndPoint.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/685740393f59fd572ad94c27112a77e0c086f741e99c9c979bf92113ae/Encoding.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/69f175956a4a3e28b6d49c1b7a6463681f0d5659a7abde86065b5b4af86e7/HostBuilder.netcoreapp.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/6b328b91f273b497721dcead23dabd813c6a99f9c5613a78ea1cee575b273b/Stream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/6bfb5caa34a165fe407ffb9d2b7285ffa682b2e3eb1f4f18fb6a945a576c4/Random.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/708a26c47191eec2b9ceac9cebb515b1f943ac7f66499fa867496a63a4ae/Socket.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/712699bd285d5dda808047137d7aee3381a09741343fee846a26256b6cc1d8/UInt32.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/71f711bf1486216a2507e90b9852cb06e1f47386b961083ffe31e2f8539/FileConfigurationSource.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/744c30a7462849eebaa8998e6fc518e3cc3a951f55a96722fcfb71c3196393b/Range.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/76a7b4387866adc31f9e317277cff4e5a723e96e76b52dd8afe066edf1abf9c3/Array.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/794bcfedceb3c6d957fbddf0e1c9a04afca77f9b5470c6859466cfba35e1ddb1/Task.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/7c4783383ec96c91b89479ced68cfa1c502a74f4eab14828d47c093ceb481/EndPoint.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/7cb6b7c72d108583c026611357d59eb9c29fc5a452d33c863a5a1678613153/Array.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/7dc9f76199c3f0113b5390f33d9ffa361634bcb9efb59069e2c828eb0dd81/MemoryExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/7f4ffc2de39c271a812247a7a07add3a5b584f1b838644779f76a32343ee0/ConfigurationChangeTokenSource.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/82b119a7779bacaf46ea32afa47f93a206bc422d27790bafe111e1ef3df7ffd/BinderOptions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/86abc90db4562dc46a78749863424fe72e7d9fb6df3f59ef89159bfb67f/CULong.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/87629731af04bb03578c1b6aa46c564e8e7e4647ea8f1b844cfd9e658ab30/BackgroundService.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/8c69a3275b6f2e32375f4779db698b143d8d68f7708dc26ae3899b5fc7bafd38/IHostBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/8f2a15e16b626a3ea75b66bf5abaff5a2519b6e42f058a7123f49d7baab2feb/MemoryMarshal.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/9378ba3d87989ef95471da32121cc574913f567bfb8a6b234e2b5b4e8bf5/NetworkStream.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/939d19470bf2797b6eab6523ee90dfad72d78dcc591d4c2a7af664c01c18b9/ReadOnlySpan.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/93c8d332ce8b236880ba67e494d4c3da27728b8cbf1e7738507588a2a893d1/IntPtr.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/941c35876d687ca2eb427d27ae8b49cbb5a85b0c95fb73ed73147e6faff3/DataAnnotationValidateOptions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/999cdaadc75536d58983a9f4e0db6aa26367941d1bb72b22102b2ad3afcc/UrlAttribute.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/9f91cf623da6ea77da3e2fe6284157af1a195a6095a59693b476a07ec24c6c49/Max.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/a011aeca7c3a84e9769f896f04c2b61916e9dbb13d561a3ee119e74b2d78e87/OptionsBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/a148b69b23decbabddf4bcf2533ebc2183c6687ad6734bf8e5d667b3ea2961/IHostEnvironment.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/a2118c999346899d9b5e224fdac06aef7fecb939f8e3dd6d2778276c14ee7a44/Span.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/a298e0276cd16e82a8c4ccc81257bc7af5e15d863243fa955edf2df1a2a7c5/AsyncTaskMethodBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ad8b6491936769d7fc26ad9a8203e3597c1d8c63798d7a592f39b784c3827/TCPClient.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/af8f5cbb783494288f3df4ca67dbe1217eb72acda74897c48466daf5307031/JsonConfigurationFileParser.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/af9ea6f1cc5e79fc868c6fc312a6b423a23d21797d2163065cf548bb19bd6/OptionsBuilderConfigurationExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/b4aa9d6deee74e2a511d54506de2de864a4b58ad22637cbbc79ef58cb10e3e9/ConfigurationExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/b892e6a13c36f5ecb467bb735e34698a6c166ace3e587c66e925697407535/Unsafe.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/b99b2f3c45a4a64828d56e874ea868114772cc411f14f92031771431525adb2b/ConfigurationKeyNameAttribute.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ba607fc887374a94b4195bbdb24b92acfa674454a6272587a2b517fdd47959/Buffer.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/baea74d7885b5f8d727f09283cbf4cbb8c68125e13f1f056fdb38ff43b5b6e/RandomNumberGenerator.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/bb1c9215e0897268602d42e692303ee1f557d3fb9335c7a30faacfeb416871d/UnnamedOptionsManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/bd1d5c50194fea68ff3559c160230b0ab50f5acf4ce3061bffd6d62958e2182/ExceptionDispatchInfo.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/c3b2a4cdcf127e28515dc4657830cb28309c97b930e7b89a3f664eda6c5172/Thread.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/c3eaeb7d66ee5db9f57b8aaad751fadc71334892968fae73dbab915c04a1b2c/HexConverter.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/c4df319e7a6b4eafe890fea08520cf9412a8d289df8bfa8057fc4621f45f6892/ValidationResult.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/c635e54d3ae9448118c336c5684911bbeb6ca88854f4f9a8459c2b23acc577/HostBuilder.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/c8df47a7eed15b4feb5997ae5b26f383488c4268b6f8be0f465105422f568cb/JsonStreamConfigurationSource.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ca76d58ce03c65bdcf1972283f41e7e88e3f97bc3c53a6af3d38b9b13b687b4/UnhandledExceptionEventArgs.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ce58aa709e137f52f62067a677ead16bdbca15feb2b485e836bed62532f4c8/Interlocked.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/d02d9a3ec141bbec955d13461a1160e5ed19dfe71fec499cdac881f181381d/JsonConfigurationProvider.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/d447e1f212196c76f7f17427b0354de47d661a93362dfc4112e243afb4c718/DataTypeAttribute.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/d4831ee94cd01757f1381727916f96dec5d57818cfc116ce175cc86bcbe/JsonConfigurationSource.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/dc8e1392c64184c113a2b2a5d28d7e59eff0429fb42262f344439edf64823/MemoryMarshal.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/dfd1adae495176f5e6ece32aaf55911f4fd52eb91a0d11477c54e46d46425fc/NameResolutionPal.Windows.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/e52ee4bf2e0b72bbb60d19a16a0d83fe6133e2c372baa3dde81b2a2c5aabba/TypeDescriptor.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/e60b8a28a674789a73bf80f2349c8fd7881cb1ed21fea431b814f1e08598/Convert.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ebf2f0407ae5ccb7785c61442dbb2f77fa91b08e585c8c49e37d3ef4c24/HostingHostBuilderExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ed6ce64925764ce46562336cd72d1f821892dcfd98b149d198de1b46b47377b4/JsonConfigurationExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/ef4d7ab83a8b9da99eefc5378d7a62bea110e35fa45785cc91bed33e916d0b2/ValidationContext.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f369ace511b6e7f4f7762d6b922aebc2cfb4a5c7e29bd30a3f994745b46f/BigInteger.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f6f364f34b2f655c9d3e109029dc8c9c876d9e4a1c974185c1f1a26584ba7/BindingPoint.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f89fe7762b7576425dc9fc98165c392a8899763288b25eb1dd4ae4b81ec7c7/Host.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/f9749fe3576a687c3c42f3794cefe8f8d91e62f939c66c0a32dbb3f74255/ManualResetEventSlim.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/fb643aeff3db18a0c8fc3f6dec4c87a694229c8c871b5f71d8a852177e473d7f/Random.Xoshiro256StarStarImpl.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$USER_HOME$/AppData/Local/JetBrains/Shared/vAny/SourcesCache/fc6c7453dd88262461bae8e52fb52052f8512af0888d827cc2f294fa361f1c7/IPv6AddressHelper.Common.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$USER_HOME$/AppData/Local/Temp/SourceGeneratedDocuments/19DD877306F257B865A3FAAA/Microsoft.Extensions.Logging.Generators/Microsoft.Extensions.Logging.Generators.LoggerMessageGenerator/LoggerMessage.g.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/../TheDialgaTeam.Core.Logging.Microsoft/src/AnsiEscapeCodeConstants.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -153,7 +182,7 @@
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="SWEA" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectId" id="2AQPxUGbYlKJZsB5yXzzVbSqZgo" />
   <component name="ProjectLevelVcsManager">
@@ -172,7 +201,7 @@
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;SymbolServersPageId&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -183,7 +212,7 @@
     ]
   }
 }</component>
-  <component name="RunManager">
+  <component name="RunManager" selected=".NET Project.Xenorig">
     <list>
       <item itemvalue=".NET Project.XenorigBenchmark" />
       <item itemvalue=".NET Project.Xenorig" />
@@ -235,6 +264,11 @@
       <workItem from="1678879642490" duration="6709000" />
       <workItem from="1678953513487" duration="275000" />
       <workItem from="1679034727279" duration="2989000" />
+      <workItem from="1679554549054" duration="7182000" />
+      <workItem from="1679562081143" duration="80000" />
+      <workItem from="1679562177440" duration="16000" />
+      <workItem from="1679571669177" duration="16425000" />
+      <workItem from="1679589680823" duration="1510000" />
     </task>
     <task id="LOCAL-00001" summary="Update">
       <created>1655015961872</created>

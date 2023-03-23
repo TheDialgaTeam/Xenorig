@@ -1,56 +1,122 @@
 ﻿using System;
 using System.Threading;
+using JetBrains.Annotations;
 using Xenorig.Utilities;
 
 namespace Xenorig.Options;
 
 public sealed class XenorigOptions
 {
-    public int PrintSpeedDuration { get; init; } = 10;
+    [UsedImplicitly]
+    public int PrintSpeedDuration { get; private set; } = 10;
 
-    public int NetworkTimeoutDuration { get; init; } = 5;
+    [UsedImplicitly]
+    public int NetworkTimeoutDuration { get; private set; } = 5;
 
-    public int MaxRetryCount { get; init; } = 5;
+    [UsedImplicitly]
+    public int MaxRetryCount { get; private set; } = 5;
 
-    public int DonatePercentage { get; init; } = 0;
-    
-    public Pool[] Pools { get; init; } = Array.Empty<Pool>();
-    
-    public XenophyteCentralizedSolo Xenophyte_Centralized_Solo { get; init; } = new();
+    [UsedImplicitly]
+    public int DonatePercentage { get; private set; }
+
+    [UsedImplicitly]
+    public Pool[] Pools
+    {
+        get => _pools!;
+        private set => _pools = value ?? _pools;
+    }
+
+    [UsedImplicitly]
+    public XenophyteCentralizedSolo Xenophyte_Centralized_Solo
+    {
+        get => _xenophyteCentralizedSolo!;
+        private set => _xenophyteCentralizedSolo = value ?? _xenophyteCentralizedSolo;
+    }
+
+    private Pool[]? _pools = Array.Empty<Pool>();
+    private XenophyteCentralizedSolo? _xenophyteCentralizedSolo = new();
 }
 
 public sealed class Pool
 {
-    public string Algorithm { get; init; } = string.Empty;
-
-    public string Coin { get; init; } = string.Empty;
-    
-    public string Url { get; init; } = string.Empty;
-    
-    public string Username { get; init; } = string.Empty;
-
-    public string Password { get; init; } = string.Empty;
-
-    public string UserAgent { get; init; } = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
-
-    public string GetUserAgent()
+    [UsedImplicitly]
+    public string Algorithm
     {
-        return string.IsNullOrEmpty(UserAgent) ? $"{ApplicationUtility.Name}/{ApplicationUtility.Version}" : UserAgent;
+        get => _algorithm!;
+        private set => _algorithm = string.IsNullOrEmpty(value) ? _algorithm : value;
     }
+
+    [UsedImplicitly]
+    public string Coin
+    {
+        get => _coin!;
+        private set => _coin = string.IsNullOrEmpty(value) ? _coin : value;
+    }
+
+    [UsedImplicitly]
+    public string Url
+    {
+        get => _url!;
+        private set => _url = string.IsNullOrEmpty(value) ? _url : value;
+    }
+
+    [UsedImplicitly]
+    public string Username
+    {
+        get => _username!;
+        private set => _username = string.IsNullOrEmpty(value) ? _username : value;
+    }
+
+    [UsedImplicitly]
+    public string Password
+    {
+        get => _password!;
+        private set => _password = string.IsNullOrEmpty(value) ? _password : value;
+    }
+
+    [UsedImplicitly]
+    public string UserAgent
+    {
+        get => _userAgent!;
+        private set => _userAgent = string.IsNullOrEmpty(value) ? _userAgent : value;
+    }
+
+    private string? _algorithm = string.Empty;
+    private string? _coin = string.Empty;
+    private string? _url = string.Empty;
+    private string? _username = string.Empty;
+    private string? _password = string.Empty;
+    private string? _userAgent = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
 }
 
 public sealed class XenophyteCentralizedSolo
 {
-    public CpuMiner CpuMiner { get; init; } = new();
+    [UsedImplicitly]
+    public CpuMiner CpuMiner
+    {
+        get => _cpuMiner!;
+        private set => _cpuMiner = value ?? _cpuMiner;
+    }
+
+    private CpuMiner? _cpuMiner = new();
 }
 
 public sealed class CpuMiner
 {
-    public int Threads { get; init; } = Environment.ProcessorCount;
+    [UsedImplicitly]
+    public int Threads { get; private set; } = Environment.ProcessorCount;
 
-    public ThreadPriority ThreadPriority { get; init; } = ThreadPriority.Normal;
-    
-    public CpuMinerThreadConfiguration[] ThreadConfigs { get; init; } = Array.Empty<CpuMinerThreadConfiguration>();
+    [UsedImplicitly]
+    public ThreadPriority ThreadPriority { get; private set; } = ThreadPriority.Normal;
+
+    [UsedImplicitly]
+    public CpuMinerThreadConfiguration[] ThreadConfigs
+    {
+        get => _threadConfigs!;
+        private set => _threadConfigs = value ?? _threadConfigs;
+    }
+
+    private CpuMinerThreadConfiguration[]? _threadConfigs = Array.Empty<CpuMinerThreadConfiguration>();
 
     public int GetNumberOfThreads()
     {
@@ -75,7 +141,9 @@ public sealed class CpuMiner
 
 public sealed class CpuMinerThreadConfiguration
 {
-    public ulong ThreadAffinity { get; init; }
+    [UsedImplicitly]
+    public ulong ThreadAffinity { get; private set; }
 
-    public ThreadPriority ThreadPriority { get; init; } = ThreadPriority.Normal;
+    [UsedImplicitly]
+    public ThreadPriority ThreadPriority { get; private set; } = ThreadPriority.Normal;
 }

@@ -10,6 +10,11 @@ public static class UnsafeUtility
     {
         return ref Unsafe.Add(ref MemoryMarshal.GetReference(span), index);
     }
+    
+    public static ref T GetRef<T>(this ReadOnlySpan<T> span, nint index)
+    {
+        return ref Unsafe.Add(ref MemoryMarshal.GetReference(span), index);
+    }
 
     public static ref T GetRef<T>(this T[] array, nint index)
     {

@@ -68,7 +68,7 @@ public sealed class PacketData
                 var bytesWritten = Base64Utility.Encode(encryptedPacket, base64EncryptedPacket);
                 if (bytesWritten == 0) return false;
 
-                base64EncryptedPacket[bytesWritten] = PaddingCharacter;
+                base64EncryptedPacket.GetRef(bytesWritten) = PaddingCharacter;
                 stream.Write(base64EncryptedPacket);
             }
 
@@ -96,7 +96,7 @@ public sealed class PacketData
             if (bytesRead == 0) return false;
 
             ReadOnlySpan<byte> base64EncryptedPacket = receivedPacket[..bytesRead];
-            if (base64EncryptedPacket[bytesRead - 1] != PaddingCharacter) return false;
+            if (base64EncryptedPacket.GetRef(bytesRead - 1) != PaddingCharacter) return false;
 
             base64EncryptedPacket = base64EncryptedPacket[..(bytesRead - 1)];
 

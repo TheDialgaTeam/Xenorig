@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 using Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 using Xenorig.Options;
+using Xenorig.Utilities;
+using CpuMiner = Xenorig.Algorithms.Xenophyte.Centralized.Miner.CpuMiner;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized;
 
@@ -11,20 +15,16 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
 {
     private readonly ILogger _logger;
     private readonly XenorigOptions _options;
+    private readonly Pool _pool;
 
     private readonly Network _network;
-
-    private readonly object _calculateHashrateLock = new();
-
-    private readonly double[] _averageHashCalculatedIn10Seconds;
-    private readonly double[] _averageHashCalculatedIn60Seconds;
-    private readonly double[] _averageHashCalculatedIn15Minutes;
-
-    private int _amountSampledFor60Seconds;
-    private int _amountSampledFor15Minutes;
+    private readonly CpuMiner _cpuMiner;
+    private readonly JobTemplate _jobTemplate = new();
+    
+    private readonly Timer _printAverageHashTimer;
 
     private double _maxHash;
-    
+
     private int _totalGoodEasyBlocksSubmitted;
     private int _totalGoodSemiRandomBlocksSubmitted;
     private int _totalGoodRandomBlocksSubmitted;
@@ -40,43 +40,50 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
     {
         _logger = logger;
         _options = options;
+        _pool = pool;
         _network = new Network(logger, options, pool);
-    }
-    
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return _network.StartAsync(cancellationToken);
+        _cpuMiner = new CpuMiner(logger, options, _network, _jobTemplate);
+        _printAverageHashTimer = new Timer(PrintAverageHashTimer, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _network.StopAsync(cancellationToken);
+        _cpuMiner.FoundBlock += CpuMinerOnFoundBlock;
+        _cpuMiner.StartCpuMiner();
         
-        return Task.CompletedTask;
+        _network.HasNewBlock += NetworkOnHasNewBlock;
+        _network.ConnectionFailed += NetworkOnConnectionFailed;
+        await _network.StartAsync(cancellationToken);
+
+        _printAverageHashTimer.Change(TimeSpan.FromSeconds(_options.PrintSpeedDuration), TimeSpan.FromSeconds(_options.PrintSpeedDuration));
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _printAverageHashTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        
+        _cpuMiner.FoundBlock -= CpuMinerOnFoundBlock;
+        _cpuMiner.StopCpuMiner();
+        
+        _network.HasNewBlock -= NetworkOnHasNewBlock;
+        _network.ConnectionFailed -= NetworkOnConnectionFailed;
+        await _network.StopAsync(cancellationToken);
     }
 
     public void PrintHashrate()
     {
-        lock (_calculateHashrateLock)
+        _maxHash = Math.Max(_maxHash, _cpuMiner.AverageHashCalculatedIn10Seconds.Sum());
+
+        Logger.PrintCpuMinerSpeedHeader(_logger);
+
+        var length = _cpuMiner.AverageHashCalculatedIn10Seconds.Length;
+        
+        for (var i = 0; i < length; i++)
         {
-            double average10SecondsSum = 0, average60SecondsSum = 0, average15MinutesSum = 0;
-
-            for (var i = _averageHashCalculatedIn10Seconds.Length - 1; i >= 0; i--)
-            {
-                average10SecondsSum += _averageHashCalculatedIn10Seconds[i];
-                average60SecondsSum += _averageHashCalculatedIn60Seconds[i];
-                average15MinutesSum += _averageHashCalculatedIn15Minutes[i];
-            }
-
-            Logger.PrintCpuMinerSpeedHeader(_logger);
-
-            for (var i = 0; i < _averageHashCalculatedIn10Seconds.Length; i++)
-            {
-                Logger.PrintCpuMinerSpeedBreakdown(_logger, i, _averageHashCalculatedIn10Seconds[i], _averageHashCalculatedIn60Seconds[i], _averageHashCalculatedIn15Minutes[i]);
-            }
-
-            Logger.PrintCpuMinerSpeed(_logger, average10SecondsSum, average60SecondsSum, average15MinutesSum, _maxHash);
+            Logger.PrintCpuMinerSpeedBreakdown(_logger, i, _cpuMiner.AverageHashCalculatedIn10Seconds.GetRef(i), _cpuMiner.AverageHashCalculatedIn60Seconds.GetRef(i), _cpuMiner.AverageHashCalculatedIn15Minutes.GetRef(i));
         }
+
+        Logger.PrintCpuMinerSpeed(_logger, _cpuMiner.AverageHashCalculatedIn10Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn60Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn15Minutes.Sum(), _maxHash);
     }
 
     public void PrintStats()
@@ -88,6 +95,66 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
 
     public void PrintCurrentJob()
     {
-        throw new NotImplementedException();
+        Logger.PrintJob(_logger, "current job", _pool.Url, _jobTemplate.BlockDifficulty, _jobTemplate.BlockMethod, _jobTemplate.BlockHeight);
+    }
+    
+    private void PrintAverageHashTimer(object? state)
+    {
+        _maxHash = Math.Max(_maxHash, _cpuMiner.AverageHashCalculatedIn10Seconds.Sum());
+        Logger.PrintCpuMinerSpeed(_logger, _cpuMiner.AverageHashCalculatedIn10Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn60Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn15Minutes.Sum(), _maxHash);
+    }
+    
+    private void CpuMinerOnFoundBlock(string jobType, bool isGoodBlock, string reason, double roundTripTime)
+    {
+        if (isGoodBlock)
+        {
+            switch (jobType)
+            {
+                case CpuMiner.JobTypeEasy:
+                    _totalGoodEasyBlocksSubmitted++;
+                    break;
+                
+                case CpuMiner.JobTypeSemiRandom:
+                    _totalGoodSemiRandomBlocksSubmitted++;
+                    break;
+                
+                case CpuMiner.JobTypeRandom:
+                    _totalGoodRandomBlocksSubmitted++;
+                    break;
+            }
+            
+            Logger.PrintBlockAcceptResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, roundTripTime);
+        }
+        else
+        {
+            switch (jobType)
+            {
+                case CpuMiner.JobTypeEasy:
+                    _totalBadEasyBlocksSubmitted++;
+                    break;
+                
+                case CpuMiner.JobTypeSemiRandom:
+                    _totalBadSemiRandomBlocksSubmitted++;
+                    break;
+                
+                case CpuMiner.JobTypeRandom:
+                    _totalBadRandomBlocksSubmitted++;
+                    break;
+            }
+            
+            Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, reason, roundTripTime);
+        }
+    }
+    
+    private void NetworkOnHasNewBlock(in BlockHeader blockHeader)
+    {
+        _jobTemplate.UpdateJobTemplate(blockHeader);
+        Logger.PrintJob(_logger, "new job", _pool.Url, blockHeader.Difficulty, blockHeader.Method, blockHeader.Height);
+    }
+    
+    private void NetworkOnConnectionFailed()
+    {
+        _network.StopAsync(CancellationToken.None).GetAwaiter().GetResult();
+        _network.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 }
