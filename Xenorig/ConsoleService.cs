@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -45,7 +46,7 @@ public sealed class ConsoleService : BackgroundService
         {
             await minerInstance.StartAsync(stoppingToken);
         }
-
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             var readKeyTask = Task.Factory.StartNew(() => Console.ReadKey(true), stoppingToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);

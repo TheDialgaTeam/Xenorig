@@ -10,7 +10,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _blockHeight;
             }
@@ -21,7 +21,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _blockTimestampCreate;
             }
@@ -32,7 +32,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _blockMethod;
             }
@@ -43,7 +43,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _blockIndication;
             }
@@ -54,7 +54,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _blockDifficulty;
             }
@@ -65,7 +65,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _blockMinRange;
             }
@@ -76,7 +76,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _blockMaxRange;
             }
@@ -98,7 +98,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _xorKeyLength;
             }
@@ -120,7 +120,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _aesKeyLength;
             }
@@ -142,7 +142,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _aesIvLength;
             }
@@ -153,7 +153,7 @@ public sealed class JobTemplate
     {
         get
         {
-            //lock (_synchronizationLock)
+            lock (_synchronizationLock)
             {
                 return _aesRound;
             }
@@ -203,7 +203,7 @@ public sealed class JobTemplate
 
     private bool _blockFound;
     
-    public void UpdateJobTemplate(in BlockHeader blockHeader)
+    public void UpdateJobTemplate(in BlockHeaderStack blockHeader)
     {
         lock (_synchronizationLock)
         {

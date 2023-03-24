@@ -146,7 +146,7 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
         }
     }
     
-    private void NetworkOnHasNewBlock(in BlockHeader blockHeader)
+    private void NetworkOnHasNewBlock(in BlockHeaderStack blockHeader)
     {
         _jobTemplate.UpdateJobTemplate(blockHeader);
         Logger.PrintJob(_logger, "new job", _pool.Url, blockHeader.Difficulty, blockHeader.Method, blockHeader.Height);

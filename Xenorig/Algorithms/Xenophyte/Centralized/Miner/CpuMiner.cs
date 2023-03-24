@@ -80,6 +80,81 @@ public sealed partial class CpuMiner
 
         [LibraryImport(Program.XenoNativeLibrary)]
         public static partial int XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(long minValue, long maxvalue, Span<long> output, Span<long> output2);
+
+        private static readonly byte[] Base16Characters = Encoding.ASCII.GetBytes(new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' });
+        
+        [SkipLocalsInit]
+        public static bool MakeEncryptedShare(ReadOnlySpan<byte> input, int inputLength, Span<byte> encryptedShare, Span<byte> hashEncryptedShare, ReadOnlySpan<byte> xorKey, int xorKeyLength, int aesKeySize, ReadOnlySpan<byte> aesKey, ReadOnlySpan<byte> aesIv, int aesRound)
+        {
+            void ConvertByteArrayToHex(ReadOnlySpan<byte> input, int inputLength, Span<byte> output, bool withDash)
+            {
+                if (withDash)
+                {
+                    for (var i = inputLength - 1; i >= 0; i--)
+                    {
+                        output.GetRef(3 * i) = Base16Characters.GetRef(input.GetRef(i) >> 4);
+                        output.GetRef(3 * i + 1) = Base16Characters.GetRef(input.GetRef(i) & 15);
+
+                        if (i == inputLength - 1) {
+                            continue;
+                        }
+
+                        output.GetRef(3 * i + 2) = (byte) '-';
+                    }
+                }
+                else
+                {
+                    for (var i = inputLength - 1; i >= 0; i--) {
+                        output.GetRef(2 * i) = Base16Characters.GetRef(input.GetRef(i) >> 4);
+                        output.GetRef(2 * i + 1) = Base16Characters.GetRef(input.GetRef(i) & 15);
+                    }
+                }
+            }
+            
+            void XorAndConvertByteArrayToHex(ReadOnlySpan<byte> input, int inputLength, ReadOnlySpan<byte> xorKey, int xorKeyLength, Span<byte> output, bool withDash)
+            {
+                if (withDash)
+                {
+                    for (var i = inputLength - 1; i >= 0; i--)
+                    {
+                        output.GetRef(3 * i) = (byte) (Base16Characters.GetRef(input.GetRef(i) >> 4) ^ xorKey.GetRef(3 * i % xorKeyLength));
+                        output.GetRef(3 * i + 1) = (byte) (Base16Characters.GetRef(input.GetRef(i) & 15) ^ xorKey.GetRef((3 * i + 1) % xorKeyLength));
+
+                        if (i == inputLength - 1) {
+                            continue;
+                        }
+
+                        output.GetRef(3 * i + 2) = (byte) ((byte) '-' ^ xorKey.GetRef((3 * i + 2) % xorKeyLength));
+                    }
+                }
+                else
+                {
+                    for (var i = inputLength - 1; i >= 0; i--) {
+                        output.GetRef(2 * i) = (byte) (Base16Characters.GetRef(input.GetRef(i) >> 4) ^ xorKey.GetRef(2 * i % xorKeyLength));
+                        output.GetRef(2 * i + 1) = (byte) (Base16Characters.GetRef(input.GetRef(i) & 15) ^ xorKey.GetRef((2 * i + 1) % xorKeyLength));
+                    }
+                }
+            }
+            
+            // First encryption phase convert to hex and xor each result.
+            var firstOutputLength = inputLength * 2;
+            Span<byte> firstOutput = stackalloc byte[firstOutputLength];
+            
+            XorAndConvertByteArrayToHex(input, inputLength, xorKey, xorKeyLength, firstOutput, false);
+            
+            // Second encryption phase: run through aes per round and apply xor at the final round.
+            
+            var secondInputLength = firstOutputLength;
+            var secondInputPaddedLength = firstOutputLength + (16 - firstOutputLength % 16);
+            var secondOutputLength = secondInputPaddedLength * 2 + (secondInputPaddedLength - 1);
+            
+            for (var i = aesRound - 1; i >= 0; i--) {
+                var temp = secondOutputLength + (16 - secondOutputLength % 16);
+                secondOutputLength = temp * 2 + (temp - 1);
+            }
+
+            return true;
+        }
     }
 
     public event BlockSubmitResultHandler? FoundBlock;
@@ -185,55 +260,42 @@ public sealed partial class CpuMiner
 
     private void ExecuteCpuMinerThread(int threadId, Options.CpuMiner options)
     {
-        try
+        var threadAffinity = options.GetThreadAffinity(threadId);
+
+        if (threadAffinity != 0)
         {
-            Thread.BeginThreadAffinity();
-
-            var threadAffinity = options.GetThreadAffinity(threadId);
-
-            if (threadAffinity != 0)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    Native.SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
-                }
-            }
-
-            // Thread Variable
-            var cpuMinerJob = new CpuMinerJob();
-
-            while (_isCpuMinerActive == 1)
-            {
-                // Wait for new block.
-                while (true)
-                {
-                    if (_isCpuMinerActive == 0) break;
-
-                    if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication)
-                    {
-                        cpuMinerJob.CurrentBlockIndication = _jobTemplate.BlockIndication;
-                        break;
-                    }
-
-                    Thread.Sleep(1);
-                }
-
-                if (_isCpuMinerActive == 0) break;
-
-                // Received new block!
-                DoEasyBlocksCalculations(threadId, options, cpuMinerJob);
-
-                if (_jobTemplate.BlockFound) continue;
-                if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication) continue;
-
-                DoNonEasyBlocksCalculations(threadId, options, cpuMinerJob);
-
-                Logger.PrintCurrentThreadJobDone(_logger, threadId);
+                Native.SetThreadAffinityMask_Linux(0, sizeof(ulong), threadAffinity);
             }
         }
-        finally
+
+        // Thread Variable
+        var cpuMinerJob = new CpuMinerJob();
+
+        while (_isCpuMinerActive == 1)
         {
-            Thread.EndThreadAffinity();
+            // Wait for new block.
+            do
+            {
+                if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication)
+                {
+                    cpuMinerJob.CurrentBlockIndication = _jobTemplate.BlockIndication;
+                    break;
+                }
+
+                Thread.Sleep(1);
+            } while (_isCpuMinerActive == 1);
+
+            if (_isCpuMinerActive == 0) break;
+
+            // Received new block!
+            DoEasyBlocksCalculations(threadId, options, cpuMinerJob);
+
+            if (_jobTemplate.BlockFound) continue;
+            if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication) continue;
+
+            DoNonEasyBlocksCalculations(threadId, options, cpuMinerJob);
         }
     }
 
@@ -247,10 +309,10 @@ public sealed partial class CpuMiner
 
         var easyBlockValues = cpuMinerJob.EasyBlockValues.AsSpan();
         Span<long> chunkData = stackalloc long[size];
-
+        
         BufferUtility.MemoryCopy(easyBlockValues.Slice(startIndex, size), chunkData, size);
 
-        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeEasy, cpuMinerJob.EasyBlockValuesLength * size, startIndex, startIndex + size - 1, size);
+        Logger.PrintCurrentChunkedThreadJob(_logger, threadId, JobTypeEasy, cpuMinerJob.EasyBlockValuesLength * size, startIndex, startIndex + size - 1, size);
 
         for (var i = size - 1; i >= 0; i--)
         {
@@ -264,11 +326,11 @@ public sealed partial class CpuMiner
 
                 (easyBlockValues.GetRef(j), easyBlockValues.GetRef(choseRandom2)) = (easyBlockValues.GetRef(choseRandom2), easyBlockValues.GetRef(j));
             }
-
-            chunkData.GetRef(choseRandom) = chunkData.GetRef(i);
-
+            
             if (_jobTemplate.BlockFound) return;
             if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication) return;
+
+            chunkData.GetRef(choseRandom) = chunkData.GetRef(i);
         }
     }
 
@@ -277,61 +339,35 @@ public sealed partial class CpuMiner
         cpuMinerJob.GenerateNonEasyBlockValues(_jobTemplate.BlockMinRange, _jobTemplate.BlockMaxRange);
         if (cpuMinerJob.NonEasyBlockValuesLength == 0) return;
 
-        var (startIndex, size) = GetJobChunk(cpuMinerJob.NonEasyBlockValuesLength, options.GetNumberOfThreads(), threadId);
-        if (size == 0) return;
-
         var easyBlockValues = cpuMinerJob.EasyBlockValues.AsSpan();
         var nonEasyBlockValues = cpuMinerJob.NonEasyBlockValues.AsSpan();
-        var tempNonEasyBlockValues = cpuMinerJob.TempNonEasyBlockValues.AsSpan();
+        
+        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom);
 
-        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeSemiRandom, cpuMinerJob.EasyBlockValuesLength * size, startIndex, startIndex + size - 1, size);
-
-        for (var i = size - 1; i >= 0; i--)
+        do
         {
-            var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
-
-            for (var j = cpuMinerJob.EasyBlockValuesLength - 1; j >= 0; j--)
-            {
-                var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
-
-                DoMathCalculations(threadId, tempNonEasyBlockValues.GetRef(choseRandom), easyBlockValues.GetRef(choseRandom2), JobTypeSemiRandom);
-                DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom2), tempNonEasyBlockValues.GetRef(choseRandom), JobTypeSemiRandom);
-
-                (easyBlockValues.GetRef(j), easyBlockValues.GetRef(choseRandom2)) = (easyBlockValues.GetRef(choseRandom2), easyBlockValues.GetRef(j));
-            }
-
-            (tempNonEasyBlockValues.GetRef(choseRandom), tempNonEasyBlockValues.GetRef(i)) = (tempNonEasyBlockValues.GetRef(i), tempNonEasyBlockValues.GetRef(choseRandom));
-
+            var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, cpuMinerJob.NonEasyBlockValuesLength);
+            var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, cpuMinerJob.NonEasyBlockValuesLength);
+            
+            DoMathCalculations(threadId, nonEasyBlockValues.GetRef(choseRandom), nonEasyBlockValues.GetRef(choseRandom2), JobTypeRandom);
+            DoMathCalculations(threadId, nonEasyBlockValues.GetRef(choseRandom2), nonEasyBlockValues.GetRef(choseRandom), JobTypeRandom);
+            
             if (_jobTemplate.BlockFound) return;
             if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication) return;
-        }
-
-        if (_jobTemplate.BlockFound) return;
-        if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication) return;
-
-        Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom, cpuMinerJob.NonEasyBlockValuesLength * size, startIndex, startIndex + size - 1, size);
-
-        for (var i = size - 1; i >= 0; i--)
-        {
-            var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
-
-            for (var j = cpuMinerJob.NonEasyBlockValuesLength - 1; j >= 0; j--)
+            
+            for (var i = cpuMinerJob.EasyBlockValuesLength - 1; i >= 0; i--)
             {
-                var choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(0, j);
+                var choseRandom3 = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
 
-                DoMathCalculations(threadId, tempNonEasyBlockValues.GetRef(choseRandom), nonEasyBlockValues.GetRef(choseRandom2), JobTypeRandom);
+                DoMathCalculations(threadId, nonEasyBlockValues.GetRef(choseRandom), easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom);
+                DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), nonEasyBlockValues.GetRef(choseRandom), JobTypeSemiRandom);
 
-                (nonEasyBlockValues.GetRef(j), nonEasyBlockValues.GetRef(choseRandom2)) = (nonEasyBlockValues.GetRef(choseRandom2), nonEasyBlockValues.GetRef(j));
+                DoMathCalculations(threadId, nonEasyBlockValues.GetRef(choseRandom2), easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom);
+                DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), nonEasyBlockValues.GetRef(choseRandom2), JobTypeSemiRandom);
 
-                if (_jobTemplate.BlockFound) return;
-                if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication) return;
+                (easyBlockValues.GetRef(i), easyBlockValues.GetRef(choseRandom3)) = (easyBlockValues.GetRef(choseRandom3), easyBlockValues.GetRef(i));
             }
-
-            (tempNonEasyBlockValues.GetRef(choseRandom), tempNonEasyBlockValues.GetRef(i)) = (tempNonEasyBlockValues.GetRef(i), tempNonEasyBlockValues.GetRef(choseRandom));
-
-            if (_jobTemplate.BlockFound) return;
-            if (cpuMinerJob.CurrentBlockIndication != _jobTemplate.BlockIndication) return;
-        }
+        } while (!_jobTemplate.BlockFound && cpuMinerJob.CurrentBlockIndication == _jobTemplate.BlockIndication);
     }
 
     private void DoMathCalculations(int threadId, long firstNumber, long secondNumber, string jobType)
@@ -401,8 +437,6 @@ public sealed partial class CpuMiner
         }
 
         Interlocked.Increment(ref _totalHashCalculatedIn10Seconds.GetRef(threadId));
-        Interlocked.Increment(ref _totalHashCalculatedIn60Seconds.GetRef(threadId));
-        Interlocked.Increment(ref _totalHashCalculatedIn15Minutes.GetRef(threadId));
 
         Span<char> hashEncryptedShareString = stackalloc char[Encoding.ASCII.GetCharCount(hashEncryptedShare)];
         Encoding.ASCII.GetChars(hashEncryptedShare, hashEncryptedShareString);
@@ -441,34 +475,43 @@ public sealed partial class CpuMiner
 
     private void CalculateAverageHashTimerOnElapsed(object? _)
     {
-        var captureTime = DateTime.Now;
+        var captureTime = Stopwatch.GetTimestamp();
 
         for (var i = AverageHashCalculatedIn10Seconds.Length - 1; i >= 0; i--)
         {
-            AverageHashCalculatedIn10Seconds.GetRef(i) = Interlocked.Read(ref _totalHashCalculatedIn10Seconds.GetRef(i)) / (TimeSpan.FromSeconds(10) + (DateTime.Now - captureTime)).TotalSeconds;
+            var capturedValue = Interlocked.Read(ref _totalHashCalculatedIn10Seconds.GetRef(i));
             Interlocked.Exchange(ref _totalHashCalculatedIn10Seconds.GetRef(i), 0);
+            
+            _totalHashCalculatedIn60Seconds.GetRef(i) += capturedValue;
+            _totalHashCalculatedIn15Minutes.GetRef(i) += capturedValue;
+            
+            AverageHashCalculatedIn10Seconds.GetRef(i) = capturedValue / (TimeSpan.FromSeconds(10) + Stopwatch.GetElapsedTime(captureTime)).TotalSeconds;
         }
-        
-        if (Interlocked.Add(ref _amountSampledFor60Seconds, 10) >= 60)
+
+        _amountSampledFor60Seconds += 10;
+
+        if (_amountSampledFor60Seconds >= 60)
         {
             for (var i = AverageHashCalculatedIn60Seconds.Length - 1; i >= 0; i--)
             {
-                AverageHashCalculatedIn60Seconds.GetRef(i) = Interlocked.Read(ref _totalHashCalculatedIn60Seconds.GetRef(i)) / (TimeSpan.FromMinutes(1) + (DateTime.Now - captureTime)).TotalSeconds;
-                Interlocked.Exchange(ref _totalHashCalculatedIn60Seconds.GetRef(i), 0);
+                AverageHashCalculatedIn60Seconds.GetRef(i) = _totalHashCalculatedIn60Seconds.GetRef(i) / (TimeSpan.FromMinutes(1) + Stopwatch.GetElapsedTime(captureTime)).TotalSeconds;
+                _totalHashCalculatedIn60Seconds.GetRef(i) = 0;
             }
 
-            Interlocked.Exchange(ref _amountSampledFor60Seconds, 0);
+            _amountSampledFor60Seconds = 0;
         }
 
-        if (Interlocked.Add(ref _amountSampledFor15Minutes, 10) >= 60 * 15)
+        _amountSampledFor15Minutes += 10;
+
+        if (_amountSampledFor15Minutes >= 60 * 15)
         {
             for (var i = AverageHashCalculatedIn60Seconds.Length - 1; i >= 0; i--)
             {
-                AverageHashCalculatedIn15Minutes.GetRef(i) = Interlocked.Read(ref _totalHashCalculatedIn15Minutes.GetRef(i)) / (TimeSpan.FromMinutes(15) + (DateTime.Now - captureTime)).TotalSeconds;
-                Interlocked.Exchange(ref _totalHashCalculatedIn15Minutes.GetRef(i), 0);
+                AverageHashCalculatedIn15Minutes.GetRef(i) = _totalHashCalculatedIn15Minutes.GetRef(i) / (TimeSpan.FromMinutes(15) + Stopwatch.GetElapsedTime(captureTime)).TotalSeconds;
+                _totalHashCalculatedIn15Minutes.GetRef(i) = 0;
             }
 
-            Interlocked.Exchange(ref _amountSampledFor15Minutes, 0);
+            _amountSampledFor15Minutes = 0;
         }
     }
 }

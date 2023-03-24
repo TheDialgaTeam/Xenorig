@@ -14,9 +14,11 @@ public static class Program
 {
     public const string XenoNativeLibrary = "xeno_native";
 
-    public static async Task Main(string[] args)
+    public static Task Main(string[] args)
     {
-        var host = Host.CreateDefaultBuilder(args)
+        AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainOnUnhandledException;
+
+        return Host.CreateDefaultBuilder(args)
             .ConfigureServices(collection =>
             {
                 collection.AddOptions<XenorigOptions>().BindConfiguration("Xenorig", options => options.BindNonPublicProperties = true);
@@ -30,12 +32,7 @@ public static class Program
                     options.SetTemplate<ConsoleService>(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix(string.Empty)));
                 });
             })
-            .UseConsoleLifetime()
-            .Build();
-
-        AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainOnUnhandledException;
-
-        await host.RunAsync();
+            .RunConsoleAsync();
     }
 
     private static void OnCurrentDomainOnUnhandledException(object _, UnhandledExceptionEventArgs eventArgs)

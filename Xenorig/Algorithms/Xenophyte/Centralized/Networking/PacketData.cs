@@ -1,70 +1,77 @@
 ﻿using System;
-using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Xenorig.Utilities;
+using Xenorig.Utilities.Buffer;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 
 public delegate void ReceivePacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime);
 
-public sealed class PacketData
+public sealed class PacketData : IDisposable
 {
     private const byte PaddingCharacter = (byte) '*';
 
-    private readonly byte[] _packetBuffer;
-    private readonly int _packetLength;
-
+    private readonly ArrayOwner<byte> _packetArrayOwner;
     private readonly bool _isEncrypted;
-
     private readonly ReceivePacketHandler? _receivePacketHandler;
 
-    private ReadOnlySpan<byte> Packet => _packetBuffer.AsSpan(0, _packetLength);
-
+    public PacketData(ArrayOwner<byte> packetArrayOwner, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
+    {
+        _packetArrayOwner = packetArrayOwner;
+        _isEncrypted = isEncrypted;
+        _receivePacketHandler = receivePacketHandler;
+    }
+    
     public PacketData(ReadOnlySpan<byte> packet, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
     {
-        _packetBuffer = ArrayPool<byte>.Shared.Rent(packet.Length);
-        _packetLength = packet.Length;
-        BufferUtility.MemoryCopy(packet, _packetBuffer, packet.Length);
+        _packetArrayOwner = ArrayOwner<byte>.Rent(packet.Length);
+        packet.CopyTo(_packetArrayOwner.Span);
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
 
     public PacketData(string packet, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
     {
-        _packetBuffer = ArrayPool<byte>.Shared.Rent(Encoding.ASCII.GetByteCount(packet));
-        _packetLength = Encoding.ASCII.GetBytes(packet, _packetBuffer);
+        _packetArrayOwner = ArrayOwner<byte>.Rent(Encoding.ASCII.GetByteCount(packet));
+        Encoding.UTF8.GetBytes(packet, _packetArrayOwner.Span);
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
 
     public bool Execute(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
-        var executeTimestamp = DateTime.Now;
+        var executeTimestamp = Stopwatch.GetTimestamp();
         return TryExecuteWrite(networkStream, key, iv) && TryExecuteRead(networkStream, key, iv, executeTimestamp);
     }
-
-    [SkipLocalsInit]
+    
     private bool TryExecuteWrite(Stream stream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
         try
         {
             if (!_isEncrypted)
             {
-                stream.Write(Packet);
+                stream.Write(_packetArrayOwner.Span);
             }
             else
             {
-                Span<byte> encryptedPacket = stackalloc byte[_packetLength + (16 - _packetLength % 16)];
-
-                if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key, iv, Packet, encryptedPacket) == 0)
+                var packet = _packetArrayOwner.Span;
+                var packetLength = packet.Length;
+                
+                using var encryptedPacketArrayOwner = ArrayOwner<byte>.Rent(packetLength + (16 - packetLength % 16));
+                var encryptedPacket = encryptedPacketArrayOwner.Span;
+                
+                if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key, iv, packet, encryptedPacket) == 0)
                 {
                     return false;
                 }
 
-                Span<byte> base64EncryptedPacket = stackalloc byte[Base64Utility.EncodeLength(encryptedPacket) + 1];
+                using var base64EncryptedPacketArrayOwner = ArrayOwner<byte>.Rent(Base64Utility.EncodeLength(encryptedPacket) + 1);
+                var base64EncryptedPacket = base64EncryptedPacketArrayOwner.Span;
+
                 var bytesWritten = Base64Utility.Encode(encryptedPacket, base64EncryptedPacket);
                 if (bytesWritten == 0) return false;
 
@@ -78,20 +85,18 @@ public sealed class PacketData
         {
             return false;
         }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(_packetBuffer);
-        }
     }
 
     [SkipLocalsInit]
-    private bool TryExecuteRead(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, DateTime executeTimestamp)
+    private bool TryExecuteRead(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, long executeTimestamp)
     {
         try
         {
             if (_receivePacketHandler == null) return true;
+
+            using var receivedPacketArrayOwner = ArrayOwner<byte>.Rent(networkStream.Socket.ReceiveBufferSize);
+            var receivedPacket = receivedPacketArrayOwner.Span;
             
-            Span<byte> receivedPacket = stackalloc byte[networkStream.Socket.ReceiveBufferSize];
             var bytesRead = networkStream.Read(receivedPacket);
             if (bytesRead == 0) return false;
 
@@ -100,20 +105,27 @@ public sealed class PacketData
 
             base64EncryptedPacket = base64EncryptedPacket[..(bytesRead - 1)];
 
-            Span<byte> encryptedPacket = stackalloc byte[Base64Utility.DecodeLength(base64EncryptedPacket)];
+            using var encryptedPacketArrayOwner = ArrayOwner<byte>.Rent(Base64Utility.DecodeLength(base64EncryptedPacket));
+            var encryptedPacket = encryptedPacketArrayOwner.Span;
             var decodedBytes = Base64Utility.Decode(base64EncryptedPacket, encryptedPacket);
             if (decodedBytes == 0) return false;
 
-            Span<byte> decryptedPacket = stackalloc byte[encryptedPacket.Length];
+            using var decryptedPacketArrayOwner = ArrayOwner<byte>.Rent(encryptedPacket.Length);
+            var decryptedPacket = decryptedPacketArrayOwner.Span;
             var bytesWritten = SymmetricAlgorithmUtility.Decrypt_AES_256_CFB_8(key, iv, encryptedPacket, decryptedPacket);
             if (bytesWritten == 0) return false;
 
-            _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], DateTime.Now - executeTimestamp);
+            _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], Stopwatch.GetElapsedTime(executeTimestamp));
             return true;
         }
         catch
         {
             return false;
         }
+    }
+
+    public void Dispose()
+    {
+        _packetArrayOwner.Dispose();
     }
 }

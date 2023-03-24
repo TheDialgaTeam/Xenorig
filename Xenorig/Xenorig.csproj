@@ -31,6 +31,8 @@
         <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
         
         <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
