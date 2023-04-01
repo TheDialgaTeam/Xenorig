@@ -1,10 +1,6 @@
 #include "MessageDigestUtility.h"
 
 DOTNET_INT MessageDigestUtility_ComputeHash_EVP_MD(const EVP_MD *type, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
-    if (type == NULL || source == NULL || sourceLength == 0 || destination == NULL) {
-        return 0;
-    }
-
     EVP_MD_CTX *context = EVP_MD_CTX_new();
 
     if (context == NULL) {
@@ -33,20 +29,6 @@ DOTNET_INT MessageDigestUtility_ComputeHash_EVP_MD(const EVP_MD *type, DOTNET_RE
     return bytesWritten;
 }
 
-DOTNET_INT MessageDigestUtility_ComputeHash_EVP_MD_Unsafe(const EVP_MD *type, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
-    EVP_MD_CTX *context = EVP_MD_CTX_new();
-
-    EVP_DigestInit_ex(context, type, NULL);
-    EVP_DigestUpdate(context, source, sourceLength);
-
-    DOTNET_UINT bytesWritten;
-
-    EVP_DigestFinal_ex(context, destination, &bytesWritten);
-    EVP_MD_CTX_free(context);
-
-    return bytesWritten;
-}
-
 DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_256Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return MessageDigestUtility_ComputeHash_EVP_MD(EVP_sha256(), source, sourceLength, destination);
 }
@@ -57,16 +39,4 @@ DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_512Hash(DOTNET_READ_ON
 
 DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha3_512Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return MessageDigestUtility_ComputeHash_EVP_MD(EVP_sha3_512(), source, sourceLength, destination);
-}
-
-DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_256Hash_Unsafe(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
-    return MessageDigestUtility_ComputeHash_EVP_MD_Unsafe(EVP_sha256(), source, sourceLength, destination);
-}
-
-DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_512Hash_Unsafe(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
-    return MessageDigestUtility_ComputeHash_EVP_MD_Unsafe(EVP_sha512(), source, sourceLength, destination);
-}
-
-DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha3_512Hash_Unsafe(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
-    return MessageDigestUtility_ComputeHash_EVP_MD_Unsafe(EVP_sha3_512(), source, sourceLength, destination);
 }

@@ -7,31 +7,53 @@ namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 
 public sealed partial class BlockHeader
 {
-    public int BlockHeight { get; private set; }
-    public long BlockTimestampCreate { get; private set; }
-    
-    public string BlockMethod { get; private set; } = string.Empty;
-    public string BlockIndication { get; private set; } = string.Empty;
-    
-    public long BlockDifficulty { get; private set; }
-    public long BlockMinRange { get; private set; }
-    public long BlockMaxRange { get; private set; }
+    public int BlockHeight => _blockHeight;
 
-    public byte[] XorKey { get; private set; } = Array.Empty<byte>();
-    public int XorKeyLength { get; private set; }
-    
-    public byte[] AesKey { get; } = new byte[32];
-    public int AesKeyLength { get; private set; }
+    public long BlockTimestampCreate => _blockTimestampCreate;
 
-    public byte[] AesIv { get; } = new byte[16];
+    public string BlockMethod => _blockMethod;
+
+    public string BlockIndication => _blockIndication;
+
+    public long BlockDifficulty => _blockDifficulty;
+
+    public long BlockMinRange => _blockMinRange;
+
+    public long BlockMaxRange => _blockMaxRange;
+
+    public ReadOnlySpan<byte> XorKey => _xorKey.AsSpan(0, _xorKeyLength);
+
+    public ReadOnlySpan<byte> AesKey => _aesKey.AsSpan(0, _aesKeyLength);
+
+    public ReadOnlySpan<byte> AesIv => _aesIv.AsSpan();
+
+    public int AesRound => _aesRound;
     
-    public int AesRound { get; private set; }
+    private int _blockHeight;
+    private long _blockTimestampCreate;
     
+    private string _blockMethod = string.Empty;
+    private string _blockIndication = string.Empty;
+    
+    private long _blockDifficulty;
+    private long _blockMinRange;
+    private long _blockMaxRange;
+    
+    private byte[] _xorKey = Array.Empty<byte>();
+    private int _xorKeyLength;
+    
+    private readonly byte[] _aesKey = new byte[32];
+    private int _aesKeyLength;
+    
+    private readonly byte[] _aesIv = new byte[16];
+    private int _aesRound;
+
     private byte[] _aesPassword = Array.Empty<byte>();
     private int _aesPasswordLength;
     
     private byte[] _aesSalt = Array.Empty<byte>();
     private int _aesSaltLength;
+
 
     [GeneratedRegex("(?<key>[A-Za-z_]+)=(?<value>[A-Za-z0-9.;]+)&?")]
     private static partial Regex GetBlockHeaderKeyValuePairs();
@@ -67,23 +89,23 @@ public sealed partial class BlockHeader
                 switch (match.Groups["key"].Value)
                 {
                     case "ID":
-                        BlockHeight = int.Parse(match.Groups["value"].Value);
+                        _blockHeight = int.Parse(match.Groups["value"].Value);
                         break;
                 
                     case "TIMESTAMP":
-                        BlockTimestampCreate = long.Parse(match.Groups["value"].Value);
+                        _blockTimestampCreate = long.Parse(match.Groups["value"].Value);
                         break;
                 
                     case "METHOD":
-                        BlockMethod = match.Groups["value"].Value;
+                        _blockMethod = match.Groups["value"].Value;
                         break;
                 
                     case "INDICATION":
-                        BlockIndication = match.Groups["value"].Value;
+                        _blockIndication = match.Groups["value"].Value;
                         break;
                 
                     case "DIFFICULTY":
-                        BlockDifficulty = long.Parse(match.Groups["value"].Value);
+                        _blockDifficulty = long.Parse(match.Groups["value"].Value);
                         break;
 
                     case "JOB":
@@ -91,21 +113,21 @@ public sealed partial class BlockHeader
                         var value = match.Groups["value"].ValueSpan;
                         var index = value.IndexOf(';');
                     
-                        BlockMinRange = long.Parse(value[..index]);
-                        BlockMaxRange = long.Parse(value[(index + 1)..]);
+                        _blockMinRange = long.Parse(value[..index]);
+                        _blockMaxRange = long.Parse(value[(index + 1)..]);
                         break;
                     }
 
                     case "KEY":
                     {
-                        var aesPasswordLength = Encoding.ASCII.GetByteCount(match.Groups["value"].Value);
+                        var aesPasswordLength = Encoding.UTF8.GetByteCount(match.Groups["value"].Value);
 
                         if (_aesPassword.Length < aesPasswordLength)
                         {
                             _aesPassword = GC.AllocateUninitializedArray<byte>(aesPasswordLength);
                         }
 
-                        _aesPasswordLength = Encoding.ASCII.GetBytes(match.Groups["value"].Value, _aesPassword);
+                        _aesPasswordLength = Encoding.UTF8.GetBytes(match.Groups["value"].Value, _aesPassword);
                         break;
                     }
                 }
@@ -132,31 +154,31 @@ public sealed partial class BlockHeader
 
         try
         {
-            AesRound = int.Parse(subString[0]);
-            AesKeyLength = int.Parse(subString[1]) / 8;
+            _aesRound = int.Parse(subString[0]);
+            _aesKeyLength = int.Parse(subString[1]) / 8;
 
-            XorKeyLength = Encoding.ASCII.GetByteCount(subString[3]);
+            _xorKeyLength = Encoding.UTF8.GetByteCount(subString[3]);
 
-            if (XorKey.Length < XorKeyLength)
+            if (_xorKey.Length < _xorKeyLength)
             {
-                XorKey = GC.AllocateUninitializedArray<byte>(XorKeyLength);
+                _xorKey = GC.AllocateUninitializedArray<byte>(_xorKeyLength);
             }
 
-            XorKeyLength = Encoding.ASCII.GetBytes(subString[3], XorKey);
+            _xorKeyLength = Encoding.UTF8.GetBytes(subString[3], _xorKey);
         
-            _aesSaltLength = Encoding.ASCII.GetByteCount(subString[2]);
+            _aesSaltLength = Encoding.UTF8.GetByteCount(subString[2]);
 
             if (_aesSalt.Length < _aesSaltLength)
             {
                 _aesSalt = GC.AllocateUninitializedArray<byte>(_aesSaltLength);
             }
         
-            _aesSaltLength = Encoding.ASCII.GetByteCount(subString[2]);
+            _aesSaltLength = Encoding.UTF8.GetByteCount(subString[2]);
 
             using var pbkdf1 = new PBKDF1(_aesPassword.AsSpan(0, _aesPasswordLength), _aesSalt.AsSpan(0, _aesSaltLength));
 
-            pbkdf1.FillBytes(AesKey.AsSpan(0, AesKeyLength));
-            pbkdf1.FillBytes(AesIv);
+            pbkdf1.FillBytes(_aesKey.AsSpan(0, _aesKeyLength));
+            pbkdf1.FillBytes(_aesIv);
             
             return true;
         }

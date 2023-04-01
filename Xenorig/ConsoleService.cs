@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -39,21 +38,26 @@ public sealed class ConsoleService : BackgroundService
         Logger.PrintDonatePercentage(_logger, "DONATE", _options.DonatePercentage);
         Logger.PrintCommand(_logger, "COMMANDS");
 
+        for (var i = 0; i < _options.Pools.Length; i++)
+        {
+            var pool = _options.Pools[i];
+            Logger.PrintPool(_logger, $"POOL #{i + 1}", pool.Url, pool.Algorithm);
+        }
+
+        Logger.PrintEmpty(_logger);
+
         _minerInstances = CreateMinerInstances();
         if (_minerInstances.Length == 0) return;
 
-        foreach (var minerInstance in _minerInstances)
-        {
-            await minerInstance.StartAsync(stoppingToken);
-        }
-        
+        await _minerInstances[_currentIndex].StartAsync(stoppingToken);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             var readKeyTask = Task.Factory.StartNew(() => Console.ReadKey(true), stoppingToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
-            var taskCompleted = await Task.WhenAny(readKeyTask, Task.Delay(Timeout.Infinite, stoppingToken)).ConfigureAwait(false);
+            var taskCompleted = await Task.WhenAny(readKeyTask, Task.Delay(Timeout.Infinite, stoppingToken));
             if (taskCompleted != readKeyTask) return;
 
-            var keyPressed = await readKeyTask.ConfigureAwait(false);
+            var keyPressed = await readKeyTask;
 
             switch (keyPressed.Key)
             {
@@ -74,43 +78,15 @@ public sealed class ConsoleService : BackgroundService
 
     private IAlgorithm[] CreateMinerInstances()
     {
-        var pools = _options.Pools;
-        var uniquePool = new List<Pool>();
-
-        var lastAlgorithm = string.Empty;
-        var lastCoin = string.Empty;
-
-        var minerInstances = new List<IAlgorithm>();
-
-        foreach (var pool in pools)
-        {
-            if (uniquePool.Count == 0 || (lastAlgorithm.Equals(pool.Algorithm.Trim(), StringComparison.OrdinalIgnoreCase) && lastCoin.Equals(pool.Coin.Trim(), StringComparison.OrdinalIgnoreCase)))
-            {
-                uniquePool.Add(pool);
-            }
-            else
-            {
-                minerInstances.Add(CreateAlgorithm(uniquePool.ToArray()));
-                uniquePool.Clear();
-            }
-
-            lastAlgorithm = pool.Algorithm;
-            lastCoin = pool.Coin;
-        }
-
-        minerInstances.Add(CreateAlgorithm(uniquePool.ToArray()));
-
-        return minerInstances.ToArray();
+        return _options.Pools.Select(CreateAlgorithm).ToArray();
     }
 
-    private IAlgorithm CreateAlgorithm(Pool[] pools)
+    private IAlgorithm CreateAlgorithm(Pool pool)
     {
-        if (pools.Length == 0) throw new Exception("Unable to create miner instances.");
-
-        if (pools[0].Algorithm.Equals("Xiropht_Centralized_Solo", StringComparison.OrdinalIgnoreCase) ||
-            pools[0].Algorithm.Equals("Xenophyte_Centralized_Solo", StringComparison.OrdinalIgnoreCase))
+        if (pool.Algorithm.Equals("Xiropht_Centralized_Solo", StringComparison.OrdinalIgnoreCase) ||
+            pool.Algorithm.Equals("Xenophyte_Centralized_Solo", StringComparison.OrdinalIgnoreCase))
         {
-            return new XenophyteCentralizedAlgorithm(_loggerFactory.CreateLogger(nameof(XenophyteCentralizedAlgorithm)), _options, pools[0]);
+            return new XenophyteCentralizedAlgorithm(_loggerFactory.CreateLogger(nameof(XenophyteCentralizedAlgorithm)), _options, pool);
         }
 
         throw new NotImplementedException("Algorithm not implemented.");

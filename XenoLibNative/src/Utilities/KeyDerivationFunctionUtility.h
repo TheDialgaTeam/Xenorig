@@ -25,9 +25,9 @@ typedef struct KDF_PBKDF1_CTX {
     EVP_MD *Hash;
 } KDF_PBKDF1_CTX;
 
-DOTNET_PUBLIC KDF_PBKDF1_CTX *KeyDerivationFunctionUtility_CreatePBKDF1(DOTNET_READ_ONLY_SPAN_BYTE password, DOTNET_INT passwordLength, DOTNET_READ_ONLY_SPAN_BYTE salt, DOTNET_INT saltLength, DOTNET_INT iterations, DOTNET_STRING hashName);
-DOTNET_PUBLIC DOTNET_INT KeyDerivationFunctionUtility_GetBytes(KDF_PBKDF1_CTX *ctx, DOTNET_SPAN_BYTE rgbOut, DOTNET_INT cb);
-DOTNET_PUBLIC void KeyDerivationFunctionUtility_Reset(KDF_PBKDF1_CTX *ctx);
-DOTNET_PUBLIC void KeyDerivationFunctionUtility_Free(KDF_PBKDF1_CTX *ctx);
+KDF_PBKDF1_CTX *KeyDerivationFunctionUtility_CreatePBKDF1(DOTNET_READ_ONLY_SPAN_BYTE password, DOTNET_INT passwordLength, DOTNET_READ_ONLY_SPAN_BYTE salt, DOTNET_INT saltLength, DOTNET_INT iterations, DOTNET_STRING hashName);
+DOTNET_INT KeyDerivationFunctionUtility_GetBytes(KDF_PBKDF1_CTX *ctx, DOTNET_SPAN_BYTE rgbOut, DOTNET_INT cb);
+void KeyDerivationFunctionUtility_Reset(KDF_PBKDF1_CTX *ctx);
+void KeyDerivationFunctionUtility_Free(KDF_PBKDF1_CTX *ctx);
 
 #endif

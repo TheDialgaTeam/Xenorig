@@ -29,11 +29,11 @@ public static partial class Logger
     [LoggerMessage(EventId = 8, Level = LogLevel.Information, Message = $"{DarkRedForegroundColor}[{{host}}] Login failed. Reason: {{reason}}{Reset}")]
     public static partial void PrintLoginFailed(ILogger logger, string host, string reason);
 
-    [LoggerMessage(EventId = 9, Level = LogLevel.Information, Message = $"{DarkRedForegroundColor}Disconnected.{Reset}")]
-    public static partial void PrintDisconnected(ILogger logger);
+    [LoggerMessage(EventId = 9, Level = LogLevel.Information, Message = $"{DarkRedForegroundColor}[{{host}}] Disconnected. Reason: {{reason}}{Reset}")]
+    public static partial void PrintDisconnected(ILogger logger, string host, string reason);
 
-    [LoggerMessage(EventId = 10, Level = LogLevel.Information, Message = $"use {{mode}} {CyanForegroundColor}{{host}} {GrayForegroundColor}({{ping}} ms){Reset}")]
-    public static partial void PrintConnected(ILogger logger, string mode, string host, double ping);
+    [LoggerMessage(EventId = 10, Level = LogLevel.Information, Message = $"use {{mode}} {CyanForegroundColor}{{host}}{Reset}")]
+    public static partial void PrintConnected(ILogger logger, string mode, string host);
 
     [LoggerMessage(EventId = 11, Level = LogLevel.Information, Message = $"{GreenForegroundColor}READY (CPU) {WhiteForegroundColor}threads {CyanForegroundColor}{{threads}}{Reset}")]
     public static partial void PrintCpuMinerReady(ILogger logger, int threads);

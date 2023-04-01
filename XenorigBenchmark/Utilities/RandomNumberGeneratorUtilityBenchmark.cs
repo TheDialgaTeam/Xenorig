@@ -1,4 +1,6 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System;
+using System.Security.Cryptography;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Xenorig.Utilities;
 
@@ -8,7 +10,7 @@ namespace XenorigBenchmark.Utilities;
 public class RandomNumberGeneratorUtilityBenchmark
 {
     [Benchmark]
-    [Arguments(int.MinValue, int.MaxValue)]
+    [Arguments(int.MinValue, 100)]
     public int GetRandomBetweenInt(int minimumValue, int maximumValue)
     {
         return RandomNumberGeneratorUtility.GetRandomBetween(minimumValue, maximumValue);

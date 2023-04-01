@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using JetBrains.Annotations;
 using Xenorig.Utilities;
@@ -54,6 +55,7 @@ public sealed class Pool
     }
 
     [UsedImplicitly]
+    [StringSyntax(StringSyntaxAttribute.Uri)]
     public string Url
     {
         get => _url!;

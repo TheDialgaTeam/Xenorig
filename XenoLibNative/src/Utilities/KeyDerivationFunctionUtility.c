@@ -175,7 +175,7 @@ DOTNET_PRIVATE DOTNET_BOOL ComputeBytes(KDF_PBKDF1_CTX *ctx, DOTNET_INT cb, DOTN
     return DOTNET_TRUE;
 }
 
-KDF_PBKDF1_CTX *KeyDerivationFunctionUtility_CreatePBKDF1(DOTNET_READ_ONLY_SPAN_BYTE password, DOTNET_INT passwordLength, DOTNET_READ_ONLY_SPAN_BYTE salt, DOTNET_INT saltLength, DOTNET_INT iterations, DOTNET_STRING hashName) {
+DOTNET_PUBLIC KDF_PBKDF1_CTX *KeyDerivationFunctionUtility_CreatePBKDF1(DOTNET_READ_ONLY_SPAN_BYTE password, DOTNET_INT passwordLength, DOTNET_READ_ONLY_SPAN_BYTE salt, DOTNET_INT saltLength, DOTNET_INT iterations, DOTNET_STRING hashName) {
     if (password == NULL || passwordLength == 0 || (salt != NULL && saltLength == 0) || iterations == 0 || hashName == NULL) {
         return NULL;
     }
@@ -213,7 +213,7 @@ KDF_PBKDF1_CTX *KeyDerivationFunctionUtility_CreatePBKDF1(DOTNET_READ_ONLY_SPAN_
     return ctx;
 }
 
-DOTNET_INT KeyDerivationFunctionUtility_GetBytes(KDF_PBKDF1_CTX *ctx, DOTNET_SPAN_BYTE rgbOut, DOTNET_INT cb) {
+DOTNET_PUBLIC DOTNET_INT KeyDerivationFunctionUtility_GetBytes(KDF_PBKDF1_CTX *ctx, DOTNET_SPAN_BYTE rgbOut, DOTNET_INT cb) {
     if (ctx == NULL || rgbOut == NULL || cb == 0) {
         return 0;
     }
@@ -276,7 +276,7 @@ DOTNET_INT KeyDerivationFunctionUtility_GetBytes(KDF_PBKDF1_CTX *ctx, DOTNET_SPA
     return cb;
 }
 
-void KeyDerivationFunctionUtility_Reset(KDF_PBKDF1_CTX *ctx) {
+DOTNET_PUBLIC void KeyDerivationFunctionUtility_Reset(KDF_PBKDF1_CTX *ctx) {
     if (ctx == NULL) {
         return;
     }
@@ -302,7 +302,7 @@ void KeyDerivationFunctionUtility_Reset(KDF_PBKDF1_CTX *ctx) {
     ctx->BaseValueLength = 0;
 }
 
-void KeyDerivationFunctionUtility_Free(KDF_PBKDF1_CTX *ctx) {
+DOTNET_PUBLIC void KeyDerivationFunctionUtility_Free(KDF_PBKDF1_CTX *ctx) {
     if (ctx == NULL) {
         return;
     }

@@ -2,8 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Xenorig.Utilities;
 using Xenorig.Utilities.Buffer;
 
@@ -11,121 +12,112 @@ namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 
 public delegate void ReceivePacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime);
 
+[DebuggerDisplay("{ToString(),raw}")]
 public sealed class PacketData : IDisposable
 {
     private const byte PaddingCharacter = (byte) '*';
 
-    private readonly ArrayOwner<byte> _packetArrayOwner;
+    private readonly ArrayPoolOwner<byte> _packetArrayPoolOwner;
     private readonly bool _isEncrypted;
     private readonly ReceivePacketHandler? _receivePacketHandler;
 
-    public PacketData(ArrayOwner<byte> packetArrayOwner, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
+    public PacketData(ArrayPoolOwner<byte> packetArrayPoolOwner, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
     {
-        _packetArrayOwner = packetArrayOwner;
+        _packetArrayPoolOwner = packetArrayPoolOwner;
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
     
     public PacketData(ReadOnlySpan<byte> packet, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
     {
-        _packetArrayOwner = ArrayOwner<byte>.Rent(packet.Length);
-        packet.CopyTo(_packetArrayOwner.Span);
+        _packetArrayPoolOwner = ArrayPoolOwner<byte>.Rent(packet.Length);
+        BufferUtility.MemoryCopy(packet, _packetArrayPoolOwner.Span, packet.Length);
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
 
     public PacketData(string packet, bool isEncrypted, ReceivePacketHandler? receivePacketHandler = null)
     {
-        _packetArrayOwner = ArrayOwner<byte>.Rent(Encoding.ASCII.GetByteCount(packet));
-        Encoding.UTF8.GetBytes(packet, _packetArrayOwner.Span);
+        _packetArrayPoolOwner = ArrayPoolOwner<byte>.Rent(Encoding.UTF8.GetByteCount(packet));
+        Encoding.UTF8.GetBytes(packet, _packetArrayPoolOwner.Span);
         _isEncrypted = isEncrypted;
         _receivePacketHandler = receivePacketHandler;
     }
 
-    public bool Execute(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
+    ~PacketData()
+    {
+        Dispose();
+    }
+
+    public async Task<bool> ExecuteAsync(NetworkStream networkStream, ReadOnlyMemory<byte> key, ReadOnlyMemory<byte> iv, CancellationToken cancellationToken)
     {
         var executeTimestamp = Stopwatch.GetTimestamp();
-        return TryExecuteWrite(networkStream, key, iv) && TryExecuteRead(networkStream, key, iv, executeTimestamp);
-    }
-    
-    private bool TryExecuteWrite(Stream stream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
-    {
-        try
-        {
-            if (!_isEncrypted)
-            {
-                stream.Write(_packetArrayOwner.Span);
-            }
-            else
-            {
-                var packet = _packetArrayOwner.Span;
-                var packetLength = packet.Length;
-                
-                using var encryptedPacketArrayOwner = ArrayOwner<byte>.Rent(packetLength + (16 - packetLength % 16));
-                var encryptedPacket = encryptedPacketArrayOwner.Span;
-                
-                if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key, iv, packet, encryptedPacket) == 0)
-                {
-                    return false;
-                }
-
-                using var base64EncryptedPacketArrayOwner = ArrayOwner<byte>.Rent(Base64Utility.EncodeLength(encryptedPacket) + 1);
-                var base64EncryptedPacket = base64EncryptedPacketArrayOwner.Span;
-
-                var bytesWritten = Base64Utility.Encode(encryptedPacket, base64EncryptedPacket);
-                if (bytesWritten == 0) return false;
-
-                base64EncryptedPacket.GetRef(bytesWritten) = PaddingCharacter;
-                stream.Write(base64EncryptedPacket);
-            }
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        return await TryExecuteWriteAsync(networkStream, key, iv, cancellationToken) && await TryExecuteReadAsync(networkStream, key, iv, executeTimestamp, cancellationToken);
     }
 
-    [SkipLocalsInit]
-    private bool TryExecuteRead(NetworkStream networkStream, ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv, long executeTimestamp)
+    private async Task<bool> TryExecuteWriteAsync(Stream stream, ReadOnlyMemory<byte> key, ReadOnlyMemory<byte> iv, CancellationToken cancellationToken)
     {
-        try
+        if (!_isEncrypted)
         {
-            if (_receivePacketHandler == null) return true;
+            await stream.WriteAsync(_packetArrayPoolOwner.Memory, cancellationToken);
+        }
+        else
+        {
+            var packetLength = _packetArrayPoolOwner.Span.Length;
+            using var encryptedPacketArrayPoolOwner = ArrayPoolOwner<byte>.Rent(packetLength + (16 - packetLength % 16));
 
-            using var receivedPacketArrayOwner = ArrayOwner<byte>.Rent(networkStream.Socket.ReceiveBufferSize);
-            var receivedPacket = receivedPacketArrayOwner.Span;
-            
-            var bytesRead = networkStream.Read(receivedPacket);
-            if (bytesRead == 0) return false;
+            if (SymmetricAlgorithmUtility.Encrypt_AES_256_CFB_8(key.Span, iv.Span, _packetArrayPoolOwner.Span, encryptedPacketArrayPoolOwner.Span) == 0)
+            {
+                return false;
+            }
 
-            ReadOnlySpan<byte> base64EncryptedPacket = receivedPacket[..bytesRead];
-            if (base64EncryptedPacket.GetRef(bytesRead - 1) != PaddingCharacter) return false;
+            using var base64EncryptedPacketArrayPoolOwner = ArrayPoolOwner<byte>.Rent(Base64Utility.EncodeLength(encryptedPacketArrayPoolOwner.Span) + 1);
 
-            base64EncryptedPacket = base64EncryptedPacket[..(bytesRead - 1)];
-
-            using var encryptedPacketArrayOwner = ArrayOwner<byte>.Rent(Base64Utility.DecodeLength(base64EncryptedPacket));
-            var encryptedPacket = encryptedPacketArrayOwner.Span;
-            var decodedBytes = Base64Utility.Decode(base64EncryptedPacket, encryptedPacket);
-            if (decodedBytes == 0) return false;
-
-            using var decryptedPacketArrayOwner = ArrayOwner<byte>.Rent(encryptedPacket.Length);
-            var decryptedPacket = decryptedPacketArrayOwner.Span;
-            var bytesWritten = SymmetricAlgorithmUtility.Decrypt_AES_256_CFB_8(key, iv, encryptedPacket, decryptedPacket);
+            var bytesWritten = Base64Utility.Encode(encryptedPacketArrayPoolOwner.Span, base64EncryptedPacketArrayPoolOwner.Span);
             if (bytesWritten == 0) return false;
 
-            _receivePacketHandler(decryptedPacket[..^decryptedPacket[^1]], Stopwatch.GetElapsedTime(executeTimestamp));
-            return true;
+            base64EncryptedPacketArrayPoolOwner.Span.GetRef(bytesWritten) = PaddingCharacter;
+            await stream.WriteAsync(base64EncryptedPacketArrayPoolOwner.Memory, cancellationToken);
         }
-        catch
-        {
-            return false;
-        }
+
+        return true;
+    }
+
+    private async Task<bool> TryExecuteReadAsync(NetworkStream networkStream, ReadOnlyMemory<byte> key, ReadOnlyMemory<byte> iv, long executeTimestamp, CancellationToken cancellationToken)
+    {
+        if (_receivePacketHandler == null) return true;
+
+        using var receivedPacketArrayOwner = ArrayPoolOwner<byte>.Rent(networkStream.Socket.ReceiveBufferSize);
+        var receivedPacket = receivedPacketArrayOwner.Memory;
+
+        var bytesRead = await networkStream.ReadAsync(receivedPacket, cancellationToken);
+        if (bytesRead == 0) return false;
+
+        ReadOnlyMemory<byte> base64EncryptedPacket = receivedPacket[..bytesRead];
+        if (base64EncryptedPacket.Span.GetRef(bytesRead - 1) != PaddingCharacter) return false;
+
+        base64EncryptedPacket = base64EncryptedPacket[..(bytesRead - 1)];
+
+        using var encryptedPacketArrayOwner = ArrayPoolOwner<byte>.Rent(Base64Utility.DecodeLength(base64EncryptedPacket.Span));
+        var decodedBytes = Base64Utility.Decode(base64EncryptedPacket.Span, encryptedPacketArrayOwner.Span);
+        if (decodedBytes == 0) return false;
+
+        using var decryptedPacketArrayOwner = ArrayPoolOwner<byte>.Rent(encryptedPacketArrayOwner.Span.Length);
+        var bytesWritten = SymmetricAlgorithmUtility.Decrypt_AES_256_CFB_8(key.Span, iv.Span, encryptedPacketArrayOwner.Span, decryptedPacketArrayOwner.Span);
+        if (bytesWritten == 0) return false;
+
+        _receivePacketHandler(decryptedPacketArrayOwner.Span[..bytesWritten], Stopwatch.GetElapsedTime(executeTimestamp));
+        return true;
+    }
+
+    public override string ToString()
+    {
+        return Encoding.UTF8.GetString(_packetArrayPoolOwner.Span);
     }
 
     public void Dispose()
     {
-        _packetArrayOwner.Dispose();
+        _packetArrayPoolOwner.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

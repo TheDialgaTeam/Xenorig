@@ -44,16 +44,19 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
+        <DefineConstants>$(DefineConstants);AOT</DefineConstants>
         <PublishAot>true</PublishAot>
         <PublishSingleFile>false</PublishSingleFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
+        <DefineConstants>$(DefineConstants);AOT</DefineConstants>
         <PublishAot>true</PublishAot>
         <PublishSingleFile>false</PublishSingleFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
+        <DefineConstants>$(DefineConstants);AOT</DefineConstants>
         <PublishAot>true</PublishAot>
         <PublishSingleFile>false</PublishSingleFile>
     </PropertyGroup>

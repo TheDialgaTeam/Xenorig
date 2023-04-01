@@ -21,11 +21,11 @@ DOTNET_PRIVATE DOTNET_BYTE DecodeByte(DOTNET_BYTE value) {
     }
 }
 
-DOTNET_INT Base64Utility_EncodeLength(DOTNET_INT inputLength) {
+DOTNET_PUBLIC DOTNET_INT Base64Utility_EncodeLength(DOTNET_INT inputLength) {
     return 4 * ((inputLength + 3 - 1) / 3);
 }
 
-DOTNET_INT Base64Utility_DecodeLength(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength) {
+DOTNET_PUBLIC DOTNET_INT Base64Utility_DecodeLength(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength) {
     if (input == NULL || inputLength % 4 != 0) {
         return 0;
     }
@@ -43,7 +43,7 @@ DOTNET_INT Base64Utility_DecodeLength(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_I
     return 3 * (inputLength / 4) - paddingLength;
 }
 
-DOTNET_INT Base64Utility_Encode(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
+DOTNET_PUBLIC DOTNET_INT Base64Utility_Encode(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
     if (input == NULL || inputLength == 0 || output == NULL) {
         return 0;
     }
@@ -81,7 +81,7 @@ DOTNET_INT Base64Utility_Encode(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inp
     return encodeLength;
 }
 
-DOTNET_INT Base64Utility_Decode(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
+DOTNET_PUBLIC DOTNET_INT Base64Utility_Decode(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
     if (input == NULL || inputLength % 4 != 0 || output == NULL) {
         return 0;
     }

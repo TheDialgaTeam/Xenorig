@@ -1,7 +1,7 @@
 #include "RandomNumberGeneratorUtility.h"
 #include "openssl/rand.h"
 
-DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumValue, DOTNET_INT maximumValue) {
+DOTNET_PUBLIC DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumValue, DOTNET_INT maximumValue) {
     DOTNET_UINT range = (DOTNET_UINT) maximumValue - (DOTNET_UINT) minimumValue;
 
     if (range == 0) {
@@ -35,7 +35,7 @@ DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumV
         DOTNET_USHORT result;
 
         do {
-            if (!RAND_bytes(&span, sizeof(span))) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) &span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -54,7 +54,7 @@ DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumV
         DOTNET_UINT result;
 
         do {
-            if (!RAND_bytes(&span, sizeof(span))) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) &span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -65,7 +65,7 @@ DOTNET_INT RandomNumberGeneratorUtility_GetRandomBetween_Int(DOTNET_INT minimumV
     }
 }
 
-DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minimumValue, DOTNET_LONG maximumValue) {
+DOTNET_PUBLIC DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minimumValue, DOTNET_LONG maximumValue) {
     DOTNET_ULONG range = maximumValue - minimumValue;
 
     if (range == 0) {
@@ -99,7 +99,7 @@ DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minim
         DOTNET_USHORT result;
 
         do {
-            if (!RAND_bytes(&span, sizeof(span))) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) &span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -118,7 +118,7 @@ DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minim
         DOTNET_UINT result;
 
         do {
-            if (!RAND_bytes(&span, sizeof(span))) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) &span, sizeof(span))) {
                 return minimumValue;
             }
 
@@ -138,7 +138,7 @@ DOTNET_LONG RandomNumberGeneratorUtility_GetRandomBetween_Long(DOTNET_LONG minim
         DOTNET_ULONG result;
 
         do {
-            if (!RAND_bytes(&span, sizeof(span))) {
+            if (!RAND_bytes((DOTNET_SPAN_BYTE) &span, sizeof(span))) {
                 return minimumValue;
             }
 

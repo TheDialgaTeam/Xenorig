@@ -1,7 +1,7 @@
 #include "CpuInformationUtility.h"
 #include "cpuinfo.h"
 
-DOTNET_STRING CpuInformationUtility_GetProcessorName() {
+DOTNET_PUBLIC DOTNET_STRING CpuInformationUtility_GetProcessorName() {
     if (!cpuinfo_initialize()) {
         return "";
     }
@@ -15,7 +15,7 @@ DOTNET_STRING CpuInformationUtility_GetProcessorName() {
     return package->name;
 }
 
-DOTNET_INT CpuInformationUtility_GetProcessorL2Cache() {
+DOTNET_PUBLIC DOTNET_INT CpuInformationUtility_GetProcessorL2Cache() {
     if (!cpuinfo_initialize()) {
         return 0;
     }
@@ -29,7 +29,7 @@ DOTNET_INT CpuInformationUtility_GetProcessorL2Cache() {
     return cache->size * cpuinfo_get_cores_count();
 }
 
-DOTNET_INT CpuInformationUtility_GetProcessorL3Cache() {
+DOTNET_PUBLIC DOTNET_INT CpuInformationUtility_GetProcessorL3Cache() {
     if (!cpuinfo_initialize()) {
         return 0;
     }
@@ -43,7 +43,7 @@ DOTNET_INT CpuInformationUtility_GetProcessorL3Cache() {
     return cache->size;
 }
 
-DOTNET_INT CpuInformationUtility_GetProcessorCoreCount() {
+DOTNET_PUBLIC DOTNET_INT CpuInformationUtility_GetProcessorCoreCount() {
     if (!cpuinfo_initialize()) {
         return 0;
     }

@@ -3,11 +3,11 @@
 
 #include "global.h"
 
-#define MemoryCopyHeader(name, type) DOTNET_PUBLIC void BufferUtility_MemoryCopy_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length)
-#define MemoryCopySource(name, type) DOTNET_PUBLIC void BufferUtility_MemoryCopy_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length) { memcpy(destination, source, sizeof(DOTNET_##type) * length); }
+#define MemoryCopyHeader(name, type) void BufferUtility_MemoryCopy_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length)
+#define MemoryCopySource(name, type) void BufferUtility_MemoryCopy_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length) { memcpy(destination, source, sizeof(DOTNET_##type) * length); }
 
-#define MemoryMoveHeader(name, type) DOTNET_PUBLIC void BufferUtility_MemoryMove_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length)
-#define MemoryMoveSource(name, type) DOTNET_PUBLIC void BufferUtility_MemoryMove_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length) { memmove(destination, source, sizeof(DOTNET_##type) * length); }
+#define MemoryMoveHeader(name, type) void BufferUtility_MemoryMove_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length)
+#define MemoryMoveSource(name, type) void BufferUtility_MemoryMove_##name(DOTNET_SPAN_##type destination, DOTNET_READ_ONLY_SPAN_##type source, DOTNET_INT length) { memmove(destination, source, sizeof(DOTNET_##type) * length); }
 
 MemoryCopyHeader(Byte, BYTE);
 MemoryCopyHeader(Short, SHORT);

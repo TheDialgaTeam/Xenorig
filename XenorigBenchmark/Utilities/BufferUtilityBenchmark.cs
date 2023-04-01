@@ -8,20 +8,9 @@ using Xenorig.Utilities;
 
 namespace XenorigBenchmark.Utilities;
 
-[SimpleJob(RuntimeMoniker.NativeAot70)]
+[SimpleJob(RuntimeMoniker.Net70)]
 public class BufferUtilityBenchmark
 {
-    [Benchmark]
-    [SkipLocalsInit]
-    public void MemoryCopyInt()
-    {
-        Span<int> source = stackalloc int[256];
-        Span<int> destination = stackalloc int[256];
-        
-        RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(source));
-        source.CopyTo(destination);
-    }
-    
     [Benchmark]
     [SkipLocalsInit]
     public void MemoryCopyLong()
@@ -30,18 +19,7 @@ public class BufferUtilityBenchmark
         Span<long> destination = stackalloc long[256];
         
         RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(source));
-        source.CopyTo(destination);
-    }
-    
-    [Benchmark]
-    [SkipLocalsInit]
-    public void MemoryCopyIntNative()
-    {
-        Span<int> source = stackalloc int[256];
-        Span<int> destination = stackalloc int[256];
-        
-        RandomNumberGenerator.Fill(MemoryMarshal.AsBytes(source));
-        BufferUtility.MemoryCopy(source, destination, 256);
+        source[..256].CopyTo(destination);
     }
 
     [Benchmark]
