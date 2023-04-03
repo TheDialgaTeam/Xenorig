@@ -118,6 +118,18 @@ public sealed class CpuMiner
         private set => _threadConfigs = value ?? _threadConfigs;
     }
 
+    [UsedImplicitly]
+    public bool EasyBlockOnly { get; private set; }
+    
+    [UsedImplicitly]
+    public bool UseXenophyteRandomizer { get; private set; }
+    
+    [UsedImplicitly]
+    public int JobMinRangePercentage { get; private set; }
+
+    [UsedImplicitly]
+    public int JobMaxRangePercentage { get; private set; } = 100;
+
     private CpuMinerThreadConfiguration[]? _threadConfigs = Array.Empty<CpuMinerThreadConfiguration>();
 
     public int GetNumberOfThreads()

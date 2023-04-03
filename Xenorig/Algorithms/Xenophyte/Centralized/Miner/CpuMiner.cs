@@ -183,6 +183,12 @@ public sealed partial class CpuMiner
             if (cpuMinerJob.BlockFound) continue;
             if (cpuMinerJob.BlockIndication != blockHeader.BlockIndication) continue;
 
+            if (options.EasyBlockOnly)
+            {
+                Logger.PrintCurrentThreadJobDone(_logger, threadId);
+                continue;
+            }
+
             DoNonEasyBlocksCalculations(threadId, options, cpuMinerJob);
         }
     }
@@ -228,44 +234,119 @@ public sealed partial class CpuMiner
         
         Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom);
 
-        do
+        if (options.UseXenophyteRandomizer)
         {
-            long choseRandom;
-            long choseRandom2;
-            
             do
             {
-                choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
-            } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom));
+                long choseRandom;
+                long choseRandom2;
             
+                do
+                {
+                    choseRandom = RandomNumberGeneratorUtility.GetBiasRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
+                } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom));
+            
+                do
+                {
+                    choseRandom2 = RandomNumberGeneratorUtility.GetBiasRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
+                } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom2));
+            
+                DoMathCalculations(threadId, choseRandom, choseRandom2, JobTypeRandom, cpuMinerJob);
+                DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
+            
+                if (cpuMinerJob.BlockFound) return;
+                if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
+            
+                for (var i = cpuMinerJob.EasyBlockValues.Length - 1; i >= 0; i--)
+                {
+                    var choseRandom3 = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
+
+                    DoMathCalculations(threadId, choseRandom, easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom, cpuMinerJob);
+                    DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), choseRandom, JobTypeSemiRandom, cpuMinerJob);
+
+                    DoMathCalculations(threadId, choseRandom2, easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom, cpuMinerJob);
+                    DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), choseRandom2, JobTypeSemiRandom, cpuMinerJob);
+
+                    (easyBlockValues.GetRef(i), easyBlockValues.GetRef(choseRandom3)) = (easyBlockValues.GetRef(choseRandom3), easyBlockValues.GetRef(i));
+                }
+            } while (!cpuMinerJob.BlockFound && cpuMinerJob.BlockIndication == _network.BlockHeader.BlockIndication);
+        }
+        else
+        {
             do
             {
-                choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
-            } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom2));
+                long choseRandom;
+                long choseRandom2;
             
-            DoMathCalculations(threadId, choseRandom, choseRandom2, JobTypeRandom, cpuMinerJob);
-            DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
+                do
+                {
+                    choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
+                } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom));
             
-            if (cpuMinerJob.BlockFound) return;
-            if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
+                do
+                {
+                    choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
+                } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom2));
             
-            for (var i = cpuMinerJob.EasyBlockValues.Length - 1; i >= 0; i--)
-            {
-                var choseRandom3 = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
+                DoMathCalculations(threadId, choseRandom, choseRandom2, JobTypeRandom, cpuMinerJob);
+                DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
+            
+                if (cpuMinerJob.BlockFound) return;
+                if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
+            
+                for (var i = cpuMinerJob.EasyBlockValues.Length - 1; i >= 0; i--)
+                {
+                    var choseRandom3 = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
 
-                DoMathCalculations(threadId, choseRandom, easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom, cpuMinerJob);
-                DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), choseRandom, JobTypeSemiRandom, cpuMinerJob);
+                    DoMathCalculations(threadId, choseRandom, easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom, cpuMinerJob);
+                    DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), choseRandom, JobTypeSemiRandom, cpuMinerJob);
 
-                DoMathCalculations(threadId, choseRandom2, easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom, cpuMinerJob);
-                DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), choseRandom2, JobTypeSemiRandom, cpuMinerJob);
+                    DoMathCalculations(threadId, choseRandom2, easyBlockValues.GetRef(choseRandom3), JobTypeSemiRandom, cpuMinerJob);
+                    DoMathCalculations(threadId, easyBlockValues.GetRef(choseRandom3), choseRandom2, JobTypeSemiRandom, cpuMinerJob);
 
-                (easyBlockValues.GetRef(i), easyBlockValues.GetRef(choseRandom3)) = (easyBlockValues.GetRef(choseRandom3), easyBlockValues.GetRef(i));
-            }
-        } while (!cpuMinerJob.BlockFound && cpuMinerJob.BlockIndication == _network.BlockHeader.BlockIndication);
+                    (easyBlockValues.GetRef(i), easyBlockValues.GetRef(choseRandom3)) = (easyBlockValues.GetRef(choseRandom3), easyBlockValues.GetRef(i));
+                }
+            } while (!cpuMinerJob.BlockFound && cpuMinerJob.BlockIndication == _network.BlockHeader.BlockIndication);
+        }
     }
 
     private void DoMathCalculations(int threadId, long firstNumber, long secondNumber, string jobType, CpuMinerJob cpuMinerJob)
     {
+        if (firstNumber > secondNumber)
+        {
+            // Subtraction Rule:
+            var subtractionResult = firstNumber - secondNumber;
+
+            if (subtractionResult >= cpuMinerJob.BlockMinRange)
+            {
+                ValidateAndSubmitShare(threadId, firstNumber, secondNumber, subtractionResult, '-', jobType, cpuMinerJob);
+            }
+            
+            // Division Rule:
+            var (integerDivideResult, integerDivideRemainder) = Math.DivRem(firstNumber, secondNumber);
+
+            if (integerDivideRemainder == 0 && integerDivideResult >= cpuMinerJob.BlockMinRange)
+            {
+                ValidateAndSubmitShare(threadId, firstNumber, secondNumber, integerDivideResult, '/', jobType, cpuMinerJob);
+            }
+
+            // Modulo Rule:
+            if (integerDivideRemainder >= cpuMinerJob.BlockMinRange)
+            {
+                ValidateAndSubmitShare(threadId, firstNumber, secondNumber, integerDivideRemainder, '%', jobType, cpuMinerJob);
+            }
+        }
+        else
+        {
+            var integerDivideRemainder = firstNumber % secondNumber;
+            
+            // Modulo Rule:
+            if (integerDivideRemainder >= cpuMinerJob.BlockMinRange)
+            {
+                ValidateAndSubmitShare(threadId, firstNumber, secondNumber, integerDivideRemainder, '%', jobType, cpuMinerJob);
+            }
+        }
+        
         // Addition Rule:
         var additionResult = firstNumber + secondNumber;
 
@@ -273,35 +354,13 @@ public sealed partial class CpuMiner
         {
             ValidateAndSubmitShare(threadId, firstNumber, secondNumber, additionResult, '+', jobType, cpuMinerJob);
         }
-
-        // Subtraction Rule:
-        var subtractionResult = firstNumber - secondNumber;
-
-        if (subtractionResult >= cpuMinerJob.BlockMinRange)
-        {
-            ValidateAndSubmitShare(threadId, firstNumber, secondNumber, subtractionResult, '-', jobType, cpuMinerJob);
-        }
-
+        
         // Multiplication Rule:
         var multiplicationResult = firstNumber * secondNumber;
 
         if (multiplicationResult <= cpuMinerJob.BlockMaxRange)
         {
             ValidateAndSubmitShare(threadId, firstNumber, secondNumber, multiplicationResult, '*', jobType, cpuMinerJob);
-        }
-
-        // Division Rule:
-        var (integerDivideResult, integerDivideRemainder) = Math.DivRem(firstNumber, secondNumber);
-
-        if (integerDivideRemainder == 0 && integerDivideResult >= cpuMinerJob.BlockMinRange)
-        {
-            ValidateAndSubmitShare(threadId, firstNumber, secondNumber, integerDivideResult, '/', jobType, cpuMinerJob);
-        }
-
-        // Modulo Rule:
-        if (integerDivideRemainder >= cpuMinerJob.BlockMinRange)
-        {
-            ValidateAndSubmitShare(threadId, firstNumber, secondNumber, integerDivideRemainder, '%', jobType, cpuMinerJob);
         }
     }
 
@@ -332,15 +391,15 @@ public sealed partial class CpuMiner
 
         Interlocked.Increment(ref _totalHashCalculatedIn10Seconds.GetRef(threadId));
 
-        Span<char> hashEncryptedShareString = stackalloc char[Encoding.ASCII.GetCharCount(hashEncryptedShare)];
-        Encoding.ASCII.GetChars(hashEncryptedShare, hashEncryptedShareString);
+        Span<char> hashEncryptedShareString = stackalloc char[Encoding.UTF8.GetCharCount(hashEncryptedShare)];
+        Encoding.UTF8.GetChars(hashEncryptedShare, hashEncryptedShareString);
 
         if (!hashEncryptedShareString.SequenceEqual(cpuMinerJob.BlockIndication)) return;
 
-        _network.SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveJob}|{Encoding.ASCII.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{cpuMinerJob.BlockHeight}|{_pool.UserAgent}", true, (packet, time) =>
+        _network.SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveJob}|{Encoding.UTF8.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{cpuMinerJob.BlockHeight}|{_pool.UserAgent}", true, (packet, time) =>
         {
-            Span<char> temp = stackalloc char[Encoding.ASCII.GetCharCount(packet)];
-            Encoding.ASCII.GetChars(packet, temp);
+            Span<char> temp = stackalloc char[Encoding.UTF8.GetCharCount(packet)];
+            Encoding.UTF8.GetChars(packet, temp);
 
             if (!temp.StartsWith(NetworkConstants.SendJobStatus)) return;
             temp = temp[(NetworkConstants.SendJobStatus.Length + 1)..];

@@ -1,0 +1,36 @@
+﻿@inherits LayoutComponentBase
+
+<Layout>
+	<LayoutHeader>
+		<Container>
+			<Bar Breakpoint="Breakpoint.Desktop" CollapseMode="BarCollapseMode.Hide" Background="Background.Primary">
+				<BarBrand>
+					<Figure Size="FigureSize.Is32x32" Margin="Margin.Is3.FromStart.Is0.FromBottom">
+						<FigureImage Source="images/worktips-logo.png" AlternateText="Xenopool Logo" />
+					</Figure>
+				</BarBrand>
+				<BarToggler Margin="Margin.Is3.FromEnd"/>
+				<BarMenu>
+					<BarStart Margin="Margin.Is3.FromStart">
+						<BarItem>
+							<BarLink To="/"><Icon Name="@("fas fa-dice-d6")"/> Pool</BarLink>
+						</BarItem>
+						<BarItem>
+							<BarLink To="https://discord.gg/mvc7v9FDyJ"><Icon Name="@("fab fa-discord")"/> Discord</BarLink>
+						</BarItem>
+					</BarStart>
+				</BarMenu>
+			</Bar>
+		</Container>
+	</LayoutHeader>
+	<LayoutContent Padding="Padding.Is3.FromTop.Is3.FromBottom">
+		<Container>
+			@Body
+		</Container>
+	</LayoutContent>
+	<LayoutFooter>
+		<Container>
+			<Paragraph TextColor="TextColor.Body">Copyright © 2023 Yong Jian Ming</Paragraph>
+		</Container>
+	</LayoutFooter>
+</Layout>

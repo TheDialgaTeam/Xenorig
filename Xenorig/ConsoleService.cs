@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ public sealed class ConsoleService : BackgroundService
         }
 
         Logger.PrintEmpty(_logger);
-
+        
         _minerInstances = CreateMinerInstances();
         if (_minerInstances.Length == 0) return;
 

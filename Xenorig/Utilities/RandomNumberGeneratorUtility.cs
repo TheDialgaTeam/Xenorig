@@ -160,4 +160,75 @@ public static class RandomNumberGeneratorUtility
             }
         }
     }
+
+    [SkipLocalsInit]
+    public static long GetBiasRandomBetween(long minimumValue, long maximumValue)
+    {
+        var range = (ulong) (maximumValue - minimumValue);
+        if (range == 0) return minimumValue;
+
+        Span<char> minimumValueString = stackalloc char[19];
+        minimumValue.TryFormat(minimumValueString, out var minimumValueLength);
+
+        var randomMaxValue = GetRandomBetweenSize(minimumValue, maximumValue);
+
+        Span<char> maximumValueString = stackalloc char[19];
+        randomMaxValue.TryFormat(maximumValueString, out var maximumValueLength);
+
+        var randomLength = GetRandomBetweenSize(minimumValueLength, maximumValueLength);
+
+        if (randomLength == 1)
+        {
+            long result;
+
+            do
+            {
+                result = GetRandomBetweenSize(0, 9);
+            } while (result < minimumValue || result > maximumValue);
+
+            return result;
+        }
+        else
+        {
+            long result;
+
+            do
+            {
+                result = 0;
+                var multiplier = 1;
+
+                for (var i = randomLength - 1; i >= 0; i--)
+                {
+                    result += GetRandomBetweenSize(0, 9) * multiplier;
+                    multiplier *= 10;
+                }
+            } while (result < minimumValue || result > maximumValue);
+
+            return result;
+        }
+    }
+
+    [SkipLocalsInit]
+    private static int GetRandomBetweenSize(int minimumValue, int maximumValue)
+    {
+        Span<byte> randomIndex = stackalloc byte[1];
+        RandomNumberGenerator.Fill(randomIndex);
+
+        var multiplier = Math.Max(0, randomIndex.GetRef(0) / 255.0 - 0.00000000001);
+        var range = maximumValue - minimumValue + 1;
+
+        return minimumValue + (int) Math.Floor(multiplier * range);
+    }
+
+    [SkipLocalsInit]
+    private static long GetRandomBetweenSize(long minimumValue, long maximumValue)
+    {
+        Span<byte> randomIndex = stackalloc byte[1];
+        RandomNumberGenerator.Fill(randomIndex);
+
+        var multiplier = Math.Max(0, randomIndex.GetRef(0) / 255.0 - 0.00000000001);
+        var range = maximumValue - minimumValue + 1;
+
+        return minimumValue + (long) Math.Floor(multiplier * range);
+    }
 }
