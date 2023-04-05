@@ -234,7 +234,7 @@ public sealed partial class CpuMiner
         
         Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom);
 
-        if (options.UseXenophyteRandomizer)
+        if (options.GetUseXenophyteRandomizer(threadId))
         {
             do
             {
@@ -393,7 +393,7 @@ public sealed partial class CpuMiner
 
         Span<char> hashEncryptedShareString = stackalloc char[Encoding.UTF8.GetCharCount(hashEncryptedShare)];
         Encoding.UTF8.GetChars(hashEncryptedShare, hashEncryptedShareString);
-
+        
         if (!hashEncryptedShareString.SequenceEqual(cpuMinerJob.BlockIndication)) return;
 
         _network.SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveJob}|{Encoding.UTF8.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{cpuMinerJob.BlockHeight}|{_pool.UserAgent}", true, (packet, time) =>

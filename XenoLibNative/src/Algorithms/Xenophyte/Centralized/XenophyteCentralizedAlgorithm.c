@@ -3,9 +3,6 @@
 #include "Utilities/RandomNumberGeneratorUtility.h"
 #include "Utilities/SymmetricAlgorithmUtility.h"
 
-#define MAX_FLOAT_PRECISION 16777216
-#define MAX_DOUBLE_PRECISION 9007199254740992
-
 DOTNET_PRIVATE DOTNET_BYTE Base16Characters[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 DOTNET_PRIVATE void ConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output, DOTNET_BOOL withDash) {
@@ -82,18 +79,8 @@ DOTNET_PUBLIC DOTNET_INT XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(
     DOTNET_LONG range = maxValue - minValue + 1;
 
     if (range > 256) {
-        if (range <= MAX_FLOAT_PRECISION) {
-            for (DOTNET_INT i = 255; i >= 0; i--) {
-                output[i] = minValue + (DOTNET_LONG) (Max_Float(0, (DOTNET_FLOAT) i / 255.0f - 0.0000001f) * (DOTNET_FLOAT) range);
-            }
-        } else if (range <= MAX_DOUBLE_PRECISION) {
-            for (DOTNET_INT i = 255; i >= 0; i--) {
-                output[i] = minValue + (DOTNET_LONG) (Max_Double(0, i / 255.0 - 0.00000000001) * (DOTNET_DOUBLE) range);
-            }
-        }
-        else
-        {
-            return 0;
+        for (DOTNET_INT i = 255; i >= 0; i--) {
+            output[i] = minValue + (DOTNET_LONG) (Max_Double(0, i / 255.0 - 0.00000000001) * (DOTNET_DOUBLE) range);
         }
 
         return 256;
@@ -125,31 +112,16 @@ DOTNET_PUBLIC DOTNET_INT XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbe
     DOTNET_INT amount = 0;
     DOTNET_INT easyBlockValuesIndex = 0;
 
-    if (range <= MAX_FLOAT_PRECISION) {
-        DOTNET_LONG value = minValue + (DOTNET_LONG) (Max_Float(0, (DOTNET_FLOAT) easyBlockValuesIndex / 255.0f - 0.0000001f) * (DOTNET_FLOAT) range);
+    DOTNET_LONG value = minValue + (DOTNET_LONG) (Max_Double(0, easyBlockValuesIndex / 255.0 - 0.00000000001) * (DOTNET_DOUBLE) range);
 
-        for (DOTNET_LONG i = minValue; i <= maxValue; i++) {
-            if (i < value) {
-                output[amount] = i;
-                output2[amount] = i;
-                amount += 1;
-            } else {
-                easyBlockValuesIndex += 1;
-                value = minValue + (DOTNET_LONG) (Max_Float(0, (DOTNET_FLOAT) easyBlockValuesIndex / 255.0f - 0.0000001f) * (DOTNET_FLOAT) range);
-            }
-        }
-    } else {
-        DOTNET_LONG value = minValue + (DOTNET_LONG) (Max_Double(0, easyBlockValuesIndex / 255.0 - 0.00000000001) * (DOTNET_DOUBLE) range);
-
-        for (DOTNET_LONG i = minValue; i <= maxValue; i++) {
-            if (i < value) {
-                output[amount] = i;
-                output2[amount] = i;
-                amount += 1;
-            } else {
-                easyBlockValuesIndex += 1;
-                value = minValue + (DOTNET_LONG) (Max_Double(0, easyBlockValuesIndex / 255.0 - 0.00000000001) * (DOTNET_DOUBLE) range);
-            }
+    for (DOTNET_LONG i = minValue; i <= maxValue; i++) {
+        if (i < value) {
+            output[amount] = i;
+            output2[amount] = i;
+            amount += 1;
+        } else {
+            easyBlockValuesIndex += 1;
+            value = minValue + (DOTNET_LONG) (Max_Double(0, easyBlockValuesIndex / 255.0 - 0.00000000001) * (DOTNET_DOUBLE) range);
         }
     }
 

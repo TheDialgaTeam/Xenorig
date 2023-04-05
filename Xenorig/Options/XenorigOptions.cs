@@ -147,6 +147,11 @@ public sealed class CpuMiner
         return GetThreadConfig(thread)?.ThreadPriority ?? ThreadPriority;
     }
 
+    public bool GetUseXenophyteRandomizer(int thread)
+    {
+        return GetThreadConfig(thread)?.UseXenophyteRandomizer ?? UseXenophyteRandomizer;
+    }
+
     private CpuMinerThreadConfiguration? GetThreadConfig(int thread)
     {
         return thread < ThreadConfigs.Length ? ThreadConfigs[thread] : null;
@@ -160,4 +165,6 @@ public sealed class CpuMinerThreadConfiguration
 
     [UsedImplicitly]
     public ThreadPriority ThreadPriority { get; private set; } = ThreadPriority.Normal;
+    
+    public bool UseXenophyteRandomizer { get; private set; }
 }

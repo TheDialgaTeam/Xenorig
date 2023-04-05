@@ -77,7 +77,7 @@ public sealed class NetworkPool : IDisposable
 
     public void SendPacketToNetwork(PacketData packetData)
     {
-        _sentBlockNetwork.SendPacketToNetwork(packetData);
+        _getBlockHeaderNetwork.SendPacketToNetwork(packetData);
     }
 
     private async void GetBlockHeaderNetworkOnStatus(bool isConnected, string reason)
