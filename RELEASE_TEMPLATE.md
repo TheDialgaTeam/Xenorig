@@ -1,6 +1,10 @@
-Change Logs from v1.0.4.0
+Change Logs from v1.0.5.0
 
-- Fixed a bug where miner can get stuck when no response is given.
+- Fixed a bug where it generate the wrong easy block numbers.
+- Fixed network issues. Now it would reconnect properly.
+- Fixed thread affinity issues.
+- Added easy block only options.
+- Added xenophyte bias randomizer.
 
 Update classification: mandatory
 
