@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-20.04, macos-13]
+        os: [windows-2022, ubuntu-20.04, macos-11]
         arch: [x64, x86, arm, arm64]
         exclude:
           - os: windows-2022
@@ -44,11 +44,11 @@ jobs:
             arch: arm64
           - os: ubuntu-20.04
             arch: x86
-          - os: macos-13
+          - os: macos-11
             arch: x86
-          - os: macos-13
+          - os: macos-11
             arch: arm
-          - os: macos-13
+          - os: macos-11
             arch: arm64
         include:
           - os: windows-2022
@@ -126,12 +126,10 @@ jobs:
             Xenorig:
               arch: linux-arm64
 
-          - os: macos-13
+          - os: macos-11
             arch: x64
             install: >-
-              cmake
               ninja
-              llvm
             output_folder: Xenorig-osx-x64
             Xenorig_native:
               configure_preset: osx-x64
