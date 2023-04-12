@@ -126,7 +126,7 @@ jobs:
             Xenorig:
               arch: linux-arm64
 
-          - os: macos-11
+          - os: macos-12
             arch: x64
             install: >-
               cmake
