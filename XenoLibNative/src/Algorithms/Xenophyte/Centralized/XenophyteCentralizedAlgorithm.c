@@ -4,7 +4,7 @@
 
 DOTNET_PRIVATE DOTNET_BYTE Base16Characters[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-inline DOTNET_PRIVATE void ConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
+DOTNET_PRIVATE void ConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
     for (DOTNET_INT i = inputLength - 1; i >= 0; i--) {
         DOTNET_INT index = 2 * i;
         DOTNET_INT index2 = index + 1;
@@ -14,7 +14,7 @@ inline DOTNET_PRIVATE void ConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE inpu
     }
 }
 
-inline DOTNET_PRIVATE void ConvertByteArrayToHexWithDash(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
+DOTNET_PRIVATE void ConvertByteArrayToHexWithDash(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
     {
         DOTNET_INT i = inputLength - 1;
         DOTNET_INT index = 3 * i;
@@ -35,7 +35,7 @@ inline DOTNET_PRIVATE void ConvertByteArrayToHexWithDash(DOTNET_READ_ONLY_SPAN_B
     }
 }
 
-inline DOTNET_PRIVATE void XorAndConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_SPAN_BYTE output) {
+DOTNET_PRIVATE void XorAndConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_SPAN_BYTE output) {
     for (DOTNET_INT i = inputLength - 1; i >= 0; i--) {
         DOTNET_INT index = 2 * i;
         DOTNET_INT index2 = index + 1;
@@ -45,7 +45,7 @@ inline DOTNET_PRIVATE void XorAndConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYT
     }
 }
 
-inline DOTNET_PRIVATE void XorAndConvertByteArrayToHexWithDash(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_SPAN_BYTE output) {
+DOTNET_PRIVATE void XorAndConvertByteArrayToHexWithDash(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_SPAN_BYTE output) {
     {
         DOTNET_INT i = inputLength - 1;
         DOTNET_INT index = 3 * i;
