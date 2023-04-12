@@ -26,17 +26,17 @@ DOTNET_INT MessageDigestUtility_ComputeHash_EVP_MD(const EVP_MD *type, DOTNET_RE
 
     EVP_MD_CTX_free(context);
 
-    return bytesWritten;
+    return (DOTNET_INT) bytesWritten;
 }
 
-DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_256Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_256Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return MessageDigestUtility_ComputeHash_EVP_MD(EVP_sha256(), source, sourceLength, destination);
 }
 
-DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_512Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha2_512Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return MessageDigestUtility_ComputeHash_EVP_MD(EVP_sha512(), source, sourceLength, destination);
 }
 
-DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha3_512Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT MessageDigestUtility_ComputeSha3_512Hash(DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return MessageDigestUtility_ComputeHash_EVP_MD(EVP_sha3_512(), source, sourceLength, destination);
 }

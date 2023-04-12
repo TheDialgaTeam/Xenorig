@@ -85,22 +85,22 @@ DOTNET_INT SymmetricAlgorithmUtility_Decrypt_EVP_CIPHER(const EVP_CIPHER *type, 
     }
 }
 
-DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_128_CBC(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_128_CBC(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return SymmetricAlgorithmUtility_Encrypt_EVP_CIPHER(EVP_aes_128_cbc(), key, iv, source, sourceLength, destination);
 }
 
-DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_192_CBC(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_192_CBC(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return SymmetricAlgorithmUtility_Encrypt_EVP_CIPHER(EVP_aes_192_cbc(), key, iv, source, sourceLength, destination);
 }
 
-DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_256_CBC(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_256_CBC(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return SymmetricAlgorithmUtility_Encrypt_EVP_CIPHER(EVP_aes_256_cbc(), key, iv, source, sourceLength, destination);
 }
 
-DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_256_CFB_8(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Encrypt_AES_256_CFB_8(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return SymmetricAlgorithmUtility_Encrypt_EVP_CIPHER(EVP_aes_256_cfb8(), key, iv, source, sourceLength, destination);
 }
 
-DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Decrypt_AES_256_CFB_8(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
+inline DOTNET_PUBLIC DOTNET_INT SymmetricAlgorithmUtility_Decrypt_AES_256_CFB_8(DOTNET_READ_ONLY_SPAN_BYTE key, DOTNET_READ_ONLY_SPAN_BYTE iv, DOTNET_READ_ONLY_SPAN_BYTE source, DOTNET_INT sourceLength, DOTNET_SPAN_BYTE destination) {
     return SymmetricAlgorithmUtility_Decrypt_EVP_CIPHER(EVP_aes_256_cfb8(), key, iv, source, sourceLength, destination);
 }

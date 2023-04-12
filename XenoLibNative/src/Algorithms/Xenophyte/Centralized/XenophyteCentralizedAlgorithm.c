@@ -1,74 +1,69 @@
 #include "XenophyteCentralizedAlgorithm.h"
 #include "Utilities/MessageDigestUtility.h"
-#include "Utilities/RandomNumberGeneratorUtility.h"
 #include "Utilities/SymmetricAlgorithmUtility.h"
 
 DOTNET_PRIVATE DOTNET_BYTE Base16Characters[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-DOTNET_PRIVATE void ConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output, DOTNET_BOOL withDash) {
-    if (withDash) {
-        {
-            DOTNET_INT i = inputLength - 1;
-            DOTNET_INT index = 3 * i;
-            DOTNET_INT index2 = index + 1;
+inline DOTNET_PRIVATE void ConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
+    for (DOTNET_INT i = inputLength - 1; i >= 0; i--) {
+        DOTNET_INT index = 2 * i;
+        DOTNET_INT index2 = index + 1;
 
-            output[index] = Base16Characters[input[i] >> 4];
-            output[index2] = Base16Characters[input[i] & 15];
-        }
-
-        for (DOTNET_INT i = inputLength - 2; i >= 0; i--) {
-            DOTNET_INT index = 3 * i;
-            DOTNET_INT index2 = index + 1;
-            DOTNET_INT index3 = index2 + 1;
-
-            output[index] = Base16Characters[input[i] >> 4];
-            output[index2] = Base16Characters[input[i] & 15];
-            output[index3] = '-';
-        }
-    } else {
-        for (DOTNET_INT i = inputLength - 1; i >= 0; i--) {
-            DOTNET_INT index = 2 * i;
-            DOTNET_INT index2 = index + 1;
-
-            output[index] = Base16Characters[input[i] >> 4];
-            output[index2] = Base16Characters[input[i] & 15];
-        }
+        output[index] = Base16Characters[input[i] >> 4];
+        output[index2] = Base16Characters[input[i] & 15];
     }
 }
 
-DOTNET_PRIVATE void XorAndConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_SPAN_BYTE output, DOTNET_BOOL withDash) {
-    if (withDash) {
-        {
-            DOTNET_INT i = inputLength - 1;
-            DOTNET_INT index = 3 * i;
-            DOTNET_INT index2 = index + 1;
+inline DOTNET_PRIVATE void ConvertByteArrayToHexWithDash(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_SPAN_BYTE output) {
+    {
+        DOTNET_INT i = inputLength - 1;
+        DOTNET_INT index = 3 * i;
+        DOTNET_INT index2 = index + 1;
 
-            output[index] = Base16Characters[input[i] >> 4] ^ xorKey[index % xorKeyLength];
-            output[index2] = Base16Characters[input[i] & 15] ^ xorKey[index2 % xorKeyLength];
-        }
+        output[index] = Base16Characters[input[i] >> 4];
+        output[index2] = Base16Characters[input[i] & 15];
+    }
 
-        for (DOTNET_INT i = inputLength - 2; i >= 0; i--) {
-            DOTNET_INT index = 3 * i;
-            DOTNET_INT index2 = index + 1;
-            DOTNET_INT index3 = index2 + 1;
+    for (DOTNET_INT i = inputLength - 2; i >= 0; i--) {
+        DOTNET_INT index = 3 * i;
+        DOTNET_INT index2 = index + 1;
+        DOTNET_INT index3 = index2 + 1;
 
-            output[index] = Base16Characters[input[i] >> 4] ^ xorKey[index % xorKeyLength];
-            output[index2] = Base16Characters[input[i] & 15] ^ xorKey[index2 % xorKeyLength];
-            output[index3] = '-' ^ xorKey[index3 % xorKeyLength];
-        }
-    } else {
-        for (DOTNET_INT i = inputLength - 1; i >= 0; i--) {
-            DOTNET_INT index = 2 * i;
-            DOTNET_INT index2 = index + 1;
-
-            output[index] = Base16Characters[input[i] >> 4] ^ xorKey[index % xorKeyLength];
-            output[index2] = Base16Characters[input[i] & 15] ^ xorKey[index2 % xorKeyLength];
-        }
+        output[index] = Base16Characters[input[i] >> 4];
+        output[index2] = Base16Characters[input[i] & 15];
+        output[index3] = '-';
     }
 }
 
-inline DOTNET_PRIVATE DOTNET_FLOAT Max_Float(DOTNET_FLOAT a, DOTNET_FLOAT b) {
-    return a > b ? a : b;
+inline DOTNET_PRIVATE void XorAndConvertByteArrayToHex(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_SPAN_BYTE output) {
+    for (DOTNET_INT i = inputLength - 1; i >= 0; i--) {
+        DOTNET_INT index = 2 * i;
+        DOTNET_INT index2 = index + 1;
+
+        output[index] = Base16Characters[input[i] >> 4] ^ xorKey[index % xorKeyLength];
+        output[index2] = Base16Characters[input[i] & 15] ^ xorKey[index2 % xorKeyLength];
+    }
+}
+
+inline DOTNET_PRIVATE void XorAndConvertByteArrayToHexWithDash(DOTNET_READ_ONLY_SPAN_BYTE input, DOTNET_INT inputLength, DOTNET_READ_ONLY_SPAN_BYTE xorKey, DOTNET_INT xorKeyLength, DOTNET_SPAN_BYTE output) {
+    {
+        DOTNET_INT i = inputLength - 1;
+        DOTNET_INT index = 3 * i;
+        DOTNET_INT index2 = index + 1;
+
+        output[index] = Base16Characters[input[i] >> 4] ^ xorKey[index % xorKeyLength];
+        output[index2] = Base16Characters[input[i] & 15] ^ xorKey[index2 % xorKeyLength];
+    }
+
+    for (DOTNET_INT i = inputLength - 2; i >= 0; i--) {
+        DOTNET_INT index = 3 * i;
+        DOTNET_INT index2 = index + 1;
+        DOTNET_INT index3 = index2 + 1;
+
+        output[index] = Base16Characters[input[i] >> 4] ^ xorKey[index % xorKeyLength];
+        output[index2] = Base16Characters[input[i] & 15] ^ xorKey[index2 % xorKeyLength];
+        output[index3] = '-' ^ xorKey[index3 % xorKeyLength];
+    }
 }
 
 inline DOTNET_PRIVATE DOTNET_DOUBLE Max_Double(DOTNET_DOUBLE a, DOTNET_DOUBLE b) {
@@ -134,7 +129,7 @@ DOTNET_PUBLIC DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNE
     DOTNET_INT firstOutputLength = inputLength * 2;
     DOTNET_BYTE firstOutput[firstOutputLength];
 
-    XorAndConvertByteArrayToHex(input, inputLength, xorKey, xorKeyLength, firstOutput, DOTNET_FALSE);
+    XorAndConvertByteArrayToHex(input, inputLength, xorKey, xorKeyLength, firstOutput);
 
     // Second encryption phase: run through aes per round and apply xor at the final round.
 
@@ -175,7 +170,7 @@ DOTNET_PUBLIC DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNE
             DOTNET_INT tempSize = secondInputLength * 2 + (secondInputLength - 1);
             DOTNET_BYTE temp[tempSize];
 
-            XorAndConvertByteArrayToHex(secondOutput, secondInputLength, xorKey, xorKeyLength, temp, DOTNET_TRUE);
+            XorAndConvertByteArrayToHexWithDash(secondOutput, secondInputLength, xorKey, xorKeyLength, temp);
 
             memcpy(secondOutput, temp, tempSize);
             secondInputLength = tempSize;
@@ -204,7 +199,7 @@ DOTNET_PUBLIC DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNE
             DOTNET_INT tempSize = secondInputLength * 2 + (secondInputLength - 1);
             DOTNET_BYTE temp[tempSize];
 
-            ConvertByteArrayToHex(secondOutput, secondInputLength, temp, DOTNET_TRUE);
+            ConvertByteArrayToHexWithDash(secondOutput, secondInputLength, temp);
 
             memcpy(secondOutput, temp, tempSize);
             secondInputLength = tempSize;
@@ -218,13 +213,13 @@ DOTNET_PUBLIC DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNE
         return DOTNET_FALSE;
     }
 
-    ConvertByteArrayToHex(thirdOutput, 64, encryptedShare, DOTNET_FALSE);
+    ConvertByteArrayToHex(thirdOutput, 64, encryptedShare);
 
     if (!MessageDigestUtility_ComputeSha2_512Hash(encryptedShare, 64 * 2, thirdOutput)) {
         return DOTNET_FALSE;
     }
 
-    ConvertByteArrayToHex(thirdOutput, 64, hashEncryptedShare, DOTNET_FALSE);
+    ConvertByteArrayToHex(thirdOutput, 64, hashEncryptedShare);
 
     return DOTNET_TRUE;
 }

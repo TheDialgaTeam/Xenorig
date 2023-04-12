@@ -1,6 +1,7 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "xeno-native",
-  "version-string": "1.0.0",
+  "version": "1.0.0",
   "dependencies": [
     "openssl",
     "lz4",

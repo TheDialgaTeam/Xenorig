@@ -161,10 +161,10 @@ public sealed class CpuMiner
 public sealed class CpuMinerThreadConfiguration
 {
     [UsedImplicitly]
-    public ulong ThreadAffinity { get; private set; }
+    public ulong? ThreadAffinity { get; private set; }
 
     [UsedImplicitly]
     public ThreadPriority ThreadPriority { get; private set; } = ThreadPriority.Normal;
     
-    public bool UseXenophyteRandomizer { get; private set; }
+    public bool? UseXenophyteRandomizer { get; private set; }
 }
