@@ -9,7 +9,7 @@ Change Logs from v1.0.5.0
 Update classification: mandatory
 
 Algorithm Supported:
-- Xenophyte_Centralized
+- Xenophyte_Centralized_Solo
 
 Note:
 - Settings from v0.x are **NOT** compatible, please use the new one instead.
