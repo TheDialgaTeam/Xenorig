@@ -173,7 +173,7 @@ public sealed partial class BlockHeader
                 _aesSalt = GC.AllocateUninitializedArray<byte>(_aesSaltLength);
             }
         
-            _aesSaltLength = Encoding.UTF8.GetByteCount(subString[2]);
+            _aesSaltLength = Encoding.UTF8.GetBytes(subString[2], _aesSalt);
 
             using var pbkdf1 = new PBKDF1(_aesPassword.AsSpan(0, _aesPasswordLength), _aesSalt.AsSpan(0, _aesSaltLength));
 

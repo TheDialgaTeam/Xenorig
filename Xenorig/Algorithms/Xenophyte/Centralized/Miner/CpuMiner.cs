@@ -168,6 +168,7 @@ public sealed partial class CpuMiner
             {
                 if (cpuMinerJob.HasNewBlock)
                 {
+                    cpuMinerJob.BlockFound = false;
                     cpuMinerJob.HasNewBlock = false;
                     break;
                 }
@@ -250,7 +251,7 @@ public sealed partial class CpuMiner
                 {
                     choseRandom2 = RandomNumberGeneratorUtility.GetBiasRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
                 } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom2));
-            
+
                 DoMathCalculations(threadId, choseRandom, choseRandom2, JobTypeRandom, cpuMinerJob);
                 DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
             

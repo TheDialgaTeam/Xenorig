@@ -177,34 +177,150 @@ public static class RandomNumberGeneratorUtility
 
         var randomLength = GetRandomBetweenSize(minimumValueLength, maximumValueLength);
 
-        if (randomLength == 1)
+        switch (randomLength)
         {
-            long result;
-
-            do
+            case 1:
             {
-                result = GetRandomBetweenSize(0, 9);
-            } while (result < minimumValue || result > maximumValue);
+                long result;
 
-            return result;
-        }
-        else
-        {
-            long result;
-
-            do
-            {
-                result = 0;
-                var multiplier = 1;
-
-                for (var i = randomLength - 1; i >= 0; i--)
+                do
                 {
-                    result += GetRandomBetweenSize(0, 9) * multiplier;
-                    multiplier *= 10;
-                }
-            } while (result < minimumValue || result > maximumValue);
+                    result = GetRandomBetweenSize(0, 9);
+                } while (result < minimumValue || result > maximumValue);
 
-            return result;
+                return result;
+            }
+
+            case 2:
+            {
+                long result;
+
+                do
+                {
+                    result = GetRandomBetweenSize(0, 9);
+                    result += GetRandomBetweenSize(0, 9) * 10;
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
+            
+            case 3:
+            {
+                long result;
+
+                do
+                {
+                    result = GetRandomBetweenSize(0, 9);
+                    result += GetRandomBetweenSize(0, 9) * 10;
+                    result += GetRandomBetweenSize(0, 9) * 100;
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
+            
+            case 4:
+            {
+                long result;
+
+                do
+                {
+                    result = GetRandomBetweenSize(0, 9);
+                    result += GetRandomBetweenSize(0, 9) * 10;
+                    result += GetRandomBetweenSize(0, 9) * 100;
+                    result += GetRandomBetweenSize(0, 9) * 1000;
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
+            
+            case 5:
+            {
+                long result;
+
+                do
+                {
+                    result = GetRandomBetweenSize(0, 9);
+                    result += GetRandomBetweenSize(0, 9) * 10;
+                    result += GetRandomBetweenSize(0, 9) * 100;
+                    result += GetRandomBetweenSize(0, 9) * 1000;
+                    result += GetRandomBetweenSize(0, 9) * 10000;
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
+            
+            case 6:
+            {
+                long result;
+
+                do
+                {
+                    result = GetRandomBetweenSize(0, 9);
+                    result += GetRandomBetweenSize(0, 9) * 10;
+                    result += GetRandomBetweenSize(0, 9) * 100;
+                    result += GetRandomBetweenSize(0, 9) * 1000;
+                    result += GetRandomBetweenSize(0, 9) * 10000;
+                    result += GetRandomBetweenSize(0, 9) * 100000;
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
+            
+            case 7:
+            {
+                long result;
+
+                do
+                {
+                    result = GetRandomBetweenSize(0, 9);
+                    result += GetRandomBetweenSize(0, 9) * 10;
+                    result += GetRandomBetweenSize(0, 9) * 100;
+                    result += GetRandomBetweenSize(0, 9) * 1000;
+                    result += GetRandomBetweenSize(0, 9) * 10000;
+                    result += GetRandomBetweenSize(0, 9) * 100000;
+                    result += GetRandomBetweenSize(0, 9) * 1000000;
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
+            
+            case 8:
+            {
+                long result;
+
+                do
+                {
+                    result = GetRandomBetweenSize(0, 9);
+                    result += GetRandomBetweenSize(0, 9) * 10;
+                    result += GetRandomBetweenSize(0, 9) * 100;
+                    result += GetRandomBetweenSize(0, 9) * 1000;
+                    result += GetRandomBetweenSize(0, 9) * 10000;
+                    result += GetRandomBetweenSize(0, 9) * 100000;
+                    result += GetRandomBetweenSize(0, 9) * 1000000;
+                    result += GetRandomBetweenSize(0, 9) * 10000000;
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
+
+            default:
+            {
+                long result;
+
+                do
+                {
+                    result = 0;
+                    var multiplier = 1;
+
+                    for (var i = randomLength - 1; i >= 0; i--)
+                    {
+                        result += GetRandomBetweenSize(0, 9) * multiplier;
+                        multiplier *= 10;
+                    }
+                } while (result < minimumValue || result > maximumValue);
+
+                return result;
+            }
         }
     }
 

@@ -153,15 +153,15 @@ DOTNET_PUBLIC DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNE
         if (i == 1) {
             switch (aesKeySize) {
                 case 128:
-                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_128_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput, 1);
+                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_128_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput);
                     break;
 
                 case 192:
-                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_192_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput, 1);
+                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_192_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput);
                     break;
 
                 case 256:
-                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_256_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput, 1);
+                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_256_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput);
                     break;
 
                 default:
@@ -182,15 +182,15 @@ DOTNET_PUBLIC DOTNET_BOOL XenophyteCentralizedAlgorithm_MakeEncryptedShare(DOTNE
         } else {
             switch (aesKeySize) {
                 case 128:
-                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_128_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput, 1);
+                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_128_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput);
                     break;
 
                 case 192:
-                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_192_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput, 1);
+                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_192_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput);
                     break;
 
                 case 256:
-                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_256_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput, 1);
+                    secondInputLength = SymmetricAlgorithmUtility_Encrypt_AES_256_CBC(aesKey, aesIv, secondOutput, secondInputLength, secondOutput);
                     break;
 
                 default:

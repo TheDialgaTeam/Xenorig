@@ -1,15 +1,12 @@
 ﻿#pragma warning disable IL2026
 
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TheDialgaTeam.Core.Logging.Microsoft;
 using Xenorig.Options;
-using Xenorig.Utilities;
 
 namespace Xenorig;
 
