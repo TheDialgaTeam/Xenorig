@@ -1,17 +1,17 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using Microsoft.Extensions.Logging;
+using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
+using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
+using Xenolib.Utilities;
 using Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 using Xenorig.Options;
-using Xenorig.Utilities;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 
-public delegate void BlockSubmitResultHandler(string jobType, bool isGoodBlock, string reason, double roundTripTime);
+public delegate void BlockSubmitResultHandler(int height, string jobType, bool isGoodBlock, string reason, double roundTripTime);
 
 public sealed partial class CpuMiner
 {
@@ -21,7 +21,7 @@ public sealed partial class CpuMiner
         {
             [LibraryImport("kernel32")]
             public static partial nint GetCurrentThread();
-        
+
             [LibraryImport("kernel32")]
             public static partial nint SetThreadAffinityMask(nint hThread, nint dwThreadAffinityMask);
         }
@@ -110,7 +110,7 @@ public sealed partial class CpuMiner
         for (var i = 0; i < totalThreads; i++)
         {
             var threadId = i;
-            
+
             _cpuMiningThreads[i] = new Thread(() => ExecuteCpuMinerThread(threadId, _options.Xenophyte_Centralized_Solo.CpuMiner))
             {
                 Name = $"Mining Thread {i}",
@@ -134,7 +134,7 @@ public sealed partial class CpuMiner
     public void UpdateJobTemplate()
     {
         var blockHeader = _network.BlockHeader;
-        
+
         foreach (var cpuMinerJob in _cpuMinerJobs)
         {
             cpuMinerJob.Update(blockHeader);
@@ -204,7 +204,7 @@ public sealed partial class CpuMiner
 
         var easyBlockValues = cpuMinerJob.EasyBlockValues;
         Span<long> chunkData = stackalloc long[size];
-        
+
         BufferUtility.MemoryCopy(easyBlockValues.Slice(startIndex, size), chunkData, size);
 
         Logger.PrintCurrentChunkedThreadJob(_logger, threadId, JobTypeEasy, cpuMinerJob.EasyBlockValues.Length * size, startIndex, startIndex + size - 1, size);
@@ -221,7 +221,7 @@ public sealed partial class CpuMiner
 
                 (easyBlockValues.GetRef(j), easyBlockValues.GetRef(choseRandom2)) = (easyBlockValues.GetRef(choseRandom2), easyBlockValues.GetRef(j));
             }
-            
+
             if (cpuMinerJob.BlockFound) return;
             if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
 
@@ -232,7 +232,7 @@ public sealed partial class CpuMiner
     private void DoNonEasyBlocksCalculations(int threadId, Options.CpuMiner options, CpuMinerJob cpuMinerJob)
     {
         var easyBlockValues = cpuMinerJob.EasyBlockValues;
-        
+
         Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom);
 
         if (options.GetUseXenophyteRandomizer(threadId))
@@ -241,12 +241,12 @@ public sealed partial class CpuMiner
             {
                 long choseRandom;
                 long choseRandom2;
-            
+
                 do
                 {
                     choseRandom = RandomNumberGeneratorUtility.GetBiasRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
                 } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom));
-            
+
                 do
                 {
                     choseRandom2 = RandomNumberGeneratorUtility.GetBiasRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
@@ -254,10 +254,10 @@ public sealed partial class CpuMiner
 
                 DoMathCalculations(threadId, choseRandom, choseRandom2, JobTypeRandom, cpuMinerJob);
                 DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
-            
+
                 if (cpuMinerJob.BlockFound) return;
                 if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
-            
+
                 for (var i = cpuMinerJob.EasyBlockValues.Length - 1; i >= 0; i--)
                 {
                     var choseRandom3 = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
@@ -278,23 +278,23 @@ public sealed partial class CpuMiner
             {
                 long choseRandom;
                 long choseRandom2;
-            
+
                 do
                 {
                     choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
                 } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom));
-            
+
                 do
                 {
                     choseRandom2 = RandomNumberGeneratorUtility.GetRandomBetween(cpuMinerJob.BlockMinRange, cpuMinerJob.BlockMaxRange);
                 } while (cpuMinerJob.EasyBlockValues.Contains(choseRandom2));
-            
+
                 DoMathCalculations(threadId, choseRandom, choseRandom2, JobTypeRandom, cpuMinerJob);
                 DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
-            
+
                 if (cpuMinerJob.BlockFound) return;
                 if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
-            
+
                 for (var i = cpuMinerJob.EasyBlockValues.Length - 1; i >= 0; i--)
                 {
                     var choseRandom3 = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
@@ -322,7 +322,7 @@ public sealed partial class CpuMiner
             {
                 ValidateAndSubmitShare(threadId, firstNumber, secondNumber, subtractionResult, '-', jobType, cpuMinerJob);
             }
-            
+
             // Division Rule:
             var (integerDivideResult, integerDivideRemainder) = Math.DivRem(firstNumber, secondNumber);
 
@@ -340,14 +340,14 @@ public sealed partial class CpuMiner
         else
         {
             var integerDivideRemainder = firstNumber % secondNumber;
-            
+
             // Modulo Rule:
             if (integerDivideRemainder >= cpuMinerJob.BlockMinRange)
             {
                 ValidateAndSubmitShare(threadId, firstNumber, secondNumber, integerDivideRemainder, '%', jobType, cpuMinerJob);
             }
         }
-        
+
         // Addition Rule:
         var additionResult = firstNumber + secondNumber;
 
@@ -355,7 +355,7 @@ public sealed partial class CpuMiner
         {
             ValidateAndSubmitShare(threadId, firstNumber, secondNumber, additionResult, '+', jobType, cpuMinerJob);
         }
-        
+
         // Multiplication Rule:
         var multiplicationResult = firstNumber * secondNumber;
 
@@ -384,7 +384,7 @@ public sealed partial class CpuMiner
 
         Span<byte> encryptedShare = stackalloc byte[64 * 2];
         Span<byte> hashEncryptedShare = stackalloc byte[64 * 2];
-        
+
         if (!CpuMinerUtility.MakeEncryptedShare(bytesToEncrypt, encryptedShare, hashEncryptedShare, cpuMinerJob.XorKey, cpuMinerJob.AesKey, cpuMinerJob.AesIv, cpuMinerJob.AesRound))
         {
             return;
@@ -394,7 +394,7 @@ public sealed partial class CpuMiner
 
         Span<char> hashEncryptedShareString = stackalloc char[Encoding.UTF8.GetCharCount(hashEncryptedShare)];
         Encoding.UTF8.GetChars(hashEncryptedShare, hashEncryptedShareString);
-        
+
         if (!hashEncryptedShareString.SequenceEqual(cpuMinerJob.BlockIndication)) return;
 
         _network.SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveJob}|{Encoding.UTF8.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{cpuMinerJob.BlockHeight}|{_pool.UserAgent}", true, (packet, time) =>
@@ -407,22 +407,22 @@ public sealed partial class CpuMiner
 
             if (temp.StartsWith(NetworkConstants.ShareWrong))
             {
-                FoundBlock?.Invoke(jobType, false, InvalidShare, time.TotalMilliseconds);
+                FoundBlock?.Invoke(cpuMinerJob.BlockHeight, jobType, false, InvalidShare, time.TotalMilliseconds);
             }
             else if (temp.StartsWith(NetworkConstants.ShareUnlock))
             {
-                FoundBlock?.Invoke(jobType, true, string.Empty, time.TotalMilliseconds);
+                FoundBlock?.Invoke(cpuMinerJob.BlockHeight, jobType, true, string.Empty, time.TotalMilliseconds);
             }
             else if (temp.StartsWith(NetworkConstants.ShareAleady))
             {
-                FoundBlock?.Invoke(jobType, false, OrphanShare, time.TotalMilliseconds);
+                FoundBlock?.Invoke(cpuMinerJob.BlockHeight, jobType, false, OrphanShare, time.TotalMilliseconds);
             }
             else if (temp.StartsWith(NetworkConstants.ShareNotExist))
             {
-                FoundBlock?.Invoke(jobType, false, InvalidShare, time.TotalMilliseconds);
+                FoundBlock?.Invoke(cpuMinerJob.BlockHeight, jobType, false, InvalidShare, time.TotalMilliseconds);
             }
         }));
-        
+
         cpuMinerJob.BlockFound = true;
         Logger.PrintBlockFound(_logger, threadId, jobType, firstNumber, op, secondNumber, solution);
     }
@@ -435,10 +435,10 @@ public sealed partial class CpuMiner
         {
             var capturedValue = Interlocked.Read(ref _totalHashCalculatedIn10Seconds.GetRef(i));
             Interlocked.Exchange(ref _totalHashCalculatedIn10Seconds.GetRef(i), 0);
-            
+
             _totalHashCalculatedIn60Seconds.GetRef(i) += capturedValue;
             _totalHashCalculatedIn15Minutes.GetRef(i) += capturedValue;
-            
+
             AverageHashCalculatedIn10Seconds.GetRef(i) = capturedValue / (TimeSpan.FromSeconds(10) + Stopwatch.GetElapsedTime(captureTime)).TotalSeconds;
         }
 

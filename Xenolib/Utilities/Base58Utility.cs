@@ -1,8 +1,7 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace Xenorig.Utilities;
+namespace Xenolib.Utilities;
 
 public static class Base58Utility
 {

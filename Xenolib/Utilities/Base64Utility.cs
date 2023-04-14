@@ -1,7 +1,7 @@
-﻿using System;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Xenorig.Utilities;
+namespace Xenolib.Utilities;
 
 public static partial class Base64Utility
 {
@@ -20,21 +20,25 @@ public static partial class Base64Utility
         public static partial int Base64Utility_Decode(ReadOnlySpan<byte> input, int inputLength, Span<byte> output);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int EncodeLength(ReadOnlySpan<byte> value)
     {
         return Native.Base64Utility_EncodeLength(value.Length);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int DecodeLength(ReadOnlySpan<byte> value)
     {
         return Native.Base64Utility_DecodeLength(value, value.Length);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Encode(ReadOnlySpan<byte> input, Span<byte> output)
     {
         return Native.Base64Utility_Encode(input, input.Length, output);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Decode(ReadOnlySpan<byte> input, Span<byte> output)
     {
         return Native.Base64Utility_Decode(input, input.Length, output);

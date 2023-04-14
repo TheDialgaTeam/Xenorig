@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 using Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
@@ -26,7 +26,7 @@ public sealed class CpuMinerJob
     public int AesRound { get; private set; }
 
     public Span<long> EasyBlockValues => _easyBlockValues.AsSpan(0, _easyBlockValuesLength);
-    
+
     public bool HasNewBlock { get; set; }
     public bool BlockFound { get; set; }
 

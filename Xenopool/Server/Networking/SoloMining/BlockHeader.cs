@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using Xenolib.Utilities.KeyDerivationFunction;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
+namespace Xenopool.Server.Networking.SoloMining;
 
 public sealed partial class BlockHeader
 {

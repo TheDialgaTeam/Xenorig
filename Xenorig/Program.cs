@@ -1,8 +1,5 @@
 ﻿#pragma warning disable IL2026
 
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TheDialgaTeam.Core.Logging.Microsoft;

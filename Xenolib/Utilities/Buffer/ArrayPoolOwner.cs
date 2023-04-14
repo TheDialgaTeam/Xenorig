@@ -1,7 +1,6 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 
-namespace Xenorig.Utilities.Buffer;
+namespace Xenolib.Utilities.Buffer;
 
 public sealed class ArrayPoolOwner<T> : IMemoryOwner<T>
 {

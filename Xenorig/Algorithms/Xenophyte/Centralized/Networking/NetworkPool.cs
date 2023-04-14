@@ -1,7 +1,5 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 using Xenorig.Options;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
@@ -21,7 +19,7 @@ public sealed class NetworkPool : IDisposable
 
     private readonly Pool _pool;
     private int _poolRetryCount;
-    
+
     private readonly Network _getBlockHeaderNetwork;
     private readonly Network _sentBlockNetwork;
 
@@ -30,7 +28,7 @@ public sealed class NetworkPool : IDisposable
         _logger = logger;
         _options = options;
         _pool = pool;
-        
+
         _getBlockHeaderNetwork = new Network(options, pool);
         _sentBlockNetwork = new Network(options, pool);
     }
@@ -87,7 +85,7 @@ public sealed class NetworkPool : IDisposable
             if (!isConnected)
             {
                 Logger.PrintDisconnected(_logger, _pool.Url, reason == string.Empty ? "None" : reason);
-                
+
                 if (_poolRetryCount++ < _options.MaxRetryCount)
                 {
                     await _getBlockHeaderNetwork.ConnectAsync(CancellationToken.None);
@@ -104,7 +102,7 @@ public sealed class NetworkPool : IDisposable
             }
         }
     }
-    
+
     private void GetBlockHeaderNetworkOnReady()
     {
         Logger.PrintConnected(_logger, "SOLO", _pool.Url);
@@ -152,7 +150,7 @@ public sealed class NetworkPool : IDisposable
         {
             HasNewBlock?.Invoke();
         }
-        
+
         GetNewBlockHeader();
     }
 

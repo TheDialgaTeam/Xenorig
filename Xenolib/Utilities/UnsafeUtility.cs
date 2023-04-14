@@ -1,8 +1,7 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Xenorig.Utilities;
+namespace Xenolib.Utilities;
 
 public static class UnsafeUtility
 {
@@ -11,7 +10,7 @@ public static class UnsafeUtility
     {
         return ref Unsafe.AddByteOffset(ref MemoryMarshal.GetReference(span), index * Unsafe.SizeOf<T>());
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly T GetRef<T>(this ReadOnlySpan<T> span, nint index)
     {

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
+namespace Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 
 public static partial class CpuMinerUtility
 {
@@ -18,7 +17,7 @@ public static partial class CpuMinerUtility
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool XenophyteCentralizedAlgorithm_MakeEncryptedShare(ReadOnlySpan<byte> input, int inputLength, Span<byte> encryptedShare, Span<byte> hashEncryptedShare, ReadOnlySpan<byte> xorKey, int xorKeyLength, int aesKeySize, ReadOnlySpan<byte> aesKey, ReadOnlySpan<byte> aesIv, int aesRound);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GenerateEasyBlockNumbers(long minValue, long maxValue, Span<long> output)
     {

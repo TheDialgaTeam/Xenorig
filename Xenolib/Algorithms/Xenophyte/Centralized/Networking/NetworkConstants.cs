@@ -1,4 +1,4 @@
-﻿namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
+﻿namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 
 public static class NetworkConstants
 {

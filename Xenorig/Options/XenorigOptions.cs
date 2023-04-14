@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
+﻿using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
-using Xenorig.Utilities;
+using Xenolib.Utilities;
 
 namespace Xenorig.Options;
 
@@ -120,10 +118,10 @@ public sealed class CpuMiner
 
     [UsedImplicitly]
     public bool EasyBlockOnly { get; private set; }
-    
+
     [UsedImplicitly]
     public bool UseXenophyteRandomizer { get; private set; }
-    
+
     [UsedImplicitly]
     public int JobMinRangePercentage { get; private set; }
 
@@ -164,7 +162,8 @@ public sealed class CpuMinerThreadConfiguration
     public ulong? ThreadAffinity { get; private set; }
 
     [UsedImplicitly]
-    public ThreadPriority ThreadPriority { get; private set; } = ThreadPriority.Normal;
-    
+    public ThreadPriority? ThreadPriority { get; private set; } = System.Threading.ThreadPriority.Normal;
+
+    [UsedImplicitly]
     public bool? UseXenophyteRandomizer { get; private set; }
 }

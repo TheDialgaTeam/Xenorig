@@ -1,19 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using Xenolib.Utilities;
 using Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 using Xenorig.Options;
-using Xenorig.Utilities;
 using CpuMiner = Xenorig.Algorithms.Xenophyte.Centralized.Miner.CpuMiner;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized;
 
 internal class XenophyteCentralizedAlgorithm : IAlgorithm
 {
-    public event Action? NetworkFailed;
-    
     private readonly ILogger _logger;
     private readonly XenorigOptions _options;
     private readonly Pool _pool;
@@ -32,10 +26,13 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
     private int _totalBadEasyBlocksSubmitted;
     private int _totalBadSemiRandomBlocksSubmitted;
     private int _totalBadRandomBlocksSubmitted;
+    
+    private int _lastFoundHeight;
+    private object _lastFoundHeightLock = new();
 
     private int TotalGoodBlocksSubmitted => _totalGoodEasyBlocksSubmitted + _totalGoodSemiRandomBlocksSubmitted + _totalGoodRandomBlocksSubmitted;
     private int TotalBadBlocksSubmitted => _totalBadEasyBlocksSubmitted + _totalBadSemiRandomBlocksSubmitted + _totalBadRandomBlocksSubmitted;
-
+    
     public XenophyteCentralizedAlgorithm(ILogger logger, XenorigOptions options, Pool pool)
     {
         _logger = logger;
@@ -105,45 +102,51 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
         Logger.PrintCpuMinerSpeed(_logger, _cpuMiner.AverageHashCalculatedIn10Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn60Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn15Minutes.Sum(), _maxHash);
     }
 
-    private void CpuMinerOnFoundBlock(string jobType, bool isGoodBlock, string reason, double roundTripTime)
+    private void CpuMinerOnFoundBlock(int height, string jobType, bool isGoodBlock, string reason, double roundTripTime)
     {
-        if (isGoodBlock)
+        lock (_lastFoundHeightLock)
         {
-            switch (jobType)
+            if (height == _lastFoundHeight) return;
+            _lastFoundHeight = height;
+        
+            if (isGoodBlock)
             {
-                case CpuMiner.JobTypeEasy:
-                    _totalGoodEasyBlocksSubmitted++;
-                    break;
+                switch (jobType)
+                {
+                    case CpuMiner.JobTypeEasy:
+                        _totalGoodEasyBlocksSubmitted++;
+                        break;
 
-                case CpuMiner.JobTypeSemiRandom:
-                    _totalGoodSemiRandomBlocksSubmitted++;
-                    break;
+                    case CpuMiner.JobTypeSemiRandom:
+                        _totalGoodSemiRandomBlocksSubmitted++;
+                        break;
 
-                case CpuMiner.JobTypeRandom:
-                    _totalGoodRandomBlocksSubmitted++;
-                    break;
+                    case CpuMiner.JobTypeRandom:
+                        _totalGoodRandomBlocksSubmitted++;
+                        break;
+                }
+
+                Logger.PrintBlockAcceptResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, roundTripTime);
             }
-
-            Logger.PrintBlockAcceptResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, roundTripTime);
-        }
-        else
-        {
-            switch (jobType)
+            else
             {
-                case CpuMiner.JobTypeEasy:
-                    _totalBadEasyBlocksSubmitted++;
-                    break;
+                switch (jobType)
+                {
+                    case CpuMiner.JobTypeEasy:
+                        _totalBadEasyBlocksSubmitted++;
+                        break;
 
-                case CpuMiner.JobTypeSemiRandom:
-                    _totalBadSemiRandomBlocksSubmitted++;
-                    break;
+                    case CpuMiner.JobTypeSemiRandom:
+                        _totalBadSemiRandomBlocksSubmitted++;
+                        break;
 
-                case CpuMiner.JobTypeRandom:
-                    _totalBadRandomBlocksSubmitted++;
-                    break;
+                    case CpuMiner.JobTypeRandom:
+                        _totalBadRandomBlocksSubmitted++;
+                        break;
+                }
+
+                Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, reason, roundTripTime);
             }
-
-            Logger.PrintBlockRejectResult(_logger, TotalGoodBlocksSubmitted, TotalBadBlocksSubmitted, reason, roundTripTime);
         }
     }
 

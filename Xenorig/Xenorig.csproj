@@ -19,6 +19,7 @@
         <PublishReadyToRun>false</PublishReadyToRun>
         <PublishSingleFile>true</PublishSingleFile>
 
+        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 
@@ -29,7 +30,7 @@
         <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
         <InvariantGlobalization>true</InvariantGlobalization>
         <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
-        
+
         <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     </PropertyGroup>
 
@@ -42,19 +43,16 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
-        <DefineConstants>$(DefineConstants)</DefineConstants>
         <PublishAot>true</PublishAot>
         <PublishSingleFile>false</PublishSingleFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
-        <DefineConstants>$(DefineConstants)</DefineConstants>
         <PublishAot>true</PublishAot>
         <PublishSingleFile>false</PublishSingleFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
-        <DefineConstants>$(DefineConstants)</DefineConstants>
         <PublishAot>true</PublishAot>
         <PublishSingleFile>false</PublishSingleFile>
     </PropertyGroup>
@@ -72,9 +70,11 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
         <PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.8.0" />
 
+        <ProjectReference Include="..\Xenolib\Xenolib.csproj" />
+
         <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
     </ItemGroup>
-
+    
     <ItemGroup Condition="'$(RuntimeIdentifier)'==''">
         <Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

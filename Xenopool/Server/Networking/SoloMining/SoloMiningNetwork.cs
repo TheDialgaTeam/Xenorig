@@ -1,28 +1,29 @@
 ﻿using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 using Xenolib.Utilities;
 using Xenolib.Utilities.Buffer;
 using Xenolib.Utilities.KeyDerivationFunction;
-using Xenorig.Options;
+using Xenopool.Server.Networking.RpcWallet;
+using Xenopool.Server.Options;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
+namespace Xenopool.Server.Networking.SoloMining;
 
-public delegate void NetworkStatus(bool isConnected, string reason = "");
-
-public sealed partial class Network : IDisposable
+public sealed class SoloMiningNetwork : IDisposable
 {
-    public event NetworkStatus? Status;
-
-    public event Action? Ready;
+    public BlockHeader BlockHeader { get; } = new();
 
     private static readonly byte[] CertificateSupportedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&~#@\'(\\)="u8.ToArray();
 
-    private readonly XenorigOptions _options;
-    private readonly Pool _pool;
+    private readonly ILogger<SoloMiningNetwork> _logger;
+    
+    private readonly IDisposable? _disposable;
+    private Options.SoloMining _soloMiningOptions;
+    private Options.RpcWallet _rpcWalletOptions;
+
+    private int _isNetworkActive;
 
     private TcpClient? _tcpClient;
 
@@ -34,10 +35,12 @@ public sealed partial class Network : IDisposable
     private BlockingCollection<PacketData>? _packetDataBlockingCollection;
     private Task? _networkPacketHandlerTask;
 
-    public Network(XenorigOptions options, Pool pool)
+    public SoloMiningNetwork(ILogger<SoloMiningNetwork> logger, IOptionsMonitor<XenopoolOptions> optionsMonitor, RpcWalletNetwork rpcWalletNetwork)
     {
-        _options = options;
-        _pool = pool;
+        _logger = logger;
+        _disposable = optionsMonitor.OnChange(OnOptionsChanged);
+        
+        OnOptionsChanged(optionsMonitor.CurrentValue);
     }
 
     private static ArrayPoolOwner<byte> GenerateCertificate()
@@ -56,34 +59,25 @@ public sealed partial class Network : IDisposable
 
         return outputArrayPoolOwner;
     }
-
-    [GeneratedRegex("(?<hostname>.+):?(?<port>\\d+)?$")]
-    private static partial Regex GetHostnameAndPortRegex();
-
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        try
+        if (Interlocked.CompareExchange(ref _isNetworkActive, 1, 0) == 1)
         {
-            await _connectionSemaphoreSlim.WaitAsync(cancellationToken);
-            await InternalConnectAsync(cancellationToken);
+            return;
         }
-        finally
-        {
-            _connectionSemaphoreSlim.Release();
-        }
+
+        await ConnectAsync(cancellationToken);
     }
 
-    public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+    public async Task StopAsync(CancellationToken cancellationToken = default)
     {
-        try
+        if (Interlocked.CompareExchange(ref _isNetworkActive, 0, 1) == 0)
         {
-            await _connectionSemaphoreSlim.WaitAsync(cancellationToken);
-            InternalDisconnect();
+            return;
         }
-        finally
-        {
-            _connectionSemaphoreSlim.Release();
-        }
+        
+        await DisconnectAsync(cancellationToken);
     }
 
     public void SendPacketToNetwork(PacketData packetData)
@@ -98,32 +92,60 @@ public sealed partial class Network : IDisposable
         }
     }
 
+    private async void OnOptionsChanged(XenopoolOptions options)
+    {
+        _soloMiningOptions = options.SoloMining;
+        _rpcWalletOptions = options.RpcWallet;
+
+        if (_isNetworkActive != 1) return;
+        
+        await StopAsync();
+        await StartAsync();
+    }
+
+    private async Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _connectionSemaphoreSlim.WaitAsync(cancellationToken);
+            await InternalConnectAsync(cancellationToken);
+        }
+        finally
+        {
+            _connectionSemaphoreSlim.Release();
+        }
+    }
+
+    private async Task DisconnectAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _connectionSemaphoreSlim.WaitAsync(cancellationToken);
+            InternalDisconnect();
+        }
+        finally
+        {
+            _connectionSemaphoreSlim.Release();
+        }
+    }
+
     private async Task InternalConnectAsync(CancellationToken cancellationToken = default)
     {
         if (_tcpClient != null) return;
 
         _tcpClient = new TcpClient();
 
-        using var networkTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.NetworkTimeoutDuration));
+        using var networkTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_soloMiningOptions.NetworkTimeoutDuration));
         using var connectionTimeoutTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, networkTimeoutCts.Token);
 
         try
         {
-            if (IPEndPoint.TryParse(_pool.Url, out var ipEndPoint))
-            {
-                await _tcpClient.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port == 0 ? NetworkConstants.SeedNodePort : ipEndPoint.Port, connectionTimeoutTokenSource.Token);
-            }
-            else
-            {
-                var hostAndPortMatch = GetHostnameAndPortRegex().Match(_pool.Url);
-                var host = await Dns.GetHostAddressesAsync(hostAndPortMatch.Groups["hostname"].Value, connectionTimeoutTokenSource.Token);
-                await _tcpClient.ConnectAsync(host, hostAndPortMatch.Groups.ContainsKey("port") ? int.Parse(hostAndPortMatch.Groups["port"].Value) : NetworkConstants.SeedNodePort, connectionTimeoutTokenSource.Token);
-            }
+            await _tcpClient.ConnectAsync(_soloMiningOptions.Host, _soloMiningOptions.Port == 0 ? NetworkConstants.SeedNodePort : _soloMiningOptions.Port, connectionTimeoutTokenSource.Token);
 
             if (_tcpClient.Connected)
             {
-                Status?.Invoke(true);
-
+                UpdateStatus(true, string.Empty);
+                
                 _packetDataBlockingCollection = new BlockingCollection<PacketData>();
                 _networkPacketHandlerTask = Task.Factory.StartNew(NetworkPacketHandlerTask, TaskCreationOptions.LongRunning);
 
@@ -141,11 +163,11 @@ public sealed partial class Network : IDisposable
 
                 SendPacketToNetwork(new PacketData(certificateArrayPoolOwner, false));
 
-                SendPacketToNetwork(new PacketData($"{NetworkConstants.MinerLoginType}|{_pool.Username}", true, (packet, _) =>
+                SendPacketToNetwork(new PacketData($"{NetworkConstants.MinerLoginType}|{_rpcWalletOptions.WalletAddress}", true, (packet, _) =>
                 {
                     if (Encoding.UTF8.GetString(packet).Equals(NetworkConstants.SendLoginAccepted))
                     {
-                        Ready?.Invoke();
+                        // Ready?.Invoke();
                     }
                     else
                     {
@@ -182,7 +204,7 @@ public sealed partial class Network : IDisposable
         _tcpClient?.Dispose();
         _tcpClient = null;
 
-        Status?.Invoke(false, reason);
+        UpdateStatus(false, reason);
     }
 
     private async Task NetworkPacketHandlerTask()
@@ -197,7 +219,7 @@ public sealed partial class Network : IDisposable
                 {
                     if (_tcpClient == null) return;
 
-                    using var networkTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.NetworkTimeoutDuration));
+                    using var networkTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_soloMiningOptions.NetworkTimeoutDuration));
 
                     if (!await packetData.ExecuteAsync(_tcpClient.GetStream(), _networkAesKey, _networkAesIv, networkTimeoutCts.Token))
                     {
@@ -220,9 +242,19 @@ public sealed partial class Network : IDisposable
         }
     }
 
+    private async void UpdateStatus(bool isConnected, string reason)
+    {
+        if (_isNetworkActive != 1) return;
+        if (isConnected) return;
+        
+        Logger.PrintDisconnected(_logger, _soloMiningOptions.Host, reason == string.Empty ? "None" : reason);
+        await ConnectAsync(CancellationToken.None);
+    }
+    
     public void Dispose()
     {
         InternalDisconnect();
+        _disposable?.Dispose();
         _connectionSemaphoreSlim.Dispose();
     }
 }

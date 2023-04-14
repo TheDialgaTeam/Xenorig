@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 
-namespace Xenorig.Utilities;
+namespace Xenolib.Utilities;
 
 public static partial class CpuInformationUtility
 {

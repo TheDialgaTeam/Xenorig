@@ -1,7 +1,6 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
-namespace Xenorig.Utilities.KeyDerivationFunction;
+namespace Xenolib.Utilities.KeyDerivationFunction;
 
 public partial class PBKDF1 : IDisposable
 {

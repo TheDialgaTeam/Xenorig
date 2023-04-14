@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+
+        <PackageId>TheDialgaTeam.Xenophyte.Xenolib</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Yong Jian Ming</Authors>
+        <Company>The Dialga Team</Company>
+        <Product>Xenolib</Product>
+        <Description>Xenophyte cryptocurrency library</Description>
+        <PackageProjectUrl>https://github.com/TheDialgaTeam/Xenorig</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/TheDialgaTeam/Xenorig</RepositoryUrl>
+        
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <DebugType>none</DebugType>
+    </PropertyGroup>
+    
+</Project>

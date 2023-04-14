@@ -1,7 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
-using static TheDialgaTeam.Core.Logging.Microsoft.AnsiEscapeCodeConstants;
+﻿using static TheDialgaTeam.Core.Logging.Microsoft.AnsiEscapeCodeConstants;
 
-namespace Xenorig;
+namespace Xenopool.Server;
 
 public static partial class Logger
 {
@@ -14,8 +13,8 @@ public static partial class Logger
     [LoggerMessage(EventId = 3, Level = LogLevel.Information, Message = $"   {WhiteForegroundColor}{{category,-12}} {DarkGrayForegroundColor}L2: {CyanForegroundColor}{{l2Cache:F1}} {DarkGrayForegroundColor}MB L3: {CyanForegroundColor}{{l3Cache:F1}} {DarkGrayForegroundColor}MB {CyanForegroundColor}{{coreCount}}{DarkGrayForegroundColor}C/{CyanForegroundColor}{{threadCount}}{DarkGrayForegroundColor}T{Reset}")]
     public static partial void PrintCpuCont(ILogger logger, string category, double l2Cache, double l3Cache, int coreCount, int threadCount);
 
-    [LoggerMessage(EventId = 4, Level = LogLevel.Information, Message = $" {GreenForegroundColor}* {WhiteForegroundColor}{{category,-12:l}} {DarkGrayForegroundColor}{{donatePercentage}}%{Reset}")]
-    public static partial void PrintDonatePercentage(ILogger logger, string category, int donatePercentage);
+    [LoggerMessage(EventId = 4, Level = LogLevel.Information, Message = "{message}")]
+    public static partial void PrintMessage(ILogger logger, string message);
 
     [LoggerMessage(EventId = 5, Level = LogLevel.Information, Message = $" {GreenForegroundColor}* {WhiteForegroundColor}{{category,-12:l}} {MagentaForegroundColor}h{DarkGrayForegroundColor}ashrate, {MagentaForegroundColor}s{DarkGrayForegroundColor}tats, {MagentaForegroundColor}j{DarkGrayForegroundColor}ob{Reset}")]
     public static partial void PrintCommand(ILogger logger, string category);

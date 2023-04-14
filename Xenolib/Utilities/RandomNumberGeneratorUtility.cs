@@ -1,8 +1,7 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
-namespace Xenorig.Utilities;
+namespace Xenolib.Utilities;
 
 public static class RandomNumberGeneratorUtility
 {
@@ -203,7 +202,7 @@ public static class RandomNumberGeneratorUtility
 
                 return result;
             }
-            
+
             case 3:
             {
                 long result;
@@ -217,7 +216,7 @@ public static class RandomNumberGeneratorUtility
 
                 return result;
             }
-            
+
             case 4:
             {
                 long result;
@@ -232,7 +231,7 @@ public static class RandomNumberGeneratorUtility
 
                 return result;
             }
-            
+
             case 5:
             {
                 long result;
@@ -248,7 +247,7 @@ public static class RandomNumberGeneratorUtility
 
                 return result;
             }
-            
+
             case 6:
             {
                 long result;
@@ -265,7 +264,7 @@ public static class RandomNumberGeneratorUtility
 
                 return result;
             }
-            
+
             case 7:
             {
                 long result;
@@ -283,7 +282,7 @@ public static class RandomNumberGeneratorUtility
 
                 return result;
             }
-            
+
             case 8:
             {
                 long result;

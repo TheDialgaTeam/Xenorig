@@ -1,14 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Xenolib.Utilities;
 using Xenorig.Algorithms;
 using Xenorig.Algorithms.Xenophyte.Centralized;
 using Xenorig.Options;
-using Xenorig.Utilities;
 
 namespace Xenorig;
 
@@ -19,7 +15,7 @@ public sealed class ConsoleService : BackgroundService
     private readonly XenorigOptions _options;
 
     private IAlgorithm[] _minerInstances = Array.Empty<IAlgorithm>();
-    private int _currentIndex = 0;
+    private readonly int _currentIndex = 0;
 
     public ConsoleService(ILogger<ConsoleService> logger, ILoggerFactory loggerFactory, IOptions<XenorigOptions> options)
     {
@@ -45,7 +41,7 @@ public sealed class ConsoleService : BackgroundService
         }
 
         Logger.PrintEmpty(_logger);
-        
+
         _minerInstances = CreateMinerInstances();
         if (_minerInstances.Length == 0) return;
 
