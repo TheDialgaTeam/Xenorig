@@ -6,26 +6,26 @@ namespace Xenorig.Options;
 
 public sealed class XenorigOptions
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public int PrintSpeedDuration { get; private set; } = 10;
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public int NetworkTimeoutDuration { get; private set; } = 5;
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public int MaxRetryCount { get; private set; } = 5;
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public int DonatePercentage { get; private set; }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public Pool[] Pools
     {
         get => _pools!;
         private set => _pools = value ?? _pools;
     }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public XenophyteCentralizedSolo Xenophyte_Centralized_Solo
     {
         get => _xenophyteCentralizedSolo!;
@@ -38,21 +38,21 @@ public sealed class XenorigOptions
 
 public sealed class Pool
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string Algorithm
     {
         get => _algorithm!;
         private set => _algorithm = string.IsNullOrEmpty(value) ? _algorithm : value;
     }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string Coin
     {
         get => _coin!;
         private set => _coin = string.IsNullOrEmpty(value) ? _coin : value;
     }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     [StringSyntax(StringSyntaxAttribute.Uri)]
     public string Url
     {
@@ -60,21 +60,21 @@ public sealed class Pool
         private set => _url = string.IsNullOrEmpty(value) ? _url : value;
     }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string Username
     {
         get => _username!;
         private set => _username = string.IsNullOrEmpty(value) ? _username : value;
     }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string Password
     {
         get => _password!;
         private set => _password = string.IsNullOrEmpty(value) ? _password : value;
     }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string UserAgent
     {
         get => _userAgent!;
@@ -91,7 +91,7 @@ public sealed class Pool
 
 public sealed class XenophyteCentralizedSolo
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public CpuMiner CpuMiner
     {
         get => _cpuMiner!;
@@ -103,30 +103,24 @@ public sealed class XenophyteCentralizedSolo
 
 public sealed class CpuMiner
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public int Threads { get; private set; } = Environment.ProcessorCount;
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public ThreadPriority ThreadPriority { get; private set; } = ThreadPriority.Normal;
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public CpuMinerThreadConfiguration[] ThreadConfigs
     {
         get => _threadConfigs!;
         private set => _threadConfigs = value ?? _threadConfigs;
     }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public bool EasyBlockOnly { get; private set; }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public bool UseXenophyteRandomizer { get; private set; }
-
-    [UsedImplicitly]
-    public int JobMinRangePercentage { get; private set; }
-
-    [UsedImplicitly]
-    public int JobMaxRangePercentage { get; private set; } = 100;
 
     private CpuMinerThreadConfiguration[]? _threadConfigs = Array.Empty<CpuMinerThreadConfiguration>();
 
@@ -158,12 +152,12 @@ public sealed class CpuMiner
 
 public sealed class CpuMinerThreadConfiguration
 {
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public ulong? ThreadAffinity { get; private set; }
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public ThreadPriority? ThreadPriority { get; private set; } = System.Threading.ThreadPriority.Normal;
 
-    [UsedImplicitly]
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public bool? UseXenophyteRandomizer { get; private set; }
 }

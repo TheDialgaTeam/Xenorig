@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 using Xenolib.Utilities;
-using Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 using Xenorig.Options;
 using CpuMiner = Xenorig.Algorithms.Xenophyte.Centralized.Miner.CpuMiner;
 
@@ -11,8 +11,11 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
     private readonly ILogger _logger;
     private readonly XenorigOptions _options;
     private readonly Pool _pool;
-
-    private readonly NetworkPool _network;
+    
+    private readonly Network _network;
+    private readonly NetworkConnection _networkConnection;
+    private BlockHeader _blockHeader = new();
+    
     private readonly CpuMiner _cpuMiner;
 
     private readonly Timer _printAverageHashTimer;
@@ -28,7 +31,7 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
     private int _totalBadRandomBlocksSubmitted;
     
     private int _lastFoundHeight;
-    private object _lastFoundHeightLock = new();
+    private readonly object _lastFoundHeightLock = new();
 
     private int TotalGoodBlocksSubmitted => _totalGoodEasyBlocksSubmitted + _totalGoodSemiRandomBlocksSubmitted + _totalGoodRandomBlocksSubmitted;
     private int TotalBadBlocksSubmitted => _totalBadEasyBlocksSubmitted + _totalBadSemiRandomBlocksSubmitted + _totalBadRandomBlocksSubmitted;
@@ -38,7 +41,8 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
         _logger = logger;
         _options = options;
         _pool = pool;
-        _network = new NetworkPool(logger, options, pool);
+        _network = new Network();
+        _networkConnection = new NetworkConnection { Uri = new UriBuilder(pool.Url) { Port = NetworkConstants.SeedNodePort }.Uri, WalletAddress = pool.Username, TimeoutDuration = TimeSpan.FromSeconds(_options.NetworkTimeoutDuration) };
         _cpuMiner = new CpuMiner(options, logger, pool, _network);
         _printAverageHashTimer = new Timer(PrintAverageHashTimer, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
@@ -48,13 +52,14 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
         _cpuMiner.FoundBlock += CpuMinerOnFoundBlock;
         _cpuMiner.StartCpuMiner();
 
+        _network.Disconnected += NetworkOnDisconnected;
+        _network.Ready += NetworkOnReady;
         _network.HasNewBlock += NetworkOnHasNewBlock;
-        _network.ConnectionFailed += NetworkOnConnectionFailed;
-        await _network.StartAsync(cancellationToken);
+        await _network.ConnectAsync(_networkConnection, cancellationToken);
 
         _printAverageHashTimer.Change(TimeSpan.FromSeconds(_options.PrintSpeedDuration), TimeSpan.FromSeconds(_options.PrintSpeedDuration));
     }
-
+    
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         _printAverageHashTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -62,9 +67,10 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
         _cpuMiner.FoundBlock -= CpuMinerOnFoundBlock;
         _cpuMiner.StopCpuMiner();
 
+        _network.Disconnected -= NetworkOnDisconnected;
+        _network.Ready -= NetworkOnReady;
         _network.HasNewBlock -= NetworkOnHasNewBlock;
-        _network.ConnectionFailed -= NetworkOnConnectionFailed;
-        await _network.StopAsync(cancellationToken);
+        await _network.DisconnectAsync(cancellationToken);
     }
 
     public void PrintHashrate()
@@ -92,8 +98,7 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
 
     public void PrintCurrentJob()
     {
-        var blockHeader = _network.BlockHeader;
-        Logger.PrintJob(_logger, "current job", _pool.Url, blockHeader.BlockDifficulty, blockHeader.BlockMethod, blockHeader.BlockHeight);
+        Logger.PrintJob(_logger, "current job", _pool.Url, _blockHeader.BlockDifficulty, _blockHeader.BlockMethod, _blockHeader.BlockHeight);
     }
 
     private void PrintAverageHashTimer(object? state)
@@ -150,15 +155,21 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
         }
     }
 
-    private void NetworkOnHasNewBlock()
+    private async void NetworkOnDisconnected(string reason)
     {
-        var blockHeader = _network.BlockHeader;
-        Logger.PrintJob(_logger, "new job", _pool.Url, blockHeader.BlockDifficulty, blockHeader.BlockMethod, blockHeader.BlockHeight);
-        _cpuMiner.UpdateJobTemplate();
+        Logger.PrintDisconnected(_logger, _networkConnection.Uri.Host, reason == string.Empty ? "None" : reason);
+        await _network.ConnectAsync(_networkConnection);
     }
-
-    private void NetworkOnConnectionFailed()
+    
+    private void NetworkOnReady()
     {
-        _network.StartAsync().Wait();
+        Logger.PrintConnected(_logger, "SOLO", _pool.Url);
+    }
+    
+    private void NetworkOnHasNewBlock(BlockHeader blockHeader)
+    {
+        Logger.PrintJob(_logger, "new job", _pool.Url, blockHeader.BlockDifficulty, blockHeader.BlockMethod, blockHeader.BlockHeight);
+        _blockHeader = blockHeader;
+        _cpuMiner.UpdateJobTemplate(blockHeader);
     }
 }

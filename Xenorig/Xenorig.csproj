@@ -74,7 +74,7 @@
 
         <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
     </ItemGroup>
-    
+
     <ItemGroup Condition="'$(RuntimeIdentifier)'==''">
         <Content Include="..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

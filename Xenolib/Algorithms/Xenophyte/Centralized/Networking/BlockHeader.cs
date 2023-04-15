@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using Xenolib.Utilities.KeyDerivationFunction;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
+namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 
 public sealed partial class BlockHeader
 {
@@ -62,7 +62,7 @@ public sealed partial class BlockHeader
         // NETWORK_HASHRATE=12128&
         // LIFETIME=360
 
-        var stringPacket = Encoding.ASCII.GetString(packet);
+        var stringPacket = Encoding.UTF8.GetString(packet);
         if (!stringPacket.StartsWith("SEND-CURRENT-BLOCK-MINING|")) return false;
 
         var matchCollection = GetBlockHeaderKeyValuePairs().Matches(stringPacket);
@@ -134,7 +134,7 @@ public sealed partial class BlockHeader
         // 1#128#128#128
         // AESROUND#AESSIZE#AESKEY#XORKEY
 
-        var stringPacket = Encoding.ASCII.GetString(packet);
+        var stringPacket = Encoding.UTF8.GetString(packet);
         if (!stringPacket.StartsWith("SEND-CONTENT-BLOCK-METHOD|")) return false;
 
         var subString = stringPacket[(stringPacket.IndexOf('|') + 1)..].Split('#');

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 using Xenolib.Utilities;
-using Xenorig.Algorithms.Xenophyte.Centralized.Networking;
 using Xenorig.Options;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
@@ -49,7 +48,7 @@ public sealed partial class CpuMiner
     private readonly ILogger _logger;
     private readonly Pool _pool;
     private readonly XenorigOptions _options;
-    private readonly NetworkPool _network;
+    private readonly Network _network;
 
     private int _isCpuMinerActive;
 
@@ -65,7 +64,7 @@ public sealed partial class CpuMiner
     private readonly long[] _totalHashCalculatedIn60Seconds;
     private readonly long[] _totalHashCalculatedIn15Minutes;
 
-    public CpuMiner(XenorigOptions options, ILogger logger, Pool pool, NetworkPool network)
+    public CpuMiner(XenorigOptions options, ILogger logger, Pool pool, Network network)
     {
         _logger = logger;
         _options = options;
@@ -131,10 +130,8 @@ public sealed partial class CpuMiner
         _calculateAverageHashTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
-    public void UpdateJobTemplate()
+    public void UpdateJobTemplate(BlockHeader blockHeader)
     {
-        var blockHeader = _network.BlockHeader;
-
         foreach (var cpuMinerJob in _cpuMinerJobs)
         {
             cpuMinerJob.Update(blockHeader);
@@ -158,7 +155,6 @@ public sealed partial class CpuMiner
         }
 
         // Thread Variable
-        var blockHeader = _network.BlockHeader;
         var cpuMinerJob = _cpuMinerJobs[threadId];
 
         while (_isCpuMinerActive == 1)
@@ -182,7 +178,7 @@ public sealed partial class CpuMiner
             DoEasyBlocksCalculations(threadId, options, cpuMinerJob);
 
             if (cpuMinerJob.BlockFound) continue;
-            if (cpuMinerJob.BlockIndication != blockHeader.BlockIndication) continue;
+            if (cpuMinerJob.HasNewBlock) continue;
 
             if (options.EasyBlockOnly)
             {
@@ -223,7 +219,7 @@ public sealed partial class CpuMiner
             }
 
             if (cpuMinerJob.BlockFound) return;
-            if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
+            if (cpuMinerJob.HasNewBlock) return;
 
             chunkData.GetRef(choseRandom) = chunkData.GetRef(i);
         }
@@ -256,7 +252,7 @@ public sealed partial class CpuMiner
                 DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
 
                 if (cpuMinerJob.BlockFound) return;
-                if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
+                if (cpuMinerJob.HasNewBlock) return;
 
                 for (var i = cpuMinerJob.EasyBlockValues.Length - 1; i >= 0; i--)
                 {
@@ -270,7 +266,7 @@ public sealed partial class CpuMiner
 
                     (easyBlockValues.GetRef(i), easyBlockValues.GetRef(choseRandom3)) = (easyBlockValues.GetRef(choseRandom3), easyBlockValues.GetRef(i));
                 }
-            } while (!cpuMinerJob.BlockFound && cpuMinerJob.BlockIndication == _network.BlockHeader.BlockIndication);
+            } while (cpuMinerJob is { BlockFound: false, HasNewBlock: false });
         }
         else
         {
@@ -293,7 +289,7 @@ public sealed partial class CpuMiner
                 DoMathCalculations(threadId, choseRandom2, choseRandom, JobTypeRandom, cpuMinerJob);
 
                 if (cpuMinerJob.BlockFound) return;
-                if (cpuMinerJob.BlockIndication != _network.BlockHeader.BlockIndication) return;
+                if (cpuMinerJob.HasNewBlock) return;
 
                 for (var i = cpuMinerJob.EasyBlockValues.Length - 1; i >= 0; i--)
                 {
@@ -307,7 +303,7 @@ public sealed partial class CpuMiner
 
                     (easyBlockValues.GetRef(i), easyBlockValues.GetRef(choseRandom3)) = (easyBlockValues.GetRef(choseRandom3), easyBlockValues.GetRef(i));
                 }
-            } while (!cpuMinerJob.BlockFound && cpuMinerJob.BlockIndication == _network.BlockHeader.BlockIndication);
+            } while (cpuMinerJob is { BlockFound: false, HasNewBlock: false });
         }
     }
 

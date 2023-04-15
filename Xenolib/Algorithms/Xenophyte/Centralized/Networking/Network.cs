@@ -1,43 +1,41 @@
 ﻿using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
-using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 using Xenolib.Utilities;
 using Xenolib.Utilities.Buffer;
 using Xenolib.Utilities.KeyDerivationFunction;
-using Xenorig.Options;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Networking;
+namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking;
 
-public delegate void NetworkStatus(bool isConnected, string reason = "");
+public delegate void DisconnectHandler(string reason);
 
-public sealed partial class Network : IDisposable
+public delegate void NewBlockHandler(BlockHeader blockHeader);
+
+public sealed class Network : IDisposable
 {
-    public event NetworkStatus? Status;
-
+    public event DisconnectHandler? Disconnected;
     public event Action? Ready;
+    public event NewBlockHandler? HasNewBlock;
 
     private static readonly byte[] CertificateSupportedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&~#@\'(\\)="u8.ToArray();
 
-    private readonly XenorigOptions _options;
-    private readonly Pool _pool;
-
     private TcpClient? _tcpClient;
+    private NetworkConnection? _networkConnection;
 
     private readonly SemaphoreSlim _connectionSemaphoreSlim = new(1, 1);
 
-    private readonly byte[] _networkAesKey = new byte[NetworkConstants.MajorUpdate1SecurityCertificateSizeItem / 8];
-    private readonly byte[] _networkAesIv = new byte[16];
+    private readonly byte[] _networkAesKey;
+    private readonly byte[] _networkAesIv;
 
     private BlockingCollection<PacketData>? _packetDataBlockingCollection;
     private Task? _networkPacketHandlerTask;
 
-    public Network(XenorigOptions options, Pool pool)
+    private readonly BlockHeader _blockHeader = new();
+
+    public Network()
     {
-        _options = options;
-        _pool = pool;
+        _networkAesKey = GC.AllocateUninitializedArray<byte>(NetworkConstants.MajorUpdate1SecurityCertificateSizeItem / 8);
+        _networkAesIv = GC.AllocateUninitializedArray<byte>(16);
     }
 
     private static ArrayPoolOwner<byte> GenerateCertificate()
@@ -56,16 +54,13 @@ public sealed partial class Network : IDisposable
 
         return outputArrayPoolOwner;
     }
-
-    [GeneratedRegex("(?<hostname>.+):?(?<port>\\d+)?$")]
-    private static partial Regex GetHostnameAndPortRegex();
-
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    
+    public async Task ConnectAsync(NetworkConnection networkConnection, CancellationToken cancellationToken = default)
     {
         try
         {
             await _connectionSemaphoreSlim.WaitAsync(cancellationToken);
-            await InternalConnectAsync(cancellationToken);
+            await InternalConnectAsync(networkConnection, cancellationToken);
         }
         finally
         {
@@ -85,45 +80,36 @@ public sealed partial class Network : IDisposable
             _connectionSemaphoreSlim.Release();
         }
     }
-
-    public void SendPacketToNetwork(PacketData packetData)
+    
+    public bool SendPacketToNetwork(PacketData packetData)
     {
         try
         {
             _packetDataBlockingCollection?.Add(packetData);
+            return true;
         }
         catch
         {
-            // Assumed it is disconnected hence you cant add anyway.
+            return false;
         }
     }
 
-    private async Task InternalConnectAsync(CancellationToken cancellationToken = default)
+    private async Task InternalConnectAsync(NetworkConnection networkConnection, CancellationToken cancellationToken = default)
     {
         if (_tcpClient != null) return;
 
         _tcpClient = new TcpClient();
-
-        using var networkTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.NetworkTimeoutDuration));
-        using var connectionTimeoutTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, networkTimeoutCts.Token);
-
+        _networkConnection = networkConnection;
+        
         try
         {
-            if (IPEndPoint.TryParse(_pool.Url, out var ipEndPoint))
-            {
-                await _tcpClient.ConnectAsync(ipEndPoint.Address, ipEndPoint.Port == 0 ? NetworkConstants.SeedNodePort : ipEndPoint.Port, connectionTimeoutTokenSource.Token);
-            }
-            else
-            {
-                var hostAndPortMatch = GetHostnameAndPortRegex().Match(_pool.Url);
-                var host = await Dns.GetHostAddressesAsync(hostAndPortMatch.Groups["hostname"].Value, connectionTimeoutTokenSource.Token);
-                await _tcpClient.ConnectAsync(host, hostAndPortMatch.Groups.ContainsKey("port") ? int.Parse(hostAndPortMatch.Groups["port"].Value) : NetworkConstants.SeedNodePort, connectionTimeoutTokenSource.Token);
-            }
-
+            using var timeoutCancellationTokenSource = new CancellationTokenSource(networkConnection.TimeoutDuration);
+            using var combinedCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutCancellationTokenSource.Token, cancellationToken);
+            
+            await _tcpClient.ConnectAsync(networkConnection.Uri.Host, networkConnection.Uri.Port, combinedCancellationTokenSource.Token);
+            
             if (_tcpClient.Connected)
             {
-                Status?.Invoke(true);
-
                 _packetDataBlockingCollection = new BlockingCollection<PacketData>();
                 _networkPacketHandlerTask = Task.Factory.StartNew(NetworkPacketHandlerTask, TaskCreationOptions.LongRunning);
 
@@ -141,11 +127,12 @@ public sealed partial class Network : IDisposable
 
                 SendPacketToNetwork(new PacketData(certificateArrayPoolOwner, false));
 
-                SendPacketToNetwork(new PacketData($"{NetworkConstants.MinerLoginType}|{_pool.Username}", true, (packet, _) =>
+                SendPacketToNetwork(new PacketData($"{NetworkConstants.MinerLoginType}|{networkConnection.WalletAddress}", true, (packet, _) =>
                 {
                     if (Encoding.UTF8.GetString(packet).Equals(NetworkConstants.SendLoginAccepted))
                     {
                         Ready?.Invoke();
+                        GetNewBlockHeader();
                     }
                     else
                     {
@@ -182,7 +169,7 @@ public sealed partial class Network : IDisposable
         _tcpClient?.Dispose();
         _tcpClient = null;
 
-        Status?.Invoke(false, reason);
+        Disconnected?.Invoke(reason);
     }
 
     private async Task NetworkPacketHandlerTask()
@@ -197,7 +184,7 @@ public sealed partial class Network : IDisposable
                 {
                     if (_tcpClient == null) return;
 
-                    using var networkTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.NetworkTimeoutDuration));
+                    using var networkTimeoutCts = new CancellationTokenSource(_networkConnection!.TimeoutDuration);
 
                     if (!await packetData.ExecuteAsync(_tcpClient.GetStream(), _networkAesKey, _networkAesIv, networkTimeoutCts.Token))
                     {
@@ -218,6 +205,40 @@ public sealed partial class Network : IDisposable
                 // It is ended and so, there is no point in handling anything else, just assumed it is disconnected.
             }
         }
+    }
+    
+    private void GetNewBlockHeader()
+    {
+        SendPacketToNetwork(new PacketData(NetworkConstants.ReceiveAskCurrentBlockMining, true, ReceiveBlockHeaderPacketHandler));
+    }
+    
+    private void ReceiveBlockHeaderPacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime)
+    {
+        var currentBlockIndication = _blockHeader.BlockIndication;
+
+        if (!_blockHeader.UpdateBlockHeader(packet))
+        {
+            GetNewBlockHeader();
+            return;
+        }
+
+        if (currentBlockIndication == _blockHeader.BlockIndication)
+        {
+            GetNewBlockHeader();
+            return;
+        }
+
+        SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveAskContentBlockMethod}|{_blockHeader.BlockMethod}", true, ReceiveBlockMethodPacketHandler));
+    }
+
+    private void ReceiveBlockMethodPacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime)
+    {
+        if (_blockHeader.UpdateBlockMethod(packet))
+        {
+            HasNewBlock?.Invoke(_blockHeader);
+        }
+
+        GetNewBlockHeader();
     }
 
     public void Dispose()

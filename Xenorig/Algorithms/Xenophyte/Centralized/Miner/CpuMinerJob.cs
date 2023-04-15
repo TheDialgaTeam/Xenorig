@@ -1,5 +1,5 @@
-﻿using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
-using Xenorig.Algorithms.Xenophyte.Centralized.Networking;
+﻿using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
+using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
 

@@ -9,8 +9,6 @@ namespace Xenorig;
 
 public static class Program
 {
-    public const string XenoNativeLibrary = "xeno_native";
-
     public static Task Main(string[] args)
     {
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainOnUnhandledException;

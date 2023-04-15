@@ -58,15 +58,15 @@ public sealed class ConsoleService : BackgroundService
             switch (keyPressed.Key)
             {
                 case ConsoleKey.H:
-                    _minerInstances[0].PrintHashrate();
+                    _minerInstances[_currentIndex].PrintHashrate();
                     break;
 
                 case ConsoleKey.S:
-                    _minerInstances[0].PrintStats();
+                    _minerInstances[_currentIndex].PrintStats();
                     break;
 
                 case ConsoleKey.J:
-                    _minerInstances[0].PrintCurrentJob();
+                    _minerInstances[_currentIndex].PrintCurrentJob();
                     break;
             }
         }
