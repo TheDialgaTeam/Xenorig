@@ -1,0 +1,115 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.5" />
+    <PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.8.0" />
+
+    <ProjectReference Include="..\..\Xenolib\Xenolib.csproj" />
+    <ProjectReference Include="..\Client\Xenopool.Client.csproj" />
+    <ProjectReference Include="..\Shared\Xenopool.Shared.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
+    <PublishAot>true</PublishAot>
+    <PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
+    <PublishAot>true</PublishAot>
+    <PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
+    <PublishAot>true</PublishAot>
+    <PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)'==''">
+    <Content Include="..\..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x64'))">
+    <DirectPInvoke Include="kernel32" />
+    <DirectPInvoke Include="xeno_native" />
+
+    <NativeLibrary Include="..\..\XenoLibNative\build\install\lib\libxeno_native.dll.a" />
+
+    <Content Include="..\..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="libxeno_native.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-x86'))">
+    <Content Include="..\..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm'))">
+    <Content Include="..\..\XenoLibNative\build\install\bin\xeno_native.dll" Link="xeno_native.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('win-arm64'))">
+    <Content Include="..\..\XenoLibNative\build\install\bin\xeno_native.dll" Link="xeno_native.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-x64'))">
+    <DirectPInvoke Include="libc" />
+    <DirectPInvoke Include="libxeno_native" />
+
+    <NativeLibrary Include="..\..\XenoLibNative\build\install\lib\libxeno_native.a" />
+
+    <Content Include="..\..\XenoLibNative\build\install\lib\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm'))">
+    <Content Include="..\..\XenoLibNative\build\install\lib\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-arm64'))">
+    <Content Include="..\..\XenoLibNative\build\install\lib\libxeno_native.so.1.0.0" Link="libxeno_native.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('osx-x64'))">
+    <DirectPInvoke Include="libxeno_native" />
+
+    <NativeLibrary Include="..\..\XenoLibNative\build\install\lib\libxeno_native.a" />
+
+    <Content Include="..\..\XenoLibNative\build\install\lib\libxeno_native.1.0.0.dylib" Link="libxeno_native.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Networking\Pool\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,62 @@
+using TheDialgaTeam.Core.Logging.Microsoft;
+using Xenopool.Server.Networking.RpcWallet;
+using Xenopool.Server.Options;
+
+namespace Xenopool.Server;
+
+public static class Program
+{
+    public static void Main(string[] args)
+    {
+        AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainOnUnhandledException;
+
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddControllersWithViews();
+        builder.Services.AddRazorPages();
+
+        builder.Services.AddSingleton<RpcWalletNetwork>();
+        builder.Services.AddHostedService<ConsoleService>();
+        
+        builder.Services.AddOptions<XenopoolOptions>().BindConfiguration("Xenopool", options => options.BindNonPublicProperties = true);
+
+        builder.Logging.AddLoggerTemplateFormatter(options =>
+        {
+            options.SetDefaultTemplate(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix((in LoggerTemplateEntry _) => $"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{DateTime.Now:yyyy-MM-dd HH:mm:ss}{AnsiEscapeCodeConstants.Reset} ")));
+            options.SetTemplate<ConsoleService>(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix(string.Empty)));
+        });
+
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseWebAssemblyDebugging();
+        }
+        else
+        {
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+        }
+
+        app.UseHttpsRedirection();
+        app.UseBlazorFrameworkFiles();
+        app.UseStaticFiles();
+
+        app.UseRouting();
+
+        app.MapRazorPages();
+        app.MapControllers();
+        app.MapFallbackToFile("index.html");
+
+        app.Run();
+    }
+    
+    private static void OnCurrentDomainOnUnhandledException(object _, UnhandledExceptionEventArgs eventArgs)
+    {
+        if (!eventArgs.IsTerminating) return;
+
+        var crashFileLocation = Path.Combine(AppContext.BaseDirectory, $"{DateTime.Now:yyyy-MM-dd-HH-mm-ss}_crash.log");
+        File.WriteAllText(crashFileLocation, eventArgs.ExceptionObject.ToString());
+    }
+}
