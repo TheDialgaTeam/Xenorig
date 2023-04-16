@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Options;
@@ -12,22 +11,43 @@ namespace Xenopool.Server.Networking.RpcWallet;
 
 public sealed class RpcWalletNetwork : IDisposable
 {
-    private readonly IDisposable? _disposable;
     private readonly HttpClient _httpClient;
 
-    private bool _useEncryption;
-
+    private readonly bool _useEncryption;
     private readonly byte[] _aesKey = new byte[32];
     private readonly byte[] _aesIv = new byte[16];
 
-    private string _walletAddress;
+    private readonly string _walletAddress;
 
-    public RpcWalletNetwork(IOptionsMonitor<XenopoolOptions> optionsMonitor)
+    public RpcWalletNetwork(IOptions<XenopoolOptions> options)
     {
-        _disposable = optionsMonitor.OnChange(OnOptionsChanged);
         _httpClient = new HttpClient();
 
-        OnOptionsChanged(optionsMonitor.CurrentValue);
+        _walletAddress = options.Value.RpcWallet.WalletAddress;
+        
+        _httpClient.BaseAddress = new UriBuilder(options.Value.RpcWallet.Host) { Port = options.Value.RpcWallet.Port }.Uri;
+        _httpClient.Timeout = TimeSpan.FromSeconds(options.Value.RpcWallet.NetworkTimeoutDuration);
+        _httpClient.DefaultRequestHeaders.UserAgent.Clear();
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(options.Value.RpcWallet.UserAgent);
+
+        if (options.Value.RpcWallet.EncryptionKey.Length >= 8)
+        {
+            _useEncryption = true;
+
+            Span<byte> encryptionKey = stackalloc byte[Encoding.UTF8.GetByteCount(options.Value.RpcWallet.EncryptionKey)];
+            Encoding.UTF8.GetBytes(options.Value.RpcWallet.EncryptionKey, encryptionKey);
+
+            Span<byte> saltKey = stackalloc byte[Encoding.UTF8.GetByteCount(options.Value.RpcWallet.EncryptionKey[..8])];
+            Encoding.UTF8.GetBytes(options.Value.RpcWallet.EncryptionKey.AsSpan(0, 8), saltKey);
+
+            using var pbkdf1 = new PBKDF1(encryptionKey, Encoding.UTF8.GetBytes(Convert.ToHexString(saltKey)));
+            pbkdf1.FillBytes(_aesKey);
+            pbkdf1.FillBytes(_aesIv);
+        }
+        else
+        {
+            _useEncryption = false;
+        }
     }
 
     public async Task<bool> CheckIfWalletAddressExistAsync(CancellationToken cancellationToken = default)
@@ -43,13 +63,13 @@ public sealed class RpcWalletNetwork : IDisposable
         return false;
     }
 
-    public async Task<int> GetTotalWalletIndexAsync(CancellationToken cancellationToken = default)
+    private async Task<int> GetTotalWalletIndexAsync(CancellationToken cancellationToken = default)
     {
         var response = await DoGetRequestAsync("get_total_wallet_index", GetTotalWalletIndexResponseContext.Default.GetTotalWalletIndexResponse, cancellationToken);
         return response?.Result ?? 0;
     }
 
-    public async Task<string> GetWalletAddressByIndexAsync(int index, CancellationToken cancellationToken = default)
+    private async Task<string> GetWalletAddressByIndexAsync(int index, CancellationToken cancellationToken = default)
     {
         var response = await DoGetRequestAsync($"get_wallet_address_by_index|{index}", GetWalletAddressByIndexResponseContext.Default.GetWalletAddressByIndexResponse, cancellationToken);
         return response?.Result ?? "wallet_not_exist";
@@ -85,39 +105,8 @@ public sealed class RpcWalletNetwork : IDisposable
         return JsonSerializer.Deserialize(aesDecryptOutput.Span[..outputLength], context);
     }
 
-    [SkipLocalsInit]
-    private void OnOptionsChanged(XenopoolOptions options)
-    {
-        _walletAddress = options.RpcWallet.WalletAddress;
-        
-        _httpClient.BaseAddress = new UriBuilder(options.RpcWallet.Host) { Port = options.RpcWallet.Port }.Uri;
-        _httpClient.Timeout = TimeSpan.FromSeconds(options.RpcWallet.NetworkTimeoutDuration);
-        _httpClient.DefaultRequestHeaders.UserAgent.Clear();
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(options.RpcWallet.UserAgent);
-
-        if (options.RpcWallet.EncryptionKey.Length >= 8)
-        {
-            _useEncryption = true;
-
-            Span<byte> encryptionKey = stackalloc byte[Encoding.UTF8.GetByteCount(options.RpcWallet.EncryptionKey)];
-            Encoding.UTF8.GetBytes(options.RpcWallet.EncryptionKey, encryptionKey);
-
-            Span<byte> saltKey = stackalloc byte[Encoding.UTF8.GetByteCount(options.RpcWallet.EncryptionKey[..8])];
-            Encoding.UTF8.GetBytes(options.RpcWallet.EncryptionKey.AsSpan(0, 8), saltKey);
-
-            using var pbkdf1 = new PBKDF1(encryptionKey, Encoding.UTF8.GetBytes(Convert.ToHexString(saltKey)));
-            pbkdf1.FillBytes(_aesKey);
-            pbkdf1.FillBytes(_aesIv);
-        }
-        else
-        {
-            _useEncryption = false;
-        }
-    }
-
     public void Dispose()
     {
-        _disposable?.Dispose();
         _httpClient.Dispose();
     }
 }

@@ -10,5 +10,5 @@ public sealed partial class GetWalletAddressByIndexResponseContext : JsonSeriali
 public sealed class GetWalletAddressByIndexResponse
 {
     [JsonPropertyName("result")]
-    public string Result { get; set; }
+    public string? Result { get; set; }
 }

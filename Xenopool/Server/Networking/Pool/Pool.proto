@@ -1,0 +1,59 @@
+﻿syntax = "proto3";
+
+package Xenopool.Server.Networking.Pool;
+
+service Pool {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc GetBlockHeader (BlockHeaderRequest) returns (BlockHeaderResponse);
+  rpc RequestNewJob (JobHeaderRequest) returns (JobHeaderResponse);
+  rpc SubmitJob (JobSubmitRequest) returns (JobSubmitResponse);
+}
+
+message LoginRequest {
+  string wallet_address = 1;
+}
+
+message LoginResponse {
+  bool result = 1;
+  optional string reason = 2;
+}
+
+message BlockHeaderRequest {
+  
+}
+
+message BlockHeaderResponse {
+  int64 block_height = 1;
+  int64 block_timestamp_create = 2;
+  string block_method = 3;
+  string block_indication = 4;
+  int64 block_difficulty = 5;
+  int64 block_min_range = 6;
+  int64 block_max_range = 7;
+  bytes xor_key = 8;
+  bytes aes_key = 9;
+  bytes aes_iv = 10;
+  int32 aes_round = 11;
+}
+
+message JobHeaderRequest {
+  int32 job_solutions = 1;
+}
+
+message JobHeaderResponse {
+  repeated string job_indications = 1;
+}
+
+message JobSubmitRequest {
+  int64 block_height = 1;
+  int64 first_number = 2;
+  int64 second_number = 3;
+  string operator = 4;
+  int64 solution = 5;
+  string user_agent = 6;
+  bytes raw_data = 7;
+}
+
+message JobSubmitResponse {
+  bool is_share_accepted = 1;
+}

@@ -1,0 +1,6 @@
+﻿<linker>
+    <assembly fullname="Xenopool">
+        <type fullname="Xenopool.Options.*" preserve="all"/>
+        <type fullname="Xenopool.Server.Database.Tables.*" preserve="all"/>
+    </assembly>
+</linker>

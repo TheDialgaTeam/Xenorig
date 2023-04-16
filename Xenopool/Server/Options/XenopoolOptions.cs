@@ -3,7 +3,7 @@ using Xenolib.Utilities;
 
 namespace Xenopool.Server.Options;
 
-public class XenopoolOptions
+public sealed class XenopoolOptions
 {
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public RemoteNode RemoteNode
@@ -26,12 +26,20 @@ public class XenopoolOptions
         private set => _soloMining = value ?? _soloMining;
     }
 
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public Pool Pool
+    {
+        get => _pool!;
+        private set => _pool = value ?? _pool;
+    }
+
     private RemoteNode? _remoteNode = new();
     private RpcWallet? _rpcWallet = new();
     private SoloMining? _soloMining = new();
+    private Pool? _pool = new();
 }
 
-public class RemoteNode
+public sealed class RemoteNode
 {
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string Host
@@ -57,7 +65,7 @@ public class RemoteNode
     private string? _userAgent = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
 }
 
-public class RpcWallet
+public sealed class RpcWallet
 {
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string Host
@@ -99,7 +107,7 @@ public class RpcWallet
     private string? _encryptionKey = string.Empty;
 }
 
-public class SoloMining
+public sealed class SoloMining
 {
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public string Host
@@ -123,4 +131,19 @@ public class SoloMining
 
     private string? _host = "127.0.0.1";
     private string? _userAgent = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
+}
+
+public sealed class Pool
+{
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public ulong MinimumPayoutAmount { get; private set; } = 1001;
+
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public int MaximumJobSolutions { get; private set; } = 1000;
+
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public int BanUserAfterFailedShares { get; private set; } = 5;
+
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public int BanDuration { get; private set; } = 3600;
 }

@@ -41,8 +41,8 @@ public static partial class Logger
     [LoggerMessage(EventId = 12, Level = LogLevel.Information, Message = $"{MagentaForegroundColor}{{job}}{Reset} from {WhiteForegroundColor}{{host}}{Reset} diff {WhiteForegroundColor}{{difficulty}}{Reset} algo {WhiteForegroundColor}{{algorithm}}{Reset} height {WhiteForegroundColor}{{height}}{Reset}")]
     public static partial void PrintJob(ILogger logger, string job, string host, long difficulty, string algorithm, int height);
 
-    [LoggerMessage(EventId = 13, Level = LogLevel.Information, Message = $"{BlueForegroundColor}Thread: {{threadId,-2}} | Job Type: {{jobType}} | Job Iterations: {{jobTotal}} | Job Chunk: {{startIndex}}-{{endIndex}} ({{size}}){Reset}")]
-    public static partial void PrintCurrentChunkedThreadJob(ILogger logger, int threadId, string jobType, long jobTotal, long startIndex, long endIndex, long size);
+    [LoggerMessage(EventId = 13, Level = LogLevel.Information, Message = $"{BlueForegroundColor}Thread: {{threadId,-2}} | Job Type: {{jobType}} | Job Chunk: {{startIndex}}-{{endIndex}} ({{size}}){Reset}")]
+    public static partial void PrintCurrentChunkedThreadJob(ILogger logger, int threadId, string jobType, long startIndex, long endIndex, long size);
 
     [LoggerMessage(EventId = 14, Level = LogLevel.Information, Message = $"{BlueForegroundColor}Thread: {{threadId,-2}} | Job Type: {{jobType}}{Reset}")]
     public static partial void PrintCurrentThreadJob(ILogger logger, int threadId, string jobType);

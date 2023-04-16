@@ -120,6 +120,8 @@ public sealed partial class CpuMiner
             _cpuMiningThreads[i].Start();
         }
 
+        Logger.PrintCpuMinerReady(_logger, totalThreads);
+
         _calculateAverageHashTimer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
     }
 
@@ -157,6 +159,11 @@ public sealed partial class CpuMiner
         // Thread Variable
         var cpuMinerJob = _cpuMinerJobs[threadId];
 
+        var doEasyBlock = options.GetEasyBlockOnly(threadId);
+        var easyBlockIndex = options.GetEasyBlockIndex(threadId);
+        var totalEasyBlockThreads = options.GetTotalEasyBlockThreads();
+        var useXenophyteRandomizer = options.GetUseXenophyteRandomizer(threadId);
+
         while (_isCpuMinerActive == 1)
         {
             // Wait for new block.
@@ -175,35 +182,32 @@ public sealed partial class CpuMiner
             if (_isCpuMinerActive == 0) break;
 
             // Received new block!
-            DoEasyBlocksCalculations(threadId, options, cpuMinerJob);
-
-            if (cpuMinerJob.BlockFound) continue;
-            if (cpuMinerJob.HasNewBlock) continue;
-
-            if (options.EasyBlockOnly)
+            if (doEasyBlock)
             {
-                Logger.PrintCurrentThreadJobDone(_logger, threadId);
-                continue;
+                DoEasyBlocksCalculations(threadId, easyBlockIndex, totalEasyBlockThreads, cpuMinerJob);
+
+                if (cpuMinerJob.BlockFound) continue;
+                if (cpuMinerJob.HasNewBlock) continue;
             }
 
-            DoNonEasyBlocksCalculations(threadId, options, cpuMinerJob);
+            DoNonSmartMiningModeCalculations(threadId, useXenophyteRandomizer, cpuMinerJob);
         }
     }
 
     [SkipLocalsInit]
-    private void DoEasyBlocksCalculations(int threadId, Options.CpuMiner options, CpuMinerJob cpuMinerJob)
+    private void DoEasyBlocksCalculations(int threadId, int easyBlockIndex, int totalEasyBlockThreads, CpuMinerJob cpuMinerJob)
     {
         cpuMinerJob.GenerateEasyBlockValues();
 
-        var (startIndex, size) = GetJobChunk(cpuMinerJob.EasyBlockValues.Length, options.GetNumberOfThreads(), threadId);
+        var easyBlockValues = cpuMinerJob.EasyBlockValues;
+
+        var (startIndex, size) = GetJobChunk(easyBlockValues.Length, totalEasyBlockThreads, easyBlockIndex);
         if (size == 0) return;
 
-        var easyBlockValues = cpuMinerJob.EasyBlockValues;
         Span<long> chunkData = stackalloc long[size];
-
         BufferUtility.MemoryCopy(easyBlockValues.Slice(startIndex, size), chunkData, size);
 
-        Logger.PrintCurrentChunkedThreadJob(_logger, threadId, JobTypeEasy, cpuMinerJob.EasyBlockValues.Length * size, startIndex, startIndex + size - 1, size);
+        Logger.PrintCurrentChunkedThreadJob(_logger, threadId, JobTypeEasy, startIndex, startIndex + size - 1, size);
 
         for (var i = size - 1; i >= 0; i--)
         {
@@ -225,13 +229,13 @@ public sealed partial class CpuMiner
         }
     }
 
-    private void DoNonEasyBlocksCalculations(int threadId, Options.CpuMiner options, CpuMinerJob cpuMinerJob)
+    private void DoNonSmartMiningModeCalculations(int threadId, bool useXenophyteRandomizer, CpuMinerJob cpuMinerJob)
     {
         var easyBlockValues = cpuMinerJob.EasyBlockValues;
 
         Logger.PrintCurrentThreadJob(_logger, threadId, JobTypeRandom);
 
-        if (options.GetUseXenophyteRandomizer(threadId))
+        if (useXenophyteRandomizer)
         {
             do
             {

@@ -1,5 +1,12 @@
+#pragma warning disable IL2026
+
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.Core.Logging.Microsoft;
+using Xenopool.Server.Database;
+using Xenopool.Server.Networking.Pool;
 using Xenopool.Server.Networking.RpcWallet;
+using Xenopool.Server.Networking.SoloMining;
 using Xenopool.Server.Options;
 
 namespace Xenopool.Server;
@@ -16,9 +23,18 @@ public static class Program
         builder.Services.AddRazorPages();
 
         builder.Services.AddSingleton<RpcWalletNetwork>();
+        builder.Services.AddSingleton<SoloMiningNetwork>();
+
         builder.Services.AddHostedService<ConsoleService>();
-        
+
         builder.Services.AddOptions<XenopoolOptions>().BindConfiguration("Xenopool", options => options.BindNonPublicProperties = true);
+
+        builder.Services.AddGrpc();
+
+        builder.Services.AddDbContextFactory<SqliteDatabaseContext>(optionsBuilder =>
+        {
+            optionsBuilder.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "data.db")}");
+        });
 
         builder.Logging.AddLoggerTemplateFormatter(options =>
         {
@@ -27,7 +43,7 @@ public static class Program
         });
 
         var app = builder.Build();
-
+        
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -38,12 +54,20 @@ public static class Program
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
+        
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        });
 
         app.UseHttpsRedirection();
         app.UseBlazorFrameworkFiles();
         app.UseStaticFiles();
 
         app.UseRouting();
+        app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
+
+        app.MapGrpcService<PoolNetwork>();
 
         app.MapRazorPages();
         app.MapControllers();
@@ -51,7 +75,7 @@ public static class Program
 
         app.Run();
     }
-    
+
     private static void OnCurrentDomainOnUnhandledException(object _, UnhandledExceptionEventArgs eventArgs)
     {
         if (!eventArgs.IsTerminating) return;

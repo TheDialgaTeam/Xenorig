@@ -91,7 +91,7 @@ DOTNET_PUBLIC DOTNET_INT XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(
     }
 }
 
-DOTNET_PUBLIC DOTNET_INT XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(DOTNET_LONG minValue, DOTNET_LONG maxValue, DOTNET_SPAN_LONG output, DOTNET_SPAN_LONG output2) {
+DOTNET_PUBLIC DOTNET_INT XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(DOTNET_LONG minValue, DOTNET_LONG maxValue, DOTNET_SPAN_LONG output) {
     DOTNET_LONG easyBlockRange = maxValue - minValue + 1;
 
     if (easyBlockRange <= 256) {
@@ -112,7 +112,6 @@ DOTNET_PUBLIC DOTNET_INT XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbe
     for (DOTNET_LONG i = minValue; i <= maxValue; i++) {
         if (i < value) {
             output[amount] = i;
-            output2[amount] = i;
             amount += 1;
         } else {
             easyBlockValuesIndex += 1;

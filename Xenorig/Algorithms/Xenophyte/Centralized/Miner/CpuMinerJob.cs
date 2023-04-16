@@ -26,7 +26,7 @@ public sealed class CpuMinerJob
     public int AesRound { get; private set; }
 
     public Span<long> EasyBlockValues => _easyBlockValues.AsSpan(0, _easyBlockValuesLength);
-
+    
     public bool HasNewBlock { get; set; }
     public bool BlockFound { get; set; }
 
@@ -40,7 +40,7 @@ public sealed class CpuMinerJob
 
     private readonly long[] _easyBlockValues = new long[256];
     private int _easyBlockValuesLength = 256;
-
+    
     public void Update(BlockHeader blockHeader)
     {
         BlockHeight = blockHeader.BlockHeight;

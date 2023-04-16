@@ -11,7 +11,7 @@ public static partial class CpuMinerUtility
         public static partial int XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(long minValue, long maxValue, Span<long> output);
 
         [LibraryImport(Program.XenoNativeLibrary)]
-        public static partial int XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(long minValue, long maxvalue, Span<long> output, Span<long> output2);
+        public static partial int XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(long minValue, long maxvalue, Span<long> output);
 
         [LibraryImport(Program.XenoNativeLibrary)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -25,9 +25,9 @@ public static partial class CpuMinerUtility
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GenerateNonEasyBlockNumbers(long minValue, long maxValue, Span<long> output, Span<long> output2)
+    public static int GenerateNonEasyBlockNumbers(long minValue, long maxValue, Span<long> output)
     {
-        return Native.XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(minValue, maxValue, output, output2);
+        return Native.XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(minValue, maxValue, output);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

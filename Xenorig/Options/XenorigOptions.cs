@@ -117,10 +117,10 @@ public sealed class CpuMiner
     }
 
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public bool EasyBlockOnly { get; private set; }
+    public bool EasyBlockOnly { get; private set; } = true;
 
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public bool UseXenophyteRandomizer { get; private set; }
+    public bool UseXenophyteRandomizer { get; private set; } = true;
 
     private CpuMinerThreadConfiguration[]? _threadConfigs = Array.Empty<CpuMinerThreadConfiguration>();
 
@@ -137,6 +137,31 @@ public sealed class CpuMiner
     public ThreadPriority GetThreadPriority(int thread)
     {
         return GetThreadConfig(thread)?.ThreadPriority ?? ThreadPriority;
+    }
+
+    public bool GetEasyBlockOnly(int thread)
+    {
+        return GetThreadConfig(thread)?.EasyBlockOnly ?? EasyBlockOnly;
+    }
+    
+    public int GetEasyBlockIndex(int thread)
+    {
+        var index = -1;
+
+        for (var i = 0; i <= thread; i++)
+        {
+            if (GetEasyBlockOnly(thread))
+            {
+                index++;
+            }
+        }
+        
+        return index;
+    }
+
+    public int GetTotalEasyBlockThreads()
+    {
+        return _threadConfigs?.Count(configuration => configuration.EasyBlockOnly ?? EasyBlockOnly) ?? (EasyBlockOnly ? GetNumberOfThreads() : 0);
     }
 
     public bool GetUseXenophyteRandomizer(int thread)
@@ -157,6 +182,9 @@ public sealed class CpuMinerThreadConfiguration
 
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public ThreadPriority? ThreadPriority { get; private set; } = System.Threading.ThreadPriority.Normal;
+    
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public bool? EasyBlockOnly { get; private set; }
 
     [UsedImplicitly(ImplicitUseKindFlags.Assign)]
     public bool? UseXenophyteRandomizer { get; private set; }
