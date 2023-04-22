@@ -1,10 +1,10 @@
 ﻿using Google.Protobuf;
 using Microsoft.Extensions.Options;
-using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
-using Xenopool.Server.Networking.Pool;
+using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool;
+using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 using Xenopool.Server.Options;
 
-namespace Xenopool.Server.Networking.SoloMining;
+namespace Xenopool.Server.SoloMining;
 
 public sealed class SoloMiningNetwork : IDisposable
 {

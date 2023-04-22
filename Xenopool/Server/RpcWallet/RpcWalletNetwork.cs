@@ -7,7 +7,7 @@ using Xenolib.Utilities.Buffer;
 using Xenolib.Utilities.KeyDerivationFunction;
 using Xenopool.Server.Options;
 
-namespace Xenopool.Server.Networking.RpcWallet;
+namespace Xenopool.Server.RpcWallet;
 
 public sealed class RpcWalletNetwork : IDisposable
 {
@@ -65,13 +65,13 @@ public sealed class RpcWalletNetwork : IDisposable
 
     private async Task<int> GetTotalWalletIndexAsync(CancellationToken cancellationToken = default)
     {
-        var response = await DoGetRequestAsync("get_total_wallet_index", GetTotalWalletIndexResponseContext.Default.GetTotalWalletIndexResponse, cancellationToken);
+        var response = await DoGetRequestAsync<GetTotalWalletIndexResponse>("get_total_wallet_index", GetTotalWalletIndexResponseContext.Default.GetTotalWalletIndexResponse, cancellationToken);
         return response?.Result ?? 0;
     }
 
     private async Task<string> GetWalletAddressByIndexAsync(int index, CancellationToken cancellationToken = default)
     {
-        var response = await DoGetRequestAsync($"get_wallet_address_by_index|{index}", GetWalletAddressByIndexResponseContext.Default.GetWalletAddressByIndexResponse, cancellationToken);
+        var response = await DoGetRequestAsync<GetWalletAddressByIndexResponse>($"get_wallet_address_by_index|{index}", GetWalletAddressByIndexResponseContext.Default.GetWalletAddressByIndexResponse, cancellationToken);
         return response?.Result ?? "wallet_not_exist";
     }
 

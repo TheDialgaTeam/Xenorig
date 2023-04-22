@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Xenolib.Utilities;
 using Xenorig.Algorithms;
 using Xenorig.Algorithms.Xenophyte.Centralized;
+using Xenorig.Algorithms.Xenophyte.Centralized.Solo;
 using Xenorig.Options;
 
 namespace Xenorig;
@@ -82,7 +83,7 @@ public sealed class ConsoleService : BackgroundService
         if (pool.Algorithm.Equals("Xiropht_Centralized_Solo", StringComparison.OrdinalIgnoreCase) ||
             pool.Algorithm.Equals("Xenophyte_Centralized_Solo", StringComparison.OrdinalIgnoreCase))
         {
-            return new XenophyteCentralizedAlgorithm(_loggerFactory.CreateLogger(nameof(XenophyteCentralizedAlgorithm)), _options, pool);
+            return new XenophyteCentralizedSoloAlgorithm(_loggerFactory.CreateLogger(nameof(XenophyteCentralizedSoloAlgorithm)), _options, pool);
         }
 
         throw new NotImplementedException("Algorithm not implemented.");

@@ -1,4 +1,4 @@
-﻿namespace Xenopool.Server.Networking.RemoteNode;
+﻿namespace Xenopool.Server.RemoteNode;
 
 public sealed class RemoteNodeNetwork : IDisposable
 {

@@ -66,6 +66,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
         <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
         <PackageReference Include="TheDialgaTeam.Core.Logging.Microsoft" Version="1.8.0" />
@@ -141,6 +142,10 @@
         <Content Include="..\XenoLibNative\build\install\lib\libxeno_native.1.0.0.dylib" Link="libxeno_native.dylib">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Algorithms\Xenophyte\Centralized\Pool\" />
     </ItemGroup>
 
 </Project>

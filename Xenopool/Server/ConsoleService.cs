@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Xenolib.Utilities;
 using Xenopool.Server.Database;
-using Xenopool.Server.Networking.RpcWallet;
-using Xenopool.Server.Networking.SoloMining;
+using Xenopool.Server.RpcWallet;
+using Xenopool.Server.SoloMining;
 
 namespace Xenopool.Server;
 

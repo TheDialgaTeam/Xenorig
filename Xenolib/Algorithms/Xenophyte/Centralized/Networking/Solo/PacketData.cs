@@ -4,7 +4,7 @@ using System.Text;
 using Xenolib.Utilities;
 using Xenolib.Utilities.Buffer;
 
-namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking;
+namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 
 public delegate void ReceivePacketHandler(ReadOnlySpan<byte> packet, TimeSpan roundTripTime);
 

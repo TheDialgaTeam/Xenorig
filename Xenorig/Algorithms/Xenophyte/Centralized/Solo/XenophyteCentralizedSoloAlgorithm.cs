@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
-using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
+using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 using Xenolib.Utilities;
 using Xenorig.Options;
-using CpuMiner = Xenorig.Algorithms.Xenophyte.Centralized.Miner.CpuMiner;
+using CpuMiner = Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner.CpuMiner;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized;
+namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo;
 
-internal class XenophyteCentralizedAlgorithm : IAlgorithm
+internal class XenophyteCentralizedSoloAlgorithm : IAlgorithm
 {
     private readonly ILogger _logger;
     private readonly XenorigOptions _options;
@@ -36,7 +36,7 @@ internal class XenophyteCentralizedAlgorithm : IAlgorithm
     private int TotalGoodBlocksSubmitted => _totalGoodEasyBlocksSubmitted + _totalGoodSemiRandomBlocksSubmitted + _totalGoodRandomBlocksSubmitted;
     private int TotalBadBlocksSubmitted => _totalBadEasyBlocksSubmitted + _totalBadSemiRandomBlocksSubmitted + _totalBadRandomBlocksSubmitted;
     
-    public XenophyteCentralizedAlgorithm(ILogger logger, XenorigOptions options, Pool pool)
+    public XenophyteCentralizedSoloAlgorithm(ILogger logger, XenorigOptions options, Pool pool)
     {
         _logger = logger;
         _options = options;

@@ -1,7 +1,7 @@
-﻿using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
+﻿using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
+namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner;
 
 public sealed class CpuMinerJob
 {

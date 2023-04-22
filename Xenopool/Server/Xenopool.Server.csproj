@@ -50,10 +50,6 @@
         <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
     </ItemGroup>
 
-    <ItemGroup>
-        <Protobuf Include="Networking\Pool\Pool.proto" GrpcServices="Server" />
-    </ItemGroup>
-
     <ItemGroup Condition="'$(RuntimeIdentifier)'==''">
         <Content Include="..\..\XenoLibNative\build\install\bin\libxeno_native.dll" Link="xeno_native.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

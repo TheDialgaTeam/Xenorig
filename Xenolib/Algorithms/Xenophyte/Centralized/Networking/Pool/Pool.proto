@@ -1,6 +1,6 @@
 ﻿syntax = "proto3";
 
-package Xenopool.Server.Networking.Pool;
+package Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool;
 
 service Pool {
   rpc Login (LoginRequest) returns (LoginResponse);
@@ -11,15 +11,17 @@ service Pool {
 
 message LoginRequest {
   string wallet_address = 1;
+  optional string worker_id = 2;
 }
 
 message LoginResponse {
   bool result = 1;
-  optional string reason = 2;
+  string token = 2;
+  optional string reason = 3;
 }
 
 message BlockHeaderRequest {
-  
+  string token = 1;
 }
 
 message BlockHeaderResponse {
@@ -37,7 +39,8 @@ message BlockHeaderResponse {
 }
 
 message JobHeaderRequest {
-  int32 job_solutions = 1;
+  string token = 1;
+  int32 job_solutions = 2;
 }
 
 message JobHeaderResponse {
@@ -45,13 +48,14 @@ message JobHeaderResponse {
 }
 
 message JobSubmitRequest {
-  int64 block_height = 1;
-  int64 first_number = 2;
-  int64 second_number = 3;
-  string operator = 4;
-  int64 solution = 5;
-  string user_agent = 6;
-  bytes raw_data = 7;
+  string token = 1;
+  int64 block_height = 2;
+  int64 first_number = 3;
+  int64 second_number = 4;
+  string operator = 5;
+  int64 solution = 6;
+  string user_agent = 7;
+  bytes raw_data = 8;
 }
 
 message JobSubmitResponse {

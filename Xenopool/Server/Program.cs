@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using TheDialgaTeam.Core.Logging.Microsoft;
 using Xenopool.Server.Database;
-using Xenopool.Server.Networking.Pool;
-using Xenopool.Server.Networking.RpcWallet;
-using Xenopool.Server.Networking.SoloMining;
 using Xenopool.Server.Options;
+using Xenopool.Server.Pool;
+using Xenopool.Server.RpcWallet;
+using Xenopool.Server.SoloMining;
 
 namespace Xenopool.Server;
 
@@ -24,6 +24,7 @@ public static class Program
 
         builder.Services.AddSingleton<RpcWalletNetwork>();
         builder.Services.AddSingleton<SoloMiningNetwork>();
+        builder.Services.AddSingleton<PoolClientCollection>();
 
         builder.Services.AddHostedService<ConsoleService>();
 
@@ -67,7 +68,7 @@ public static class Program
         app.UseRouting();
         app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 
-        app.MapGrpcService<PoolNetwork>();
+        app.MapGrpcService<PoolService>();
 
         app.MapRazorPages();
         app.MapControllers();

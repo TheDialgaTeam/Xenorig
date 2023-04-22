@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Xenopool.Server.Networking.RpcWallet;
+namespace Xenopool.Server.RpcWallet;
 
 [JsonSerializable(typeof(GetWalletAddressByIndexResponse), GenerationMode = JsonSourceGenerationMode.Metadata)]
 public sealed partial class GetWalletAddressByIndexResponseContext : JsonSerializerContext

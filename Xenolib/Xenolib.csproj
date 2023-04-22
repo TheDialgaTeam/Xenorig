@@ -25,4 +25,12 @@
         <DebugType>none</DebugType>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Grpc.AspNetCore" Version="2.52.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Protobuf Include="Algorithms\Xenophyte\Centralized\Networking\Pool\Pool.proto" />
+    </ItemGroup>
+
 </Project>

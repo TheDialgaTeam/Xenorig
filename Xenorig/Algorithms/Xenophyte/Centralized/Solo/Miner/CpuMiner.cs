@@ -3,12 +3,12 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
-using Xenolib.Algorithms.Xenophyte.Centralized.Networking;
+using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 using Xenolib.Utilities;
 using Xenorig.Options;
 
-namespace Xenorig.Algorithms.Xenophyte.Centralized.Miner;
+namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner;
 
 public delegate void BlockSubmitResultHandler(int height, string jobType, bool isGoodBlock, string reason, double roundTripTime);
 

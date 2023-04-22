@@ -5,7 +5,7 @@ using Xenolib.Utilities;
 using Xenolib.Utilities.Buffer;
 using Xenolib.Utilities.KeyDerivationFunction;
 
-namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking;
+namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 
 public delegate void DisconnectHandler(string reason);
 
