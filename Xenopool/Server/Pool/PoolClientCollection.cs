@@ -1,43 +1,71 @@
-﻿using Grpc.Core;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool;
+using Xenolib.Utilities.Buffer;
 using Xenopool.Server.Database;
 using Xenopool.Server.Database.Repository;
 
 namespace Xenopool.Server.Pool;
 
-public sealed class PoolClientCollection
+public sealed class PoolClientCollection : IDisposable
 {
     public Dictionary<string, PoolClient> PoolClients { get; } = new();
-    
+
+    public Dictionary<string, PoolClient.Worker> PoolWorkers { get; } = new();
+
     private readonly IDbContextFactory<SqliteDatabaseContext> _contextFactory;
 
+    private readonly Timer _poolWorkerChecker;
+    
     public PoolClientCollection(IDbContextFactory<SqliteDatabaseContext> contextFactory)
     {
         _contextFactory = contextFactory;
+        _poolWorkerChecker = new Timer(CheckPoolWorkerValidity, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    }
+    
+    public async Task<LoginResponse> RegisterClientAsync(LoginRequest request)
+    {
+        if (!PoolClients.TryGetValue(request.WalletAddress, out var poolClient))
+        {
+            poolClient = new PoolClient(new PoolAccountRepository(await _contextFactory.CreateDbContextAsync()), request.WalletAddress);
+            PoolClients.Add(request.WalletAddress, poolClient);
+        }
+
+        if (poolClient.Account.IsBanned)
+        {
+            return new LoginResponse { Status = false, Reason = poolClient.Account.BanReason ?? string.Empty };
+        }
+
+        string guid;
+
+        do
+        {
+            guid = Guid.NewGuid().ToString();
+        } while (!PoolWorkers.TryAdd(guid, new PoolClient.Worker(poolClient.Account, request.WorkerId)));
+                
+        return new LoginResponse { Status = true, Token = guid };
     }
 
-    public async Task<LoginResponse> RegisterClient(LoginRequest request, ServerCallContext context)
+    private void CheckPoolWorkerValidity(object? state)
     {
-        try
-        {
-            await using var dbContext = await _contextFactory.CreateDbContextAsync(context.CancellationToken);
-            using var accountRepository = new PoolAccountRepository(dbContext);
+        using var expiredPoolWorker = ArrayPoolOwner<string>.Rent(PoolWorkers.Count);
+        var removedCount = 0;
 
-            var account = await accountRepository.GetOrCreateAccountAsync(request.WalletAddress, context.CancellationToken);
-            var guid = Guid.NewGuid();
+        foreach (var poolWorker in PoolWorkers)
+        {
+            if (poolWorker.Value.IsExpire())
+            {
+                expiredPoolWorker.Span[removedCount++] = poolWorker.Key;
+            }
+        }
 
-            PoolClients.Add(guid.ToString(), new PoolClient(account, request.WorkerId));
-            
-            return new LoginResponse { Result = true, Token = guid.ToString() };
-        }
-        catch (OperationCanceledException)
+        for (var i = 0; i < removedCount; i++)
         {
-            return new LoginResponse { Result = false, Token = string.Empty, Reason = "Login Timeout." };
+            PoolWorkers.Remove(expiredPoolWorker.Span[i]);
         }
-        catch
-        {
-            return new LoginResponse { Result = false, Token = string.Empty, Reason = "Unexpected error occured." };
-        }
+    }
+
+    public void Dispose()
+    {
+        _poolWorkerChecker.Dispose();
     }
 }

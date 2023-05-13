@@ -1,30 +1,67 @@
 ﻿syntax = "proto3";
 
+import "google/api/annotations.proto";
+
 package Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool;
 
+// Mining Pool Service
 service Pool {
-  rpc Login (LoginRequest) returns (LoginResponse);
-  rpc GetBlockHeader (BlockHeaderRequest) returns (BlockHeaderResponse);
-  rpc RequestNewJob (JobHeaderRequest) returns (JobHeaderResponse);
-  rpc SubmitJob (JobSubmitRequest) returns (JobSubmitResponse);
+  // Authenticate miner by providing wallet address and worker id.
+  rpc Login (LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/pool/login"
+      body: "*"
+    };
+  }
+  
+  // Get the current block header for mining.
+  rpc GetBlockHeader (BlockHeaderRequest) returns (BlockHeaderResponse) {
+    option (google.api.http) = {
+      get: "/v1/pool/get_block_header"
+    };
+  }
+  
+  // Request for mining job.
+  rpc RequestNewJob (JobHeaderRequest) returns (JobHeaderResponse) {
+    option (google.api.http) = {
+      get: "/v1/pool/request_new_job"
+    };
+  }
+  
+  // Submit mining job.
+  rpc SubmitJob (JobSubmitRequest) returns (JobSubmitResponse) {
+    option (google.api.http) = {
+      post: "/v1/pool/submit_job"
+      body: "*"
+    };
+  }
 }
 
 message LoginRequest {
+  // Xenophyte Wallet Address.
   string wallet_address = 1;
+  
+  // Miner worker id. This is used to identify unique miner instances when mining on the same wallet address.
   optional string worker_id = 2;
 }
 
 message LoginResponse {
-  bool result = 1;
-  string token = 2;
-  optional string reason = 3;
+  // Response status.
+  bool status = 1;
+  
+  // Error message when status is false.
+  optional string reason = 2;
+  
+  // Authentication token.
+  optional string token = 3;
 }
 
 message BlockHeaderRequest {
+  // Authentication token.
   string token = 1;
 }
 
-message BlockHeaderResponse {
+message BlockHeader {
   int64 block_height = 1;
   int64 block_timestamp_create = 2;
   string block_method = 3;
@@ -38,13 +75,26 @@ message BlockHeaderResponse {
   int32 aes_round = 11;
 }
 
+message BlockHeaderResponse {
+  // Response status.
+  bool status = 1;
+  
+  // Error message when status is false.
+  optional string reason = 2;
+  
+  // Block header information.
+  BlockHeader header = 3;
+}
+
 message JobHeaderRequest {
   string token = 1;
   int32 job_solutions = 2;
 }
 
 message JobHeaderResponse {
-  repeated string job_indications = 1;
+  bool status = 1;
+  optional string reason = 2;
+  repeated string job_indications = 3;
 }
 
 message JobSubmitRequest {
@@ -59,5 +109,7 @@ message JobSubmitRequest {
 }
 
 message JobSubmitResponse {
-  bool is_share_accepted = 1;
+  bool status = 1;
+  optional string reason = 2;
+  bool is_share_accepted = 3;
 }

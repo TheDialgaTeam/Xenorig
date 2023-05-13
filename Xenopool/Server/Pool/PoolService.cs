@@ -17,16 +17,16 @@ public sealed class PoolService : Xenolib.Algorithms.Xenophyte.Centralized.Netwo
 
     public override async Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
     {
-        return await _poolClientCollection.RegisterClient(request, context);
+        return await _poolClientCollection.RegisterClientAsync(request);
     }
 
-    public override async Task<BlockHeaderResponse> GetBlockHeader(BlockHeaderRequest request, ServerCallContext context)
+    public override Task<BlockHeaderResponse> GetBlockHeader(BlockHeaderRequest request, ServerCallContext context)
     {
-        while (_soloMiningNetwork.BlockHeaderResponse == null)
+        if (_poolClientCollection.PoolWorkers.TryGetValue(request.Token, out var worker))
         {
-            await Task.Delay(1, context.CancellationToken);
+            return Task.FromResult(_soloMiningNetwork.BlockHeaderResponse);
         }
 
-        return _soloMiningNetwork.BlockHeaderResponse;
+        return Task.FromResult(new BlockHeaderResponse { Status = false, Reason = "User not authorized." });
     }
 }

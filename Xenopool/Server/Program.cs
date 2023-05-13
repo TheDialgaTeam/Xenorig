@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using TheDialgaTeam.Core.Logging.Microsoft;
 using Xenopool.Server.Database;
 using Xenopool.Server.Options;
@@ -30,12 +31,16 @@ public static class Program
 
         builder.Services.AddOptions<XenopoolOptions>().BindConfiguration("Xenopool", options => options.BindNonPublicProperties = true);
 
-        builder.Services.AddGrpc();
-
-        builder.Services.AddDbContextFactory<SqliteDatabaseContext>(optionsBuilder =>
+        builder.Services.AddGrpc().AddJsonTranscoding();
+        builder.Services.AddGrpcSwagger();
+        builder.Services.AddSwaggerGen(options =>
         {
-            optionsBuilder.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "data.db")}");
+            var filePath = Path.Combine(AppContext.BaseDirectory, "Xenolib.xml");
+            options.IncludeXmlComments(filePath, true);
+            options.IncludeGrpcXmlComments(filePath, true);
         });
+
+        builder.Services.AddDbContextFactory<SqliteDatabaseContext>(optionsBuilder => { optionsBuilder.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "data.db")}"); });
 
         builder.Logging.AddLoggerTemplateFormatter(options =>
         {
@@ -44,7 +49,7 @@ public static class Program
         });
 
         var app = builder.Build();
-        
+
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -55,7 +60,7 @@ public static class Program
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
-        
+
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -67,6 +72,9 @@ public static class Program
 
         app.UseRouting();
         app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
+        
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
         app.MapGrpcService<PoolService>();
 

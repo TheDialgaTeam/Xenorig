@@ -15,6 +15,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>1701;1702;IL2121;CS1591;CS1574</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -27,6 +30,7 @@
 
     <ItemGroup>
       <PackageReference Include="Grpc.AspNetCore" Version="2.52.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Grpc.JsonTranscoding" Version="7.0.5" />
     </ItemGroup>
 
     <ItemGroup>

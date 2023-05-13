@@ -3,7 +3,7 @@ using Xenopool.Server.Database.Tables;
 
 namespace Xenopool.Server.Database.Repository;
 
-public sealed class PoolAccountRepository : IDisposable
+public sealed class PoolAccountRepository : IDisposable, IAsyncDisposable
 {
     private readonly SqliteDatabaseContext _context;
 
@@ -12,22 +12,35 @@ public sealed class PoolAccountRepository : IDisposable
         _context = context;
     }
 
-    public async Task<PoolAccount> GetOrCreateAccountAsync(string walletAddress, CancellationToken cancellationToken)
+    public PoolAccount CreateAccount(string walletAddress)
     {
-        var count = await _context.PoolAccounts.CountAsync(account => account.WalletAddress == walletAddress, cancellationToken);
+        var account = new PoolAccount { WalletAddress = walletAddress };
+        _context.PoolAccounts.Add(account);
+        return account;
+    }
+    
+    public PoolAccount? GetAccount(string walletAddress)
+    {
+        return _context.PoolAccounts.SingleOrDefault(account => account.WalletAddress == walletAddress);
+    }
+    
+    public Task<PoolAccount?> GetAccountAsync(string walletAddress, CancellationToken cancellationToken)
+    {
+        return _context.PoolAccounts.SingleOrDefaultAsync(account => account.WalletAddress == walletAddress, cancellationToken);
+    }
 
-        if (count == 0)
-        {
-            var account = new PoolAccount { WalletAddress = walletAddress };
-            _context.PoolAccounts.Add(account);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-
-        return await _context.PoolAccounts.SingleAsync(account => account.WalletAddress == walletAddress, cancellationToken);
+    public Task SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        return _context.SaveChangesAsync(cancellationToken);
     }
 
     public void Dispose()
     {
         _context.Dispose();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return _context.DisposeAsync();
     }
 }
