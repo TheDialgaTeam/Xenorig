@@ -25,7 +25,7 @@ public static class Program
 
         builder.Services.AddSingleton<RpcWalletNetwork>();
         builder.Services.AddSingleton<SoloMiningNetwork>();
-        builder.Services.AddSingleton<PoolClientCollection>();
+        builder.Services.AddSingleton<PoolClientManager>();
 
         builder.Services.AddHostedService<ConsoleService>();
 

@@ -18,6 +18,10 @@ public static partial class CpuMinerUtility
         public static partial bool XenophyteCentralizedAlgorithm_MakeEncryptedShare(ReadOnlySpan<byte> input, int inputLength, Span<byte> encryptedShare, Span<byte> hashEncryptedShare, ReadOnlySpan<byte> xorKey, int xorKeyLength, int aesKeySize, ReadOnlySpan<byte> aesKey, ReadOnlySpan<byte> aesIv, int aesRound);
     }
 
+    public const string JobTypeEasy = "Easy Block";
+    public const string JobTypeSemiRandom = "Semi Random";
+    public const string JobTypeRandom = "Random";
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GenerateEasyBlockNumbers(long minValue, long maxValue, Span<long> output)
     {
@@ -34,5 +38,13 @@ public static partial class CpuMinerUtility
     public static bool MakeEncryptedShare(ReadOnlySpan<byte> input, Span<byte> encryptedShare, Span<byte> hashEncryptedShare, ReadOnlySpan<byte> xorKey, ReadOnlySpan<byte> aesKey, ReadOnlySpan<byte> aesIv, int aesRound)
     {
         return Native.XenophyteCentralizedAlgorithm_MakeEncryptedShare(input, input.Length, encryptedShare, hashEncryptedShare, xorKey, xorKey.Length, aesKey.Length * 8, aesKey, aesIv, aesRound);
+    }
+    
+    public static (int startIndex, int size) GetJobChunk(int totalSize, int numberOfChunks, int threadId)
+    {
+        var (quotient, remainder) = Math.DivRem(totalSize, numberOfChunks);
+        var startIndex = threadId * quotient + Math.Min(threadId, remainder);
+        var chunkLength = quotient + (threadId < remainder ? 1 : 0);
+        return (startIndex, chunkLength);
     }
 }

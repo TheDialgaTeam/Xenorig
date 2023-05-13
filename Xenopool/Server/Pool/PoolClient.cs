@@ -1,46 +1,29 @@
-﻿using Xenopool.Server.Database.Repository;
-using Xenopool.Server.Database.Tables;
+﻿using Xenopool.Server.Database.Tables;
 
 namespace Xenopool.Server.Pool;
 
-public sealed class PoolClient : IDisposable
+public sealed class PoolClient
 {
-    public sealed class Worker
-    {
-        private readonly PoolAccount _poolAccount;
-        private readonly string _workerId;
+    private readonly PoolAccount _poolAccount;
+    private readonly string _workerId;
         
-        private DateTime _lastRequestTime = DateTime.Now;
+    private DateTime _lastRequestTime = DateTime.Now;
 
-        public Worker(PoolAccount poolAccount, string workerId)
-        {
-            _poolAccount = poolAccount;
-            _workerId = workerId;
-        }
+    private ulong _sharePoints = 0;
 
-        public bool IsExpire()
-        {
-            return (DateTime.Now - _lastRequestTime).TotalMinutes > 1;
-        }
-
-        public void Ping()
-        {
-            _lastRequestTime = DateTime.Now;
-        }
-    }
-    
-    public PoolAccount Account { get; }
-
-    private readonly PoolAccountRepository _poolAccountRepository;
-
-    public PoolClient(PoolAccountRepository poolAccountRepository, string walletAddress)
+    public PoolClient(PoolAccount poolAccount, string workerId)
     {
-        _poolAccountRepository = poolAccountRepository;
-        Account = poolAccountRepository.GetAccount(walletAddress) ?? poolAccountRepository.CreateAccount(walletAddress);
+        _poolAccount = poolAccount;
+        _workerId = workerId;
     }
 
-    public void Dispose()
+    public bool IsExpire()
     {
-        _poolAccountRepository.Dispose();
+        return (DateTime.Now - _lastRequestTime).TotalMinutes > 1;
+    }
+
+    public void Ping()
+    {
+        _lastRequestTime = DateTime.Now;
     }
 }

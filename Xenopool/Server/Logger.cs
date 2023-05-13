@@ -25,17 +25,11 @@ public static partial class Logger
     [LoggerMessage(EventId = 10, Level = LogLevel.Information, Message = $"use {{mode}} {CyanForegroundColor}{{host}}{Reset}")]
     public static partial void PrintConnected(ILogger logger, string mode, string host);
 
-    [LoggerMessage(EventId = 11, Level = LogLevel.Information, Message = $"{GreenForegroundColor}READY (CPU) {WhiteForegroundColor}threads {CyanForegroundColor}{{threads}}{Reset}")]
-    public static partial void PrintCpuMinerReady(ILogger logger, int threads);
-
     [LoggerMessage(EventId = 12, Level = LogLevel.Information, Message = $"{MagentaForegroundColor}{{job}}{Reset} from {WhiteForegroundColor}{{host}}{Reset} diff {WhiteForegroundColor}{{difficulty}}{Reset} algo {WhiteForegroundColor}{{algorithm}}{Reset} height {WhiteForegroundColor}{{height}}{Reset}")]
     public static partial void PrintJob(ILogger logger, string job, string host, long difficulty, string algorithm, int height);
-
-    [LoggerMessage(EventId = 13, Level = LogLevel.Information, Message = $"{BlueForegroundColor}Thread: {{threadId,-2}} | Job Type: {{jobType}} | Job Iterations: {{jobTotal}} | Job Chunk: {{startIndex}}-{{endIndex}} ({{size}}){Reset}")]
-    public static partial void PrintCurrentChunkedThreadJob(ILogger logger, int threadId, string jobType, long jobTotal, long startIndex, long endIndex, long size);
-
-    [LoggerMessage(EventId = 15, Level = LogLevel.Information, Message = $"{GreenForegroundColor}Thread: {{threadId,-2}} | Job Type: {{jobType}} | Block found: {{firstNumber}} {{operatorSymbol}} {{secondNumber}} = {{result}}{Reset}")]
-    public static partial void PrintBlockFound(ILogger logger, int threadId, string jobType, long firstNumber, char operatorSymbol, long secondNumber, long result);
+    
+    [LoggerMessage(EventId = 15, Level = LogLevel.Information, Message = $"{GreenForegroundColor}Job Type: {{jobType}} | Block found: {{firstNumber}} {{operatorSymbol}} {{secondNumber}} = {{result}}{Reset}")]
+    public static partial void PrintBlockFound(ILogger logger, string jobType, long firstNumber, char operatorSymbol, long secondNumber, long result);
 
     [LoggerMessage(EventId = 16, Level = LogLevel.Information, Message = $"{GreenForegroundColor}accepted {Reset}({{goodTotal}}/{{badTotal}}) {GrayForegroundColor}({{ping}} ms){Reset}")]
     public static partial void PrintBlockAcceptResult(ILogger logger, int goodTotal, int badTotal, double ping);
