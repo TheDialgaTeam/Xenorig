@@ -5,7 +5,7 @@ namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner;
 
 public sealed class CpuMinerJob
 {
-    public int BlockHeight { get; private set; }
+    public long BlockHeight { get; private set; }
 
     public long BlockTimestampCreate { get; private set; }
 

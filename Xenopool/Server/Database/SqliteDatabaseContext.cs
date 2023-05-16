@@ -1,6 +1,7 @@
 ﻿#pragma warning disable IL2026
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Xenopool.Server.Database.Tables;
 
 namespace Xenopool.Server.Database;

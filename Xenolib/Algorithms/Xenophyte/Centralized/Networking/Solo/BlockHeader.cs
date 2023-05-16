@@ -6,7 +6,7 @@ namespace Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 
 public sealed partial class BlockHeader
 {
-    public int BlockHeight { get; private set; }
+    public long BlockHeight { get; private set; }
 
     public long BlockTimestampCreate { get; private set; }
 
@@ -76,7 +76,7 @@ public sealed partial class BlockHeader
                 switch (match.Groups["key"].Value)
                 {
                     case "ID":
-                        BlockHeight = int.Parse(match.Groups["value"].Value);
+                        BlockHeight = long.Parse(match.Groups["value"].Value);
                         break;
 
                     case "TIMESTAMP":

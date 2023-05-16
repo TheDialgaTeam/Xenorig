@@ -1,7 +1,7 @@
-﻿using Grpc.Core;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool;
-using Xenolib.Utilities.Buffer;
 using Xenopool.Server.Database;
 using Xenopool.Server.Database.Repository;
 
@@ -11,9 +11,8 @@ public sealed class PoolClientManager : IDisposable
 {
     private readonly PoolAccountRepository _poolAccountRepository;
     private readonly Timer _poolClientValidityCheck;
-
-    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
-    private readonly Dictionary<string, PoolClient> _poolClients = new();
+    
+    private readonly ConcurrentDictionary<string, PoolClient> _poolClients = new();
 
     public PoolClientManager(IDbContextFactory<SqliteDatabaseContext> contextFactory)
     {
@@ -21,72 +20,38 @@ public sealed class PoolClientManager : IDisposable
         _poolClientValidityCheck = new Timer(CheckClientValidity, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
     }
 
-    public async Task<LoginResponse> AddClientAsync(LoginRequest request, ServerCallContext context)
+    public LoginResponse AddClient(LoginRequest request)
     {
-        try
+        var account = _poolAccountRepository.GetAccount(request.WalletAddress) ?? _poolAccountRepository.CreateAccount(request.WalletAddress);
+
+        if (account.IsBanned)
         {
-            await _semaphoreSlim.WaitAsync(context.CancellationToken);
+            return new LoginResponse { Status = false, Reason = account.BanReason ?? string.Empty };
+        }
         
-            var account = await _poolAccountRepository.GetAccountAsync(request.WalletAddress, context.CancellationToken) ?? _poolAccountRepository.CreateAccount(request.WalletAddress);
+        string guid;
 
-            if (account.IsBanned)
-            {
-                return new LoginResponse { Status = false, Reason = account.BanReason ?? string.Empty };
-            }
-
-            string guid;
-
-            do
-            {
-                guid = Guid.NewGuid().ToString();
-            } while (!_poolClients.TryAdd(guid, new PoolClient(account, request.WorkerId)));
-
-            return new LoginResponse { Status = true, Token = guid };
-        }
-        finally
+        do
         {
-            if (_semaphoreSlim.CurrentCount == 0) _semaphoreSlim.Release();
-        }
+            guid = Guid.NewGuid().ToString();
+        } while (!_poolClients.TryAdd(guid, new PoolClient(account, request.WorkerId)));
+
+        return new LoginResponse { Status = true, Token = guid };
     }
-
-    public async Task<PoolClient?> GetClientAsync(string token, CancellationToken cancellationToken = default)
+    
+    public bool TryGetClient(string token, [MaybeNullWhen(false)] out PoolClient poolClient)
     {
-        try
-        {
-            await _semaphoreSlim.WaitAsync(cancellationToken);
-            return _poolClients.TryGetValue(token, out var poolClient) ? poolClient : null;
-        }
-        finally
-        {
-            if (_semaphoreSlim.CurrentCount == 0) _semaphoreSlim.Release();
-        }
+        return _poolClients.TryGetValue(token, out poolClient);
     }
 
     private void CheckClientValidity(object? _)
     {
-        try
+        foreach (var poolClient in _poolClients)
         {
-            _semaphoreSlim.Wait();
-            
-            using var expiredPoolClients = ArrayPoolOwner<string>.Rent(_poolClients.Count);
-            var expiredPoolClientCount = 0;
-            
-            foreach (var poolClient in _poolClients)
+            if (poolClient.Value.IsExpire())
             {
-                if (poolClient.Value.IsExpire())
-                {
-                    expiredPoolClients.Span[expiredPoolClientCount++] = poolClient.Key;
-                }
+                _poolClients.TryRemove(poolClient);
             }
-
-            for (var i = 0; i < expiredPoolClientCount; i++)
-            {
-                _poolClients.Remove(expiredPoolClients.Span[i]);
-            }
-        }
-        finally
-        {
-            if (_semaphoreSlim.CurrentCount == 0) _semaphoreSlim.Release();
         }
     }
 
@@ -94,6 +59,5 @@ public sealed class PoolClientManager : IDisposable
     {
         _poolAccountRepository.Dispose();
         _poolClientValidityCheck.Dispose();
-        _semaphoreSlim.Dispose();
     }
 }

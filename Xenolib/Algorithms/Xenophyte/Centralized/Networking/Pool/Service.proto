@@ -5,7 +5,7 @@ import "google/api/annotations.proto";
 package Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool;
 
 // Mining Pool Service
-service Pool {
+service PoolService {
   // Authenticate miner by providing wallet address and worker id.
   rpc Login (LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
@@ -104,8 +104,8 @@ message JobSubmitRequest {
   int64 second_number = 4;
   string operator = 5;
   int64 solution = 6;
-  string user_agent = 7;
-  bytes raw_data = 8;
+  bytes encrypted_share = 7;
+  bytes encrypted_share_hash = 8;
 }
 
 message JobSubmitResponse {

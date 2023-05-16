@@ -6,11 +6,11 @@ using CpuMiner = Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner.CpuMiner;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo;
 
-internal class XenophyteCentralizedSoloAlgorithm : IAlgorithm
+public class XenophyteCentralizedSoloAlgorithm : IAlgorithm
 {
     private readonly ILogger _logger;
     private readonly XenorigOptions _options;
-    private readonly Pool _pool;
+    private readonly Options.Pool _pool;
     
     private readonly Network _network;
     private readonly NetworkConnection _networkConnection;
@@ -30,13 +30,13 @@ internal class XenophyteCentralizedSoloAlgorithm : IAlgorithm
     private int _totalBadSemiRandomBlocksSubmitted;
     private int _totalBadRandomBlocksSubmitted;
     
-    private int _lastFoundHeight;
+    private long _lastFoundHeight;
     private readonly object _lastFoundHeightLock = new();
 
     private int TotalGoodBlocksSubmitted => _totalGoodEasyBlocksSubmitted + _totalGoodSemiRandomBlocksSubmitted + _totalGoodRandomBlocksSubmitted;
     private int TotalBadBlocksSubmitted => _totalBadEasyBlocksSubmitted + _totalBadSemiRandomBlocksSubmitted + _totalBadRandomBlocksSubmitted;
     
-    public XenophyteCentralizedSoloAlgorithm(ILogger logger, XenorigOptions options, Pool pool)
+    public XenophyteCentralizedSoloAlgorithm(ILogger logger, XenorigOptions options, Options.Pool pool)
     {
         _logger = logger;
         _options = options;
@@ -107,7 +107,7 @@ internal class XenophyteCentralizedSoloAlgorithm : IAlgorithm
         Logger.PrintCpuMinerSpeed(_logger, _cpuMiner.AverageHashCalculatedIn10Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn60Seconds.Sum(), _cpuMiner.AverageHashCalculatedIn15Minutes.Sum(), _maxHash);
     }
 
-    private void CpuMinerOnFoundBlock(int height, string jobType, bool isGoodBlock, string reason, double roundTripTime)
+    private void CpuMinerOnFoundBlock(long height, string jobType, bool isGoodBlock, string reason, double roundTripTime)
     {
         lock (_lastFoundHeightLock)
         {

@@ -27,6 +27,10 @@
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <DebugType>none</DebugType>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+    </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Grpc.AspNetCore" Version="2.52.0" />
@@ -34,7 +38,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Protobuf Include="Algorithms\Xenophyte\Centralized\Networking\Pool\Pool.proto" />
+      <Protobuf Include="Algorithms\Xenophyte\Centralized\Networking\Pool\Service.proto" />
     </ItemGroup>
 
 </Project>

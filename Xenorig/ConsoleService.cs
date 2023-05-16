@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xenolib.Utilities;
 using Xenorig.Algorithms;
-using Xenorig.Algorithms.Xenophyte.Centralized;
 using Xenorig.Algorithms.Xenophyte.Centralized.Solo;
 using Xenorig.Options;
 
@@ -16,7 +15,7 @@ public sealed class ConsoleService : BackgroundService
     private readonly XenorigOptions _options;
 
     private IAlgorithm[] _minerInstances = Array.Empty<IAlgorithm>();
-    private readonly int _currentIndex = 0;
+    private int _currentIndex = 0;
 
     public ConsoleService(ILogger<ConsoleService> logger, ILoggerFactory loggerFactory, IOptions<XenorigOptions> options)
     {

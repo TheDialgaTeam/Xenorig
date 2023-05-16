@@ -121,7 +121,7 @@ public sealed class PacketData : IDisposable
 
     public void Dispose()
     {
-        _packetArrayPoolOwner.Dispose();
         GC.SuppressFinalize(this);
+        _packetArrayPoolOwner.Dispose();
     }
 }

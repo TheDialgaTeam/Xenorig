@@ -46,7 +46,6 @@
 
         <ProjectReference Include="..\..\Xenolib\Xenolib.csproj" />
         <ProjectReference Include="..\Client\Xenopool.Client.csproj" />
-        <ProjectReference Include="..\Shared\Xenopool.Shared.csproj" />
 
         <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
     </ItemGroup>

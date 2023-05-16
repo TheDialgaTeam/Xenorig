@@ -39,7 +39,7 @@ public static partial class Logger
     public static partial void PrintCpuMinerReady(ILogger logger, int threads);
 
     [LoggerMessage(EventId = 12, Level = LogLevel.Information, Message = $"{MagentaForegroundColor}{{job}}{Reset} from {WhiteForegroundColor}{{host}}{Reset} diff {WhiteForegroundColor}{{difficulty}}{Reset} algo {WhiteForegroundColor}{{algorithm}}{Reset} height {WhiteForegroundColor}{{height}}{Reset}")]
-    public static partial void PrintJob(ILogger logger, string job, string host, long difficulty, string algorithm, int height);
+    public static partial void PrintJob(ILogger logger, string job, string host, long difficulty, string algorithm, long height);
 
     [LoggerMessage(EventId = 13, Level = LogLevel.Information, Message = $"{BlueForegroundColor}Thread: {{threadId,-2}} | Job Type: {{jobType}} | Job Chunk: {{startIndex}}-{{endIndex}} ({{size}}){Reset}")]
     public static partial void PrintCurrentChunkedThreadJob(ILogger logger, int threadId, string jobType, long startIndex, long endIndex, long size);

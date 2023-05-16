@@ -2,5 +2,6 @@
     <assembly fullname="Xenopool">
         <type fullname="Xenopool.Options.*" preserve="all"/>
         <type fullname="Xenopool.Server.Database.Tables.*" preserve="all"/>
+        <type fullname="Xenopool.Server.Migrations.*" preserve="all"/>
     </assembly>
 </linker>

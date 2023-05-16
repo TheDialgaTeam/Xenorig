@@ -30,8 +30,10 @@ public class ConsoleService : BackgroundService
         Logger.PrintCpuCont(_logger, string.Empty, CpuInformationUtility.ProcessorL2Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorL3Cache / 1024.0 / 1024.0, CpuInformationUtility.ProcessorCoreCount, CpuInformationUtility.ProcessorThreadCount);
         Logger.PrintEmpty(_logger);
 
-        await using var sqliteDatabaseContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await sqliteDatabaseContext.Database.MigrateAsync(cancellationToken);
+        await using (var sqliteDatabaseContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken))
+        {
+            await sqliteDatabaseContext.Database.MigrateAsync(cancellationToken);
+        }
 
         if (!await _rpcWalletNetwork.CheckIfWalletAddressExistAsync(cancellationToken))
         {

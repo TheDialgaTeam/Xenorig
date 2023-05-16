@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Xenopool.Server.Database.Tables;
+﻿using Xenopool.Server.Database.Tables;
 
 namespace Xenopool.Server.Database.Repository;
 
@@ -22,11 +21,6 @@ public sealed class PoolAccountRepository : IDisposable, IAsyncDisposable
     public PoolAccount? GetAccount(string walletAddress)
     {
         return _context.PoolAccounts.SingleOrDefault(account => account.WalletAddress == walletAddress);
-    }
-    
-    public Task<PoolAccount?> GetAccountAsync(string walletAddress, CancellationToken cancellationToken)
-    {
-        return _context.PoolAccounts.SingleOrDefaultAsync(account => account.WalletAddress == walletAddress, cancellationToken);
     }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken)

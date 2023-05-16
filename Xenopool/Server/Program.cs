@@ -2,7 +2,6 @@
 
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using TheDialgaTeam.Core.Logging.Microsoft;
 using Xenopool.Server.Database;
 using Xenopool.Server.Options;

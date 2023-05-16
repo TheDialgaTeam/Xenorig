@@ -26,7 +26,7 @@ public static partial class Logger
     public static partial void PrintConnected(ILogger logger, string mode, string host);
 
     [LoggerMessage(EventId = 12, Level = LogLevel.Information, Message = $"{MagentaForegroundColor}{{job}}{Reset} from {WhiteForegroundColor}{{host}}{Reset} diff {WhiteForegroundColor}{{difficulty}}{Reset} algo {WhiteForegroundColor}{{algorithm}}{Reset} height {WhiteForegroundColor}{{height}}{Reset}")]
-    public static partial void PrintJob(ILogger logger, string job, string host, long difficulty, string algorithm, int height);
+    public static partial void PrintJob(ILogger logger, string job, string host, long difficulty, string algorithm, long height);
     
     [LoggerMessage(EventId = 15, Level = LogLevel.Information, Message = $"{GreenForegroundColor}Job Type: {{jobType}} | Block found: {{firstNumber}} {{operatorSymbol}} {{secondNumber}} = {{result}}{Reset}")]
     public static partial void PrintBlockFound(ILogger logger, string jobType, long firstNumber, char operatorSymbol, long secondNumber, long result);

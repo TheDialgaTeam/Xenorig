@@ -7,7 +7,8 @@ using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo;
 using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 using Xenolib.Utilities;
 using Xenopool.Server.Options;
-using BlockHeader = Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo.BlockHeader;
+using Xenopool.Server.Pool;
+using BlockHeader = Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool.BlockHeader;
 
 namespace Xenopool.Server.SoloMining;
 
@@ -30,7 +31,12 @@ public sealed class SoloMiningNetwork : IDisposable
     private readonly long[] _easyBlockValues = new long[256];
     private int _easyBlockValuesLength = 256;
 
-    public SoloMiningNetwork(IOptions<XenopoolOptions> options, ILogger<SoloMiningNetwork> logger, IHostApplicationLifetime hostApplicationLifetime)
+    private readonly char[] _operators = { '+', '-', '*', '/', '%' };
+    private readonly char[] _operators2 = { '+', '*', '%' };
+
+    private readonly object _lock = new();
+
+    public SoloMiningNetwork(IOptions<XenopoolOptions> options, ILogger<SoloMiningNetwork> logger)
     {
         _options = options;
         _logger = logger;
@@ -43,6 +49,39 @@ public sealed class SoloMiningNetwork : IDisposable
         };
     }
 
+    [SkipLocalsInit]
+    private static bool GenerateHash(long firstNumber, long secondNumber, char op, BlockHeader blockHeader, out string encryptedShare, out string encryptedShareHash)
+    {
+        Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19 + 1];
+
+        firstNumber.TryFormat(stringToEncrypt, out var firstNumberWritten);
+
+        stringToEncrypt.GetRef(firstNumberWritten) = ' ';
+        stringToEncrypt.GetRef(firstNumberWritten + 1) = op;
+        stringToEncrypt.GetRef(firstNumberWritten + 2) = ' ';
+
+        secondNumber.TryFormat(stringToEncrypt[(firstNumberWritten + 3)..], out var secondNumberWritten);
+        blockHeader.BlockTimestampCreate.TryFormat(stringToEncrypt[(firstNumberWritten + 3 + secondNumberWritten)..], out var finalWritten);
+
+        Span<byte> bytesToEncrypt = stackalloc byte[firstNumberWritten + 3 + secondNumberWritten + finalWritten];
+        Encoding.UTF8.GetBytes(stringToEncrypt[..(firstNumberWritten + 3 + secondNumberWritten + finalWritten)], bytesToEncrypt);
+
+        Span<byte> encryptedShareBytes = stackalloc byte[64 * 2];
+        Span<byte> hashEncryptedShareBytes = stackalloc byte[64 * 2];
+
+        if (!CpuMinerUtility.MakeEncryptedShare(bytesToEncrypt, encryptedShareBytes, hashEncryptedShareBytes, blockHeader.XorKey.Span, blockHeader.AesKey.Span, blockHeader.AesIv.Span, blockHeader.AesRound))
+        {
+            encryptedShare = string.Empty;
+            encryptedShareHash = string.Empty;
+            return false;
+        }
+
+        encryptedShare = Encoding.UTF8.GetString(encryptedShareBytes);
+        encryptedShareHash = Encoding.UTF8.GetString(hashEncryptedShareBytes);
+
+        return blockHeader.BlockIndication == encryptedShareHash;
+    }
+
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         _network.Disconnected += NetworkOnDisconnected;
@@ -50,6 +89,61 @@ public sealed class SoloMiningNetwork : IDisposable
         _network.HasNewBlock += NetworkOnHasNewBlock;
 
         await _network.ConnectAsync(_networkConnection, cancellationToken);
+    }
+
+    public PoolShare GeneratePoolShare()
+    {
+        var blockHeader = BlockHeaderResponse.Header;
+        long firstNumber, secondNumber;
+        char @operator;
+        long solution;
+
+        if (RandomNumberGeneratorUtility.GetRandomBetween(1, 100) <= 50)
+        {
+            firstNumber = EasyBlockValues[RandomNumberGeneratorUtility.GetRandomBetween(0, 255)];
+
+            do
+            {
+                secondNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(blockHeader.BlockMinRange, blockHeader.BlockMaxRange);
+            } while (EasyBlockValues.Contains(secondNumber));
+        }
+        else
+        {
+            secondNumber = EasyBlockValues[RandomNumberGeneratorUtility.GetRandomBetween(0, 255)];
+
+            do
+            {
+                firstNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(blockHeader.BlockMinRange, blockHeader.BlockMaxRange);
+            } while (EasyBlockValues.Contains(secondNumber));
+        }
+
+        do
+        {
+            @operator = firstNumber > secondNumber ? _operators[RandomNumberGeneratorUtility.GetRandomBetween(0, _operators.Length - 1)] : _operators2[RandomNumberGeneratorUtility.GetRandomBetween(0, _operators2.Length - 1)];
+
+            solution = @operator switch
+            {
+                '+' => firstNumber + secondNumber,
+                '-' => firstNumber - secondNumber,
+                '*' => firstNumber * secondNumber,
+                '/' => firstNumber % secondNumber == 0 ? firstNumber / secondNumber : 0,
+                '%' => firstNumber % secondNumber,
+                var _ => 0
+            };
+        } while (solution >= blockHeader.BlockMinRange && solution <= blockHeader.BlockMaxRange);
+
+        GenerateHash(firstNumber, secondNumber, @operator, blockHeader, out var encryptedShare, out var encryptedShareHash);
+
+        return new PoolShare
+        {
+            BlockHeight = blockHeader.BlockHeight,
+            FirstNumber = firstNumber,
+            SecondNumber = secondNumber,
+            Operator = @operator,
+            Solution = solution,
+            EncryptedShare = encryptedShare,
+            EncryptedShareHash = encryptedShareHash
+        };
     }
 
     private async Task StopAsync(CancellationToken cancellationToken = default)
@@ -72,40 +166,40 @@ public sealed class SoloMiningNetwork : IDisposable
         Logger.PrintConnected(_logger, "SOLO", _networkConnection.Uri.Host);
     }
 
-    private void NetworkOnHasNewBlock(BlockHeader blockHeader)
+    private void NetworkOnHasNewBlock(Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo.BlockHeader blockHeader)
     {
         Logger.PrintJob(_logger, "new job", _networkConnection.Uri.Host, blockHeader.BlockDifficulty, blockHeader.BlockMethod, blockHeader.BlockHeight);
-
-        BlockHeaderResponse = new BlockHeaderResponse
+        
+        lock (_lock)
         {
-            Status = true,
-            Header = new Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool.BlockHeader
+            BlockHeaderResponse = new BlockHeaderResponse
             {
-                BlockHeight = blockHeader.BlockHeight,
-                BlockTimestampCreate = blockHeader.BlockTimestampCreate,
-                BlockMethod = blockHeader.BlockMethod,
-                BlockIndication = blockHeader.BlockIndication,
-                BlockDifficulty = blockHeader.BlockDifficulty,
-                BlockMinRange = blockHeader.BlockMinRange,
-                BlockMaxRange = blockHeader.BlockMaxRange,
-                XorKey = ByteString.CopyFrom(blockHeader.XorKey),
-                AesKey = ByteString.CopyFrom(blockHeader.AesKey),
-                AesIv = ByteString.CopyFrom(blockHeader.AesIv),
-                AesRound = blockHeader.AesRound
-            }
-        };
+                Status = true,
+                Header = new BlockHeader
+                {
+                    BlockHeight = blockHeader.BlockHeight,
+                    BlockTimestampCreate = blockHeader.BlockTimestampCreate,
+                    BlockMethod = blockHeader.BlockMethod,
+                    BlockIndication = blockHeader.BlockIndication,
+                    BlockDifficulty = blockHeader.BlockDifficulty,
+                    BlockMinRange = blockHeader.BlockMinRange,
+                    BlockMaxRange = blockHeader.BlockMaxRange,
+                    XorKey = ByteString.CopyFrom(blockHeader.XorKey),
+                    AesKey = ByteString.CopyFrom(blockHeader.AesKey),
+                    AesIv = ByteString.CopyFrom(blockHeader.AesIv),
+                    AesRound = blockHeader.AesRound
+                }
+            };
 
-        _easyBlockValuesLength = CpuMinerUtility.GenerateEasyBlockNumbers(blockHeader.BlockMinRange, blockHeader.BlockMaxRange, _easyBlockValues);
-
+            _easyBlockValuesLength = CpuMinerUtility.GenerateEasyBlockNumbers(blockHeader.BlockMinRange, blockHeader.BlockMaxRange, _easyBlockValues);
+        }
+        
         var easyBlockValues = EasyBlockValues;
 
-        var (startIndex, size) = CpuMinerUtility.GetJobChunk(_easyBlockValuesLength, CpuInformationUtility.ProcessorCoreCount, 0);
-        if (size == 0) return;
+        Span<long> chunkData = stackalloc long[_easyBlockValuesLength];
+        BufferUtility.MemoryCopy(easyBlockValues, chunkData, _easyBlockValuesLength);
 
-        Span<long> chunkData = stackalloc long[size];
-        BufferUtility.MemoryCopy(easyBlockValues.Slice(startIndex, size), chunkData, size);
-
-        for (var i = size - 1; i >= 0; i--)
+        for (var i = _easyBlockValuesLength - 1; i >= 0; i--)
         {
             var choseRandom = RandomNumberGeneratorUtility.GetRandomBetween(0, i);
 
@@ -122,7 +216,7 @@ public sealed class SoloMiningNetwork : IDisposable
         }
     }
 
-    private void DoMathCalculations(long firstNumber, long secondNumber, string jobType, BlockHeader blockHeader)
+    private void DoMathCalculations(long firstNumber, long secondNumber, string jobType, Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo.BlockHeader blockHeader)
     {
         if (firstNumber > secondNumber)
         {
@@ -177,7 +271,7 @@ public sealed class SoloMiningNetwork : IDisposable
     }
 
     [SkipLocalsInit]
-    private void ValidateAndSubmitShare(long firstNumber, long secondNumber, long solution, char op, string jobType, BlockHeader blockHeader)
+    private void ValidateAndSubmitShare(long firstNumber, long secondNumber, long solution, char op, string jobType, Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo.BlockHeader blockHeader)
     {
         Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19 + 1];
 
@@ -206,6 +300,7 @@ public sealed class SoloMiningNetwork : IDisposable
 
         if (!hashEncryptedShareString.SequenceEqual(blockHeader.BlockIndication)) return;
 
+        /*
         _network.SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveJob}|{Encoding.UTF8.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{blockHeader.BlockHeight}|{_options.Value.SoloMining.UserAgent}", true, (packet, time) =>
         {
             Span<char> temp = stackalloc char[Encoding.UTF8.GetCharCount(packet)];
@@ -231,6 +326,7 @@ public sealed class SoloMiningNetwork : IDisposable
                 //FoundBlock?.Invoke(cpuMinerJob.BlockHeight, jobType, false, InvalidShare, time.TotalMilliseconds);
             }
         }));
+        */
 
         Logger.PrintBlockFound(_logger, jobType, firstNumber, op, secondNumber, solution);
     }

@@ -1,4 +1,5 @@
 ﻿using Xenopool.Server.Database.Tables;
+using Xenopool.Server.SoloMining;
 
 namespace Xenopool.Server.Pool;
 
@@ -9,6 +10,7 @@ public sealed class PoolClient
         
     private DateTime _lastRequestTime = DateTime.Now;
 
+    private PoolShare[] _poolShares;
     private ulong _sharePoints = 0;
 
     public PoolClient(PoolAccount poolAccount, string workerId)
@@ -25,5 +27,17 @@ public sealed class PoolClient
     public void Ping()
     {
         _lastRequestTime = DateTime.Now;
+    }
+
+    public PoolShare[] GeneratePoolShare(SoloMiningNetwork network, int solutions)
+    {
+        _poolShares = new PoolShare[solutions];
+        
+        for (var i = 0; i < solutions; i++)
+        {
+            _poolShares[i] = network.GeneratePoolShare();
+        }
+
+        return _poolShares;
     }
 }

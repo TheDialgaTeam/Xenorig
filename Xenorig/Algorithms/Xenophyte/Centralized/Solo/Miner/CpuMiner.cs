@@ -10,7 +10,7 @@ using Xenorig.Options;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner;
 
-public delegate void BlockSubmitResultHandler(int height, string jobType, bool isGoodBlock, string reason, double roundTripTime);
+public delegate void BlockSubmitResultHandler(long height, string jobType, bool isGoodBlock, string reason, double roundTripTime);
 
 public sealed partial class CpuMiner
 {
@@ -46,7 +46,7 @@ public sealed partial class CpuMiner
     private const string OrphanShare = "Orphan Share";
 
     private readonly ILogger _logger;
-    private readonly Pool _pool;
+    private readonly Options.Pool _pool;
     private readonly XenorigOptions _options;
     private readonly Network _network;
 
@@ -64,7 +64,7 @@ public sealed partial class CpuMiner
     private readonly long[] _totalHashCalculatedIn60Seconds;
     private readonly long[] _totalHashCalculatedIn15Minutes;
 
-    public CpuMiner(XenorigOptions options, ILogger logger, Pool pool, Network network)
+    public CpuMiner(XenorigOptions options, ILogger logger, Options.Pool pool, Network network)
     {
         _logger = logger;
         _options = options;

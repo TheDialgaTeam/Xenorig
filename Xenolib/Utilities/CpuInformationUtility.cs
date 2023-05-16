@@ -1,8 +1,10 @@
 ﻿using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
+using System.Runtime.Versioning;
 
 namespace Xenolib.Utilities;
 
+[UnsupportedOSPlatform("browser")]
 public static partial class CpuInformationUtility
 {
     private static partial class Native

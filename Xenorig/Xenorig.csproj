@@ -144,8 +144,4 @@
         </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Algorithms\Xenophyte\Centralized\Pool\" />
-    </ItemGroup>
-
 </Project>

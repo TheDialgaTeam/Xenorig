@@ -4,7 +4,7 @@ using Xenopool.Server.SoloMining;
 
 namespace Xenopool.Server.Pool;
 
-public sealed class PoolService : Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool.Pool.PoolBase
+public sealed class PoolService : Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool.PoolService.PoolServiceBase
 {
     private readonly SoloMiningNetwork _soloMiningNetwork;
     private readonly PoolClientManager _poolClientManager;
@@ -15,41 +15,45 @@ public sealed class PoolService : Xenolib.Algorithms.Xenophyte.Centralized.Netwo
         _poolClientManager = poolClientManager;
     }
 
-    public override async Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
+    public override Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
     {
-        return await _poolClientManager.AddClientAsync(request, context);
+        return Task.FromResult(_poolClientManager.AddClient(request));
     }
 
-    public override async Task<BlockHeaderResponse> GetBlockHeader(BlockHeaderRequest request, ServerCallContext context)
+    public override Task<BlockHeaderResponse> GetBlockHeader(BlockHeaderRequest request, ServerCallContext context)
     {
-        var poolClient = await _poolClientManager.GetClientAsync(request.Token, context.CancellationToken);
-
-        if (poolClient == null)
+        if (!_poolClientManager.TryGetClient(request.Token, out var poolClient))
         {
-            return new BlockHeaderResponse { Status = false, Reason = "User not authorized." };
+            return Task.FromResult(new BlockHeaderResponse { Status = false, Reason = "User not authorized." });
         }
         
         poolClient.Ping();
-        
-        return await Task.FromResult(_soloMiningNetwork.BlockHeaderResponse);
+
+        return Task.FromResult(_soloMiningNetwork.BlockHeaderResponse);
     }
 
-    public override async Task<JobHeaderResponse> RequestNewJob(JobHeaderRequest request, ServerCallContext context)
+    public override Task<JobHeaderResponse> RequestNewJob(JobHeaderRequest request, ServerCallContext context)
     {
-        var poolClient = await _poolClientManager.GetClientAsync(request.Token, context.CancellationToken);
-
-        if (poolClient == null)
+        if (!_poolClientManager.TryGetClient(request.Token, out var poolClient))
         {
-            return new JobHeaderResponse { Status = false, Reason = "User not authorized." };
+            return Task.FromResult(new JobHeaderResponse { Status = false, Reason = "User not authorized." });
         }
-        
+
         poolClient.Ping();
-        
-        return await base.RequestNewJob(request, context);
+
+        var response = new JobHeaderResponse { Status = true };
+        response.JobIndications.AddRange(poolClient.GeneratePoolShare(_soloMiningNetwork, request.JobSolutions).Select(share => share.EncryptedShareHash));
+
+        return Task.FromResult(response);
     }
 
     public override Task<JobSubmitResponse> SubmitJob(JobSubmitRequest request, ServerCallContext context)
     {
+        if (!_poolClientManager.TryGetClient(request.Token, out var poolClient))
+        {
+            return Task.FromResult(new JobSubmitResponse { Status = false, Reason = "User not authorized." });
+        }
+        
         return base.SubmitJob(request, context);
     }
 }

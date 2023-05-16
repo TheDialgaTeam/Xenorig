@@ -1,10 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 
 public static partial class CpuMinerUtility
 {
+    [UnsupportedOSPlatform("browser")]
     private static partial class Native
     {
         [LibraryImport(Program.XenoNativeLibrary)]
@@ -17,23 +19,22 @@ public static partial class CpuMinerUtility
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool XenophyteCentralizedAlgorithm_MakeEncryptedShare(ReadOnlySpan<byte> input, int inputLength, Span<byte> encryptedShare, Span<byte> hashEncryptedShare, ReadOnlySpan<byte> xorKey, int xorKeyLength, int aesKeySize, ReadOnlySpan<byte> aesKey, ReadOnlySpan<byte> aesIv, int aesRound);
     }
-
-    public const string JobTypeEasy = "Easy Block";
-    public const string JobTypeSemiRandom = "Semi Random";
-    public const string JobTypeRandom = "Random";
     
+    [UnsupportedOSPlatform("browser")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GenerateEasyBlockNumbers(long minValue, long maxValue, Span<long> output)
     {
         return Native.XenophyteCentralizedAlgorithm_GenerateEasyBlockNumbers(minValue, maxValue, output);
     }
 
+    [UnsupportedOSPlatform("browser")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GenerateNonEasyBlockNumbers(long minValue, long maxValue, Span<long> output)
     {
         return Native.XenophyteCentralizedAlgorithm_GenerateNonEasyBlockNumbers(minValue, maxValue, output);
     }
 
+    [UnsupportedOSPlatform("browser")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool MakeEncryptedShare(ReadOnlySpan<byte> input, Span<byte> encryptedShare, Span<byte> hashEncryptedShare, ReadOnlySpan<byte> xorKey, ReadOnlySpan<byte> aesKey, ReadOnlySpan<byte> aesIv, int aesRound)
     {
