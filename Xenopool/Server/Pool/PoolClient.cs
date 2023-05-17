@@ -35,7 +35,7 @@ public sealed class PoolClient
         
         for (var i = 0; i < solutions; i++)
         {
-            _poolShares[i] = network.GeneratePoolShare();
+            //_poolShares[i] = network.GeneratePoolShare();
         }
 
         return _poolShares;

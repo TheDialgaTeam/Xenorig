@@ -26,10 +26,10 @@ public sealed class PoolService : Xenolib.Algorithms.Xenophyte.Centralized.Netwo
         {
             return Task.FromResult(new BlockHeaderResponse { Status = false, Reason = "User not authorized." });
         }
-        
+
         poolClient.Ping();
 
-        return Task.FromResult(_soloMiningNetwork.BlockHeaderResponse);
+        return Task.FromResult(_soloMiningNetwork.CurrentMiningJob?.BlockHeaderResponse ?? new BlockHeaderResponse { Status = false, Reason = "Blockchain is not ready." });
     }
 
     public override Task<JobHeaderResponse> RequestNewJob(JobHeaderRequest request, ServerCallContext context)
@@ -53,7 +53,7 @@ public sealed class PoolService : Xenolib.Algorithms.Xenophyte.Centralized.Netwo
         {
             return Task.FromResult(new JobSubmitResponse { Status = false, Reason = "User not authorized." });
         }
-        
+
         return base.SubmitJob(request, context);
     }
 }
