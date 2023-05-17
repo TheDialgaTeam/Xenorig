@@ -35,23 +35,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-20.04, macos-11]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         arch: [x64, x86, arm, arm64]
         exclude:
-          - os: windows-2022
+          - os: windows-latest
             arch: arm
-          - os: windows-2022
+          - os: windows-latest
             arch: arm64
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             arch: x86
-          - os: macos-11
+          - os: macos-latest
             arch: x86
-          - os: macos-11
+          - os: macos-latest
             arch: arm
-          - os: macos-11
+          - os: macos-latest
             arch: arm64
         include:
-          - os: windows-2022
+          - os: windows-latest
             arch: x64
             install: ""
             output_folder: Xenorig-windows-x64
@@ -66,7 +66,7 @@ jobs:
             Xenorig:
               arch: win-x64
 
-          - os: windows-2022
+          - os: windows-latest
             arch: x86
             install: ""
             output_folder: Xenorig-windows-x86
@@ -81,7 +81,7 @@ jobs:
             Xenorig:
               arch: win-x86
 
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             arch: x64
             install: >-
               cmake
@@ -96,7 +96,7 @@ jobs:
             Xenorig:
               arch: linux-x64
 
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             arch: arm
             install: >-
               cmake
@@ -111,7 +111,7 @@ jobs:
             Xenorig:
               arch: linux-arm
 
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             arch: arm64
             install: >-
               cmake
@@ -126,7 +126,7 @@ jobs:
             Xenorig:
               arch: linux-arm64
 
-          - os: macos-11
+          - os: macos-latest
             arch: x64
             install: >-
               ninja
@@ -256,7 +256,7 @@ jobs:
 
   deploy_Xenorig:
     name: Deploy Xenorig
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [build_Xenorig]
     if: startsWith(github.ref, 'refs/tags/')
 

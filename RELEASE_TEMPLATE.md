@@ -1,12 +1,8 @@
-Change Logs from v1.0.5.0
+Change Logs from v1.0.6.0
 
-- Fixed a bug where it generate the wrong easy block numbers.
-- Fixed network issues. Now it would reconnect properly.
-- Fixed thread affinity issues.
-- Added easy block only options.
-- Added xenophyte bias randomizer.
+- Fixed a bug where the orphan blocks are duplicated when multiple threads submit the same block.
 
-Update classification: mandatory
+Update classification: optional / ~~mandatory~~
 
 Algorithm Supported:
 - Xenophyte_Centralized_Solo
