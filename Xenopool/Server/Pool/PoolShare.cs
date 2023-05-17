@@ -1,18 +1,18 @@
 ﻿namespace Xenopool.Server.Pool;
 
-public struct PoolShare
+public sealed class PoolShare
 {
-    public long BlockHeight { get; init; }
+    public required long BlockHeight { get; init; }
     
-    public long FirstNumber { get; init; }
+    public required long FirstNumber { get; init; }
     
-    public long SecondNumber { get; init; }
+    public required long SecondNumber { get; init; }
     
-    public char Operator { get; init; }
+    public required char Operator { get; init; }
     
-    public long Solution { get; init; }
+    public required long Solution { get; init; }
 
-    public string EncryptedShare { get; init; }
+    public required string EncryptedShare { get; init; }
     
-    public string EncryptedShareHash { get; init; }
+    public required string EncryptedShareHash { get; init; }
 }

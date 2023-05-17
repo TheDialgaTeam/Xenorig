@@ -18,18 +18,17 @@ public static class Program
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainOnUnhandledException;
 
         var builder = WebApplication.CreateBuilder(args);
+        
+        builder.Services.AddOptions<XenopoolOptions>().BindConfiguration("Xenopool", options => options.BindNonPublicProperties = true);
 
-        builder.Services.AddControllersWithViews();
-        builder.Services.AddRazorPages();
+        builder.Services.AddDbContextFactory<SqliteDatabaseContext>(optionsBuilder => { optionsBuilder.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "data.db")}"); });
 
         builder.Services.AddSingleton<RpcWalletNetwork>();
         builder.Services.AddSingleton<SoloMiningNetwork>();
         builder.Services.AddSingleton<PoolClientManager>();
 
         builder.Services.AddHostedService<ConsoleService>();
-
-        builder.Services.AddOptions<XenopoolOptions>().BindConfiguration("Xenopool", options => options.BindNonPublicProperties = true);
-
+        
         builder.Services.AddGrpc().AddJsonTranscoding();
         builder.Services.AddGrpcSwagger();
         builder.Services.AddSwaggerGen(options =>
@@ -38,9 +37,7 @@ public static class Program
             options.IncludeXmlComments(filePath, true);
             options.IncludeGrpcXmlComments(filePath, true);
         });
-
-        builder.Services.AddDbContextFactory<SqliteDatabaseContext>(optionsBuilder => { optionsBuilder.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "data.db")}"); });
-
+        
         builder.Logging.AddLoggerTemplateFormatter(options =>
         {
             options.SetDefaultTemplate(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix((in LoggerTemplateEntry _) => $"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{DateTime.Now:yyyy-MM-dd HH:mm:ss}{AnsiEscapeCodeConstants.Reset} ")));
@@ -48,15 +45,13 @@ public static class Program
         });
 
         var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
+        
         if (app.Environment.IsDevelopment())
         {
             app.UseWebAssemblyDebugging();
         }
         else
         {
-            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
 
@@ -76,10 +71,6 @@ public static class Program
         app.UseSwaggerUI();
 
         app.MapGrpcService<PoolService>();
-
-        app.MapRazorPages();
-        app.MapControllers();
-        app.MapFallbackToFile("index.html");
 
         app.Run();
     }

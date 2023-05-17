@@ -29,22 +29,7 @@ public sealed class PoolService : Xenolib.Algorithms.Xenophyte.Centralized.Netwo
 
         poolClient.Ping();
 
-        return Task.FromResult(_soloMiningNetwork.CurrentMiningJob?.BlockHeaderResponse ?? new BlockHeaderResponse { Status = false, Reason = "Blockchain is not ready." });
-    }
-
-    public override Task<JobHeaderResponse> RequestNewJob(JobHeaderRequest request, ServerCallContext context)
-    {
-        if (!_poolClientManager.TryGetClient(request.Token, out var poolClient))
-        {
-            return Task.FromResult(new JobHeaderResponse { Status = false, Reason = "User not authorized." });
-        }
-
-        poolClient.Ping();
-
-        var response = new JobHeaderResponse { Status = true };
-        response.JobIndications.AddRange(poolClient.GeneratePoolShare(_soloMiningNetwork, request.JobSolutions).Select(share => share.EncryptedShareHash));
-
-        return Task.FromResult(response);
+        return Task.FromResult(_soloMiningNetwork.CurrentMiningJob == null ? new BlockHeaderResponse { Status = false, Reason = "Blockchain is not ready." } : poolClient.GetBlockHeader(_soloMiningNetwork.CurrentMiningJob));
     }
 
     public override Task<JobSubmitResponse> SubmitJob(JobSubmitRequest request, ServerCallContext context)

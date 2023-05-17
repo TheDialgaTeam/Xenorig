@@ -21,13 +21,6 @@ service PoolService {
     };
   }
   
-  // Request for mining job.
-  rpc RequestNewJob (JobHeaderRequest) returns (JobHeaderResponse) {
-    option (google.api.http) = {
-      get: "/v1/pool/request_new_job"
-    };
-  }
-  
   // Submit mining job.
   rpc SubmitJob (JobSubmitRequest) returns (JobSubmitResponse) {
     option (google.api.http) = {
@@ -61,20 +54,6 @@ message BlockHeaderRequest {
   string token = 1;
 }
 
-message BlockHeader {
-  int64 block_height = 1;
-  int64 block_timestamp_create = 2;
-  string block_method = 3;
-  string block_indication = 4;
-  int64 block_difficulty = 5;
-  int64 block_min_range = 6;
-  int64 block_max_range = 7;
-  bytes xor_key = 8;
-  bytes aes_key = 9;
-  bytes aes_iv = 10;
-  int32 aes_round = 11;
-}
-
 message BlockHeaderResponse {
   // Response status.
   bool status = 1;
@@ -83,18 +62,28 @@ message BlockHeaderResponse {
   optional string reason = 2;
   
   // Block header information.
-  BlockHeader header = 3;
-}
+  optional BlockHeader block_header = 3;
+  
+  // Job header information.
+  optional JobHeader job_header = 4;
 
-message JobHeaderRequest {
-  string token = 1;
-  int32 job_solutions = 2;
-}
-
-message JobHeaderResponse {
-  bool status = 1;
-  optional string reason = 2;
-  repeated string job_indications = 3;
+  message BlockHeader {
+    int64 block_height = 1;
+    int64 block_timestamp_create = 2;
+    string block_method = 3;
+    string block_indication = 4;
+    int64 block_difficulty = 5;
+    int64 block_min_range = 6;
+    int64 block_max_range = 7;
+    bytes xor_key = 8;
+    bytes aes_key = 9;
+    bytes aes_iv = 10;
+    int32 aes_round = 11;
+  }
+  
+  message JobHeader {
+    repeated string job_indications = 1;
+  }
 }
 
 message JobSubmitRequest {

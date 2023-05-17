@@ -23,18 +23,15 @@ public sealed class PoolAccountRepository : IDisposable, IAsyncDisposable
         return _context.PoolAccounts.SingleOrDefault(account => account.WalletAddress == walletAddress);
     }
 
-    public Task SaveChangesAsync(CancellationToken cancellationToken)
-    {
-        return _context.SaveChangesAsync(cancellationToken);
-    }
-
     public void Dispose()
     {
+        _context.SaveChanges();
         _context.Dispose();
     }
 
     public ValueTask DisposeAsync()
     {
+        _context.SaveChanges();
         return _context.DisposeAsync();
     }
 }

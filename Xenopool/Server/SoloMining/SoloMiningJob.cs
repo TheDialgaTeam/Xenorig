@@ -1,36 +1,33 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Google.Protobuf;
 using Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool;
 using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 using Xenolib.Utilities;
 using Xenopool.Server.Pool;
-using BlockHeader = Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo.BlockHeader;
+using SoloBlockHeader = Xenolib.Algorithms.Xenophyte.Centralized.Networking.Solo.BlockHeader;
 
 namespace Xenopool.Server.SoloMining;
 
 public sealed class SoloMiningJob
 {
     public BlockHeaderResponse BlockHeaderResponse { get; }
-
+    
     public Span<long> EasyBlockValues => _easyBlockValues.AsSpan(0, _easyBlockValuesLength);
 
     private static readonly char[] Operators = { '+', '-', '*', '/', '%' };
     private static readonly char[] Operators2 = { '+', '*', '%' };
 
-    private readonly BlockHeader _blockHeader;
-
     private readonly long[] _easyBlockValues = new long[256];
     private readonly int _easyBlockValuesLength;
 
-    public SoloMiningJob(BlockHeader blockHeader)
+    public SoloMiningJob(SoloBlockHeader blockHeader)
     {
-        _blockHeader = blockHeader;
-
         BlockHeaderResponse = new BlockHeaderResponse
         {
             Status = true,
-            Header = new Xenolib.Algorithms.Xenophyte.Centralized.Networking.Pool.BlockHeader
+            BlockHeader = new BlockHeaderResponse.Types.BlockHeader
             {
                 BlockHeight = blockHeader.BlockHeight,
                 BlockTimestampCreate = blockHeader.BlockTimestampCreate,
@@ -48,9 +45,17 @@ public sealed class SoloMiningJob
 
         _easyBlockValuesLength = CpuMinerUtility.GenerateEasyBlockNumbers(blockHeader.BlockMinRange, blockHeader.BlockMaxRange, _easyBlockValues);
     }
-    
-    public bool TryGenerateSemiRandomPoolShare(out PoolShare poolShare)
+
+    public bool TryGenerateSemiRandomPoolShare([MaybeNullWhen(false)] out PoolShare poolShare)
     {
+        if (EasyBlockValues.Length < 256)
+        {
+            poolShare = null;
+            return false;
+        }
+
+        var header = BlockHeaderResponse.BlockHeader;
+
         long firstNumber, secondNumber;
         char @operator;
         long solution;
@@ -61,7 +66,7 @@ public sealed class SoloMiningJob
 
             do
             {
-                secondNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(_blockHeader.BlockMinRange, _blockHeader.BlockMaxRange);
+                secondNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(header.BlockMinRange, header.BlockMaxRange);
             } while (EasyBlockValues.Contains(secondNumber));
         }
         else
@@ -70,7 +75,7 @@ public sealed class SoloMiningJob
 
             do
             {
-                firstNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(_blockHeader.BlockMinRange, _blockHeader.BlockMaxRange);
+                firstNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(header.BlockMinRange, header.BlockMaxRange);
             } while (EasyBlockValues.Contains(firstNumber));
         }
 
@@ -87,17 +92,17 @@ public sealed class SoloMiningJob
                 '%' => firstNumber % secondNumber,
                 var _ => 0
             };
-        } while (solution >= _blockHeader.BlockMinRange && solution <= _blockHeader.BlockMaxRange);
+        } while (solution >= header.BlockMinRange && solution <= header.BlockMaxRange);
 
         if (!TryGenerateHash(firstNumber, secondNumber, @operator, out var encryptedShare, out var encryptedShareHash))
         {
-            poolShare = default;
+            poolShare = null;
             return false;
         }
 
         poolShare = new PoolShare
         {
-            BlockHeight = _blockHeader.BlockHeight,
+            BlockHeight = header.BlockHeight,
             FirstNumber = firstNumber,
             SecondNumber = secondNumber,
             Operator = @operator,
@@ -108,21 +113,29 @@ public sealed class SoloMiningJob
 
         return true;
     }
-    
-    public bool TryGenerateRandomPoolShare(out PoolShare poolShare)
+
+    public bool TryGenerateRandomPoolShare([MaybeNullWhen(false)] out PoolShare poolShare)
     {
+        if (EasyBlockValues.Length < 256)
+        {
+            poolShare = null;
+            return false;
+        }
+        
+        var header = BlockHeaderResponse.BlockHeader;
+
         long firstNumber, secondNumber;
         char @operator;
         long solution;
 
         do
         {
-            firstNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(_blockHeader.BlockMinRange, _blockHeader.BlockMaxRange);
+            firstNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(header.BlockMinRange, header.BlockMaxRange);
         } while (EasyBlockValues.Contains(firstNumber));
-            
+
         do
         {
-            secondNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(_blockHeader.BlockMinRange, _blockHeader.BlockMaxRange);
+            secondNumber = RandomNumberGeneratorUtility.GetBiasRandomBetween(header.BlockMinRange, header.BlockMaxRange);
         } while (EasyBlockValues.Contains(secondNumber));
 
         do
@@ -138,17 +151,17 @@ public sealed class SoloMiningJob
                 '%' => firstNumber % secondNumber,
                 var _ => 0
             };
-        } while (solution >= _blockHeader.BlockMinRange && solution <= _blockHeader.BlockMaxRange);
+        } while (solution >= header.BlockMinRange && solution <= header.BlockMaxRange);
 
         if (!TryGenerateHash(firstNumber, secondNumber, @operator, out var encryptedShare, out var encryptedShareHash))
         {
-            poolShare = default;
+            poolShare = null;
             return false;
         }
 
         poolShare = new PoolShare
         {
-            BlockHeight = _blockHeader.BlockHeight,
+            BlockHeight = header.BlockHeight,
             FirstNumber = firstNumber,
             SecondNumber = secondNumber,
             Operator = @operator,
@@ -163,6 +176,7 @@ public sealed class SoloMiningJob
     [SkipLocalsInit]
     private bool TryGenerateHash(long firstNumber, long secondNumber, char op, out string encryptedShare, out string encryptedShareHash)
     {
+        var header = BlockHeaderResponse.BlockHeader;
         Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19 + 1];
 
         firstNumber.TryFormat(stringToEncrypt, out var firstNumberWritten);
@@ -172,7 +186,7 @@ public sealed class SoloMiningJob
         stringToEncrypt.GetRef(firstNumberWritten + 2) = ' ';
 
         secondNumber.TryFormat(stringToEncrypt[(firstNumberWritten + 3)..], out var secondNumberWritten);
-        _blockHeader.BlockTimestampCreate.TryFormat(stringToEncrypt[(firstNumberWritten + 3 + secondNumberWritten)..], out var finalWritten);
+        header.BlockTimestampCreate.TryFormat(stringToEncrypt[(firstNumberWritten + 3 + secondNumberWritten)..], out var finalWritten);
 
         Span<byte> bytesToEncrypt = stackalloc byte[firstNumberWritten + 3 + secondNumberWritten + finalWritten];
         Encoding.ASCII.GetBytes(stringToEncrypt[..(firstNumberWritten + 3 + secondNumberWritten + finalWritten)], bytesToEncrypt);
@@ -180,7 +194,7 @@ public sealed class SoloMiningJob
         Span<byte> encryptedShareBytes = stackalloc byte[64 * 2];
         Span<byte> hashEncryptedShareBytes = stackalloc byte[64 * 2];
 
-        if (!CpuMinerUtility.MakeEncryptedShare(bytesToEncrypt, encryptedShareBytes, hashEncryptedShareBytes, _blockHeader.XorKey, _blockHeader.AesKey, _blockHeader.AesIv, _blockHeader.AesRound))
+        if (!CpuMinerUtility.MakeEncryptedShare(bytesToEncrypt, encryptedShareBytes, hashEncryptedShareBytes, header.XorKey.Span, header.AesKey.Span, header.AesIv.Span, header.AesRound))
         {
             encryptedShare = string.Empty;
             encryptedShareHash = string.Empty;
