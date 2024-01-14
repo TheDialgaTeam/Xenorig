@@ -1,6 +1,6 @@
-Change Logs from v1.0.6.0
+Change Logs from v1.1.0
 
-- Fixed a bug where the orphan blocks are duplicated when multiple threads submit the same block.
+- Fixed a bug where certain options can lead to division by zero.
 
 Update classification: optional / ~~mandatory~~
 

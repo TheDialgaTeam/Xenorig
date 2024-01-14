@@ -3,7 +3,7 @@ using Xenolib.Algorithms.Xenophyte.Centralized.Utilities;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner;
 
-public sealed class CpuMinerJob
+internal sealed class CpuMinerJob
 {
     public long BlockHeight { get; private set; }
 

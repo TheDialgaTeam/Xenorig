@@ -8,7 +8,7 @@ using Xenorig.Options;
 
 namespace Xenorig;
 
-public sealed class ConsoleService : BackgroundService
+internal sealed class ConsoleService : BackgroundService
 {
     private readonly ILogger<ConsoleService> _logger;
     private readonly ILoggerFactory _loggerFactory;
@@ -41,7 +41,7 @@ public sealed class ConsoleService : BackgroundService
         }
 
         Logger.PrintEmpty(_logger);
-
+        
         _minerInstances = CreateMinerInstances();
         if (_minerInstances.Length == 0) return;
 

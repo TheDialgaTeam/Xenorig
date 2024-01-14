@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.Sockets;
+using System.Runtime.Versioning;
 using System.Text;
 using Xenolib.Utilities;
 using Xenolib.Utilities.Buffer;
@@ -11,6 +12,7 @@ public delegate void DisconnectHandler(string reason);
 
 public delegate void NewBlockHandler(BlockHeader blockHeader);
 
+[UnsupportedOSPlatform("browser")]
 public sealed class Network : IDisposable
 {
     public event DisconnectHandler? Disconnected;

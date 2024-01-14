@@ -6,7 +6,7 @@ using CpuMiner = Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner.CpuMiner;
 
 namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo;
 
-public class XenophyteCentralizedSoloAlgorithm : IAlgorithm
+internal class XenophyteCentralizedSoloAlgorithm : IAlgorithm
 {
     private readonly ILogger _logger;
     private readonly XenorigOptions _options;

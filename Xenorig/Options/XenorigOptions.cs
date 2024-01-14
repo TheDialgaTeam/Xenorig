@@ -1,128 +1,55 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
 using Xenolib.Utilities;
 
 namespace Xenorig.Options;
 
-public sealed class XenorigOptions
+internal sealed class XenorigOptions
 {
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public int PrintSpeedDuration { get; private set; } = 10;
+    public int PrintSpeedDuration { get; set; } = 10;
+    
+    public int NetworkTimeoutDuration { get; set; } = 5;
+    
+    public int MaxRetryCount { get; set; } = 5;
+    
+    public int DonatePercentage { get; set; }
+    
+    public Pool[] Pools { get; set; } = Array.Empty<Pool>();
 
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public int NetworkTimeoutDuration { get; private set; } = 5;
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public int MaxRetryCount { get; private set; } = 5;
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public int DonatePercentage { get; private set; }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public Pool[] Pools
-    {
-        get => _pools!;
-        private set => _pools = value ?? _pools;
-    }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public XenophyteCentralizedSolo Xenophyte_Centralized_Solo
-    {
-        get => _xenophyteCentralizedSolo!;
-        private set => _xenophyteCentralizedSolo = value ?? _xenophyteCentralizedSolo;
-    }
-
-    private Pool[]? _pools = Array.Empty<Pool>();
-    private XenophyteCentralizedSolo? _xenophyteCentralizedSolo = new();
+    public XenophyteCentralizedSolo Xenophyte_Centralized_Solo { get; set; } = new();
 }
 
-public sealed class Pool
+internal sealed class Pool
 {
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public string Algorithm
-    {
-        get => _algorithm!;
-        private set => _algorithm = string.IsNullOrEmpty(value) ? _algorithm : value;
-    }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public string Coin
-    {
-        get => _coin!;
-        private set => _coin = string.IsNullOrEmpty(value) ? _coin : value;
-    }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public string Algorithm { get; set; } = string.Empty;
+    
+    public string Coin { get; set; } = string.Empty;
+    
     [StringSyntax(StringSyntaxAttribute.Uri)]
-    public string Url
-    {
-        get => _url!;
-        private set => _url = string.IsNullOrEmpty(value) ? _url : value;
-    }
+    public string Url { get; set; } = string.Empty;
+    
+    public string Username { get; set; } = string.Empty;
 
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public string Username
-    {
-        get => _username!;
-        private set => _username = string.IsNullOrEmpty(value) ? _username : value;
-    }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public string Password
-    {
-        get => _password!;
-        private set => _password = string.IsNullOrEmpty(value) ? _password : value;
-    }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public string UserAgent
-    {
-        get => _userAgent!;
-        private set => _userAgent = string.IsNullOrEmpty(value) ? _userAgent : value;
-    }
-
-    private string? _algorithm = string.Empty;
-    private string? _coin = string.Empty;
-    private string? _url = string.Empty;
-    private string? _username = string.Empty;
-    private string? _password = string.Empty;
-    private string? _userAgent = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
+    public string Password { get; set; } = string.Empty;
+    
+    public string UserAgent { get; set; } = $"{ApplicationUtility.Name}/{ApplicationUtility.Version}";
 }
 
-public sealed class XenophyteCentralizedSolo
+internal sealed class XenophyteCentralizedSolo
 {
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public CpuMiner CpuMiner
-    {
-        get => _cpuMiner!;
-        private set => _cpuMiner = value ?? _cpuMiner;
-    }
-
-    private CpuMiner? _cpuMiner = new();
+    public CpuMiner CpuMiner { get; set; } = new();
 }
 
-public sealed class CpuMiner
+internal sealed class CpuMiner
 {
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public int Threads { get; private set; } = Environment.ProcessorCount;
+    public int Threads { get; set; } = Environment.ProcessorCount;
+    
+    public ThreadPriority ThreadPriority { get; set; } = ThreadPriority.Normal;
 
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public ThreadPriority ThreadPriority { get; private set; } = ThreadPriority.Normal;
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public CpuMinerThreadConfiguration[] ThreadConfigs
-    {
-        get => _threadConfigs!;
-        private set => _threadConfigs = value ?? _threadConfigs;
-    }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public bool EasyBlockOnly { get; private set; } = true;
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public bool UseXenophyteRandomizer { get; private set; } = true;
-
-    private CpuMinerThreadConfiguration[]? _threadConfigs = Array.Empty<CpuMinerThreadConfiguration>();
+    public CpuMinerThreadConfiguration[] ThreadConfigs { get; set; } = Array.Empty<CpuMinerThreadConfiguration>();
+    
+    public bool DoEasyBlock { get; set; } = true;
+    
+    public bool UseXenophyteRandomizer { get; set; } = true;
 
     public int GetNumberOfThreads()
     {
@@ -139,9 +66,9 @@ public sealed class CpuMiner
         return GetThreadConfig(thread)?.ThreadPriority ?? ThreadPriority;
     }
 
-    public bool GetEasyBlockOnly(int thread)
+    public bool GetDoEasyBlock(int thread)
     {
-        return GetThreadConfig(thread)?.EasyBlockOnly ?? EasyBlockOnly;
+        return GetThreadConfig(thread)?.DoEasyBlock ?? DoEasyBlock;
     }
     
     public int GetEasyBlockIndex(int thread)
@@ -150,7 +77,7 @@ public sealed class CpuMiner
 
         for (var i = 0; i <= thread; i++)
         {
-            if (GetEasyBlockOnly(thread))
+            if (GetDoEasyBlock(thread))
             {
                 index++;
             }
@@ -161,7 +88,18 @@ public sealed class CpuMiner
 
     public int GetTotalEasyBlockThreads()
     {
-        return _threadConfigs?.Count(configuration => configuration.EasyBlockOnly ?? EasyBlockOnly) ?? (EasyBlockOnly ? GetNumberOfThreads() : 0);
+        var result = 0;
+        var numberOfThreads = GetNumberOfThreads();
+        
+        for (var i = 0; i < numberOfThreads; i++)
+        {
+            if (GetDoEasyBlock(i))
+            {
+                result++;
+            }
+        }
+        
+        return result;
     }
 
     public bool GetUseXenophyteRandomizer(int thread)
@@ -175,17 +113,13 @@ public sealed class CpuMiner
     }
 }
 
-public sealed class CpuMinerThreadConfiguration
+internal sealed class CpuMinerThreadConfiguration
 {
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public ulong? ThreadAffinity { get; private set; }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public ThreadPriority? ThreadPriority { get; private set; } = System.Threading.ThreadPriority.Normal;
+    public ulong? ThreadAffinity { get; set; }
     
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public bool? EasyBlockOnly { get; private set; }
-
-    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-    public bool? UseXenophyteRandomizer { get; private set; }
+    public ThreadPriority? ThreadPriority { get; set; } = System.Threading.ThreadPriority.Normal;
+    
+    public bool? DoEasyBlock { get; set; }
+    
+    public bool? UseXenophyteRandomizer { get; set; }
 }

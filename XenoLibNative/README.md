@@ -1,10 +1,12 @@
 # XenoLibNative
-***This is the native c library used by Xiro. Without this library, mining speed will be slower.***
+***This is the native c library used by Xeno. Without this library, mining speed will be slower.***
 
 #### Table of contents
+- [XenoLibNative](#xenolibnative)
+      - [Table of contents](#table-of-contents)
   - [Compile Instructions](#compile-instructions)
     - [For Windows](#for-windows)
-      - [Via Command Line](#via-command-line)
+      - [Via Command Line:](#via-command-line)
     - [For Linux](#for-linux)
       - [Ubuntu 20.04 (LTS)](#ubuntu-2004-lts)
   - [Donations](#donations)

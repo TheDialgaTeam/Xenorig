@@ -12,7 +12,7 @@ namespace Xenorig.Algorithms.Xenophyte.Centralized.Solo.Miner;
 
 public delegate void BlockSubmitResultHandler(long height, string jobType, bool isGoodBlock, string reason, double roundTripTime);
 
-public sealed partial class CpuMiner
+internal sealed partial class CpuMiner
 {
     private static partial class Native
     {
@@ -92,14 +92,6 @@ public sealed partial class CpuMiner
         _totalHashCalculatedIn15Minutes = new long[totalThreads];
     }
 
-    private static (int startIndex, int size) GetJobChunk(int totalSize, int numberOfChunks, int threadId)
-    {
-        var (quotient, remainder) = Math.DivRem(totalSize, numberOfChunks);
-        var startIndex = threadId * quotient + Math.Min(threadId, remainder);
-        var chunkLength = quotient + (threadId < remainder ? 1 : 0);
-        return (startIndex, chunkLength);
-    }
-
     public void StartCpuMiner()
     {
         if (Interlocked.CompareExchange(ref _isCpuMinerActive, 1, 0) == 1) return;
@@ -159,7 +151,7 @@ public sealed partial class CpuMiner
         // Thread Variable
         var cpuMinerJob = _cpuMinerJobs[threadId];
 
-        var doEasyBlock = options.GetEasyBlockOnly(threadId);
+        var doEasyBlock = options.GetDoEasyBlock(threadId);
         var easyBlockIndex = options.GetEasyBlockIndex(threadId);
         var totalEasyBlockThreads = options.GetTotalEasyBlockThreads();
         var useXenophyteRandomizer = options.GetUseXenophyteRandomizer(threadId);
@@ -201,7 +193,7 @@ public sealed partial class CpuMiner
 
         var easyBlockValues = cpuMinerJob.EasyBlockValues;
 
-        var (startIndex, size) = GetJobChunk(easyBlockValues.Length, totalEasyBlockThreads, easyBlockIndex);
+        var (startIndex, size) = CpuMinerUtility.GetJobChunk(easyBlockValues.Length, totalEasyBlockThreads, easyBlockIndex);
         if (size == 0) return;
 
         Span<long> chunkData = stackalloc long[size];
@@ -368,7 +360,7 @@ public sealed partial class CpuMiner
     [SkipLocalsInit]
     private void ValidateAndSubmitShare(int threadId, long firstNumber, long secondNumber, long solution, char op, string jobType, CpuMinerJob cpuMinerJob)
     {
-        Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19 + 1];
+        Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19];
 
         firstNumber.TryFormat(stringToEncrypt, out var firstNumberWritten);
 
@@ -392,12 +384,12 @@ public sealed partial class CpuMiner
 
         Interlocked.Increment(ref _totalHashCalculatedIn10Seconds.GetRef(threadId));
 
-        Span<char> hashEncryptedShareString = stackalloc char[Encoding.UTF8.GetCharCount(hashEncryptedShare)];
-        Encoding.UTF8.GetChars(hashEncryptedShare, hashEncryptedShareString);
+        Span<char> hashEncryptedShareString = stackalloc char[Encoding.ASCII.GetCharCount(hashEncryptedShare)];
+        Encoding.ASCII.GetChars(hashEncryptedShare, hashEncryptedShareString);
 
         if (!hashEncryptedShareString.SequenceEqual(cpuMinerJob.BlockIndication)) return;
 
-        _network.SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveJob}|{Encoding.UTF8.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{cpuMinerJob.BlockHeight}|{_pool.UserAgent}", true, (packet, time) =>
+        _network.SendPacketToNetwork(new PacketData($"{NetworkConstants.ReceiveJob}|{Encoding.ASCII.GetString(encryptedShare)}|{solution}|{firstNumber} {op} {secondNumber}|{hashEncryptedShareString}|{cpuMinerJob.BlockHeight}|{_pool.UserAgent}", true, (packet, time) =>
         {
             Span<char> temp = stackalloc char[Encoding.UTF8.GetCharCount(packet)];
             Encoding.UTF8.GetChars(packet, temp);

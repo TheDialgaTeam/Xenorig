@@ -60,7 +60,7 @@ public sealed class SoloMiningJob
         char @operator;
         long solution;
 
-        if (RandomNumberGeneratorUtility.GetRandomBetween(1, 100) <= 50)
+        if (RandomNumberGeneratorUtility.GetRandomBetween(0, 99) < 50)
         {
             firstNumber = EasyBlockValues[RandomNumberGeneratorUtility.GetRandomBetween(0, 255)];
 
@@ -177,8 +177,8 @@ public sealed class SoloMiningJob
     private bool TryGenerateHash(long firstNumber, long secondNumber, char op, out string encryptedShare, out string encryptedShareHash)
     {
         var header = BlockHeaderResponse.BlockHeader;
-        Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19 + 1];
-
+        Span<char> stringToEncrypt = stackalloc char[19 + 1 + 1 + 1 + 19 + 19];
+        
         firstNumber.TryFormat(stringToEncrypt, out var firstNumberWritten);
 
         stringToEncrypt.GetRef(firstNumberWritten) = ' ';
@@ -191,8 +191,8 @@ public sealed class SoloMiningJob
         Span<byte> bytesToEncrypt = stackalloc byte[firstNumberWritten + 3 + secondNumberWritten + finalWritten];
         Encoding.ASCII.GetBytes(stringToEncrypt[..(firstNumberWritten + 3 + secondNumberWritten + finalWritten)], bytesToEncrypt);
 
-        Span<byte> encryptedShareBytes = stackalloc byte[64 * 2];
-        Span<byte> hashEncryptedShareBytes = stackalloc byte[64 * 2];
+        Span<byte> encryptedShareBytes = stackalloc byte[128];
+        Span<byte> hashEncryptedShareBytes = stackalloc byte[128];
 
         if (!CpuMinerUtility.MakeEncryptedShare(bytesToEncrypt, encryptedShareBytes, hashEncryptedShareBytes, header.XorKey.Span, header.AesKey.Span, header.AesIv.Span, header.AesRound))
         {

@@ -1,13 +1,13 @@
-﻿#pragma warning disable IL2026
-
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TheDialgaTeam.Core.Logging.Microsoft;
+using TheDialgaTeam.Serilog.Extensions;
+using TheDialgaTeam.Serilog.Formatting;
+using TheDialgaTeam.Serilog.Sinks.AnsiConsole;
 using Xenorig.Options;
 
 namespace Xenorig;
 
-public static class Program
+internal static class Program
 {
     public static Task Main(string[] args)
     {
@@ -16,18 +16,17 @@ public static class Program
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices(collection =>
             {
-                collection.AddOptions<XenorigOptions>().BindConfiguration("Xenorig", options => options.BindNonPublicProperties = true);
+                collection.AddOptions<XenorigOptions>().BindConfiguration("Xenorig");
                 collection.AddHostedService<ConsoleService>();
             })
-            .ConfigureLogging(builder =>
+            .ConfigureSerilog((context, provider, configuration) =>
             {
-                builder.AddLoggerTemplateFormatter(options =>
-                {
-                    options.SetDefaultTemplate(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix((in LoggerTemplateEntry _) => $"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{DateTime.Now:yyyy-MM-dd HH:mm:ss}{AnsiEscapeCodeConstants.Reset} ")));
-                    options.SetTemplate<ConsoleService>(formattingBuilder => formattingBuilder.SetGlobal(messageFormattingBuilder => messageFormattingBuilder.SetPrefix(string.Empty)));
-                });
+                configuration.WriteTo.AnsiConsoleSink(builder => builder
+                    .SetDefault(templateBuilder => templateBuilder.SetDefault($"{AnsiEscapeCodeConstants.DarkGrayForegroundColor}{{Timestamp:yyyy-MM-dd HH:mm:ss}}{AnsiEscapeCodeConstants.Reset} {{Message:l}}{{NewLine}}{{Exception}}"))
+                    .SetOverrides("Xenorig.ConsoleService", templateBuilder => templateBuilder.SetDefault("{Message:l}{NewLine}{Exception}"))
+                );
             })
-            .RunConsoleAsync();
+            .RunConsoleAsync(options => options.SuppressStatusMessages = true);
     }
 
     private static void OnCurrentDomainOnUnhandledException(object _, UnhandledExceptionEventArgs eventArgs)

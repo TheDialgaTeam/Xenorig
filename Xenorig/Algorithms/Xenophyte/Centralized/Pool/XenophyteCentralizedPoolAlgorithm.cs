@@ -1,6 +1,6 @@
 ﻿namespace Xenorig.Algorithms.Xenophyte.Centralized.Pool;
 
-public class XenophyteCentralizedPoolAlgorithm : IAlgorithm
+internal class XenophyteCentralizedPoolAlgorithm : IAlgorithm
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {

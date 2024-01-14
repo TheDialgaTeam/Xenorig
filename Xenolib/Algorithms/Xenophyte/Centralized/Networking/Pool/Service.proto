@@ -87,6 +87,7 @@ message BlockHeaderResponse {
 }
 
 message JobSubmitRequest {
+  // Authentication token.
   string token = 1;
   int64 block_height = 2;
   int64 first_number = 3;
