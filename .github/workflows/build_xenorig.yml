@@ -272,37 +272,37 @@ jobs:
           New-Item "$Xenorig_native_install_root" -ItemType 'Directory' -Force
 
       - name: Download Xenorig artifact (windows-x64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Xenorig-windows-x64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (windows-x86)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Xenorig-windows-x86
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (linux-x64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Xenorig-linux-x64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (linux-arm)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Xenorig-linux-arm
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (linux-arm64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Xenorig-linux-arm64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
 
       - name: Download Xenorig artifact (osx-x64)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           name: Xenorig-osx-x64
           path: ${{ github.workspace }}/${{ env.XENORIG_PUBLISH_ROOT }}
