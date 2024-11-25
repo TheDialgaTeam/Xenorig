@@ -1,0 +1,12 @@
+{
+  "name": "xenorig",
+  "version": "2.0.0",
+  "dependencies": [
+    "cpuinfo",
+    "cxxopts",
+    "lz4",
+    "openssl",
+    "rapidjson",
+    "spdlog"
+  ]
+}
