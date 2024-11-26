@@ -1,0 +1,49 @@
+{
+	"$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+
+	"name": "Ubuntu 22.04",
+
+	"build": {
+		"context": "../..",
+		"dockerfile": "../Dockerfile",
+		"target": "dev_env_default",
+		"args": {
+			"UBUNTU_VERSION": "22.04"
+		}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools-extension-pack",
+				"twxs.cmake",
+				"KylinIDETeam.cmake-intellisence",
+				"redhat.vscode-yaml",
+				"yzhang.markdown-all-in-one",
+				"github.vscode-github-actions",
+				"dbaeumer.vscode-eslint"
+			]
+		}
+	},
+
+	"mounts": [
+		{
+			"source": "vcpkg-cache",
+			"target": "/root/.cache/vcpkg/archives",
+			"type": "volume"
+		},
+		{
+			"source": "ccache",
+			"target": "/root/.ccache",
+			"type": "volume"
+		},
+		{
+			"source": "project",
+			"target": "${containerWorkspaceFolder}",
+			"type": "volume"
+		}
+	],
+
+	"workspaceFolder": "/usr/local/src/DeroGold",
+	"workspaceMount": ""
+}
