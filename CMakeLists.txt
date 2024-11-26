@@ -129,7 +129,7 @@ endif()
 # Set vcpkg toolchain options
 set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/ports")
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets")
-set(VCPKG_BOOTSTRAP_OPTIONS "--disable-metrics")
+set(VCPKG_BOOTSTRAP_OPTIONS "--disableMetrics")
 set(VCPKG_INSTALL_OPTIONS "--clean-after-build")
 
 include("${CMAKE_TOOLCHAIN_FILE}")

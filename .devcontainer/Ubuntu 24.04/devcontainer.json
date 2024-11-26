@@ -1,14 +1,14 @@
 {
 	"$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
 
-	"name": "Ubuntu 20.04",
+	"name": "Ubuntu 24.04",
 
 	"build": {
 		"context": "../..",
 		"dockerfile": "../Dockerfile",
 		"target": "dev_env_default",
 		"args": {
-			"UBUNTU_VERSION": "20.04"
+			"UBUNTU_VERSION": "24.04"
 		}
 	},
 
