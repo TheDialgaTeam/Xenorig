@@ -6,6 +6,4 @@ add_executable(Xenorig
         Config/XenorigConfig.cpp
         Config/XenorigConfig.h)
 
-target_link_libraries(Xenorig PRIVATE cxxopts::cxxopts lz4::lz4 OpenSSL::SSL OpenSSL::Crypto rapidjson spdlog::spdlog)
-
-add_dependencies(Xenorig version Utility)
+target_link_libraries(Xenorig PRIVATE Utility cxxopts::cxxopts lz4::lz4 OpenSSL::SSL OpenSSL::Crypto rapidjson spdlog::spdlog)

@@ -2,6 +2,14 @@
   "name": "xenorig",
   "version": "2.0.0",
   "dependencies": [
+    {
+      "name": "cpp-httplib",
+      "features": [
+        "openssl",
+        "zlib",
+        "brotli"
+      ]
+    },
     "cpuinfo",
     "cxxopts",
     "lz4",

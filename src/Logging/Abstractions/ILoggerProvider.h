@@ -13,6 +13,6 @@ namespace Xenorig::Logging::Abstractions
         virtual ~ILoggerProvider() = default;
         virtual std::shared_ptr<ILogger> CreateLogger(std::string categoryName) = 0;
     };
-} // namespace Xenorig::Logging
+} // namespace Xenorig::Logging::Abstractions
 
 #endif // XENORIG_LOGGING_ILOGGERPROVIDER_H

@@ -5,7 +5,7 @@
 
 namespace Xenorig::Utility::Console
 {
-    void SetTitle(const std::string &title);
+    void SetConsoleTitle(const std::string &title);
 } // namespace Xenorig::Utility::Console
 
 #endif // XENORIG_UTILITY_CONSOLE_H

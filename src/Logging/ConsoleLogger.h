@@ -4,6 +4,8 @@
 #include "Abstractions/ILogger.h"
 
 #include <optional>
+#include <memory>
+#include <spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace Xenorig::Logging

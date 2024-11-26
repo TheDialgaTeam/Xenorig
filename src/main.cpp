@@ -10,7 +10,7 @@ int main(int argv, char *argc[])
     const Xenorig::Logger::Logger logger;
     const Xenorig::Utility::CpuInformation cpuInformation;
 
-    Xenorig::Utility::Console::SetTitle("Test");
+    Xenorig::Utility::Console::SetConsoleTitle("Test");
 
     logger.GetConsole(true)->info(" {}* {}{:<12} {}{}/{} {}{}/{}{}",
                                    Xenorig::Logger::AnsiEscapeCodeConstants::GreenForegroundColor,
