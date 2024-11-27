@@ -4,6 +4,7 @@
 #include "ILogger.h"
 
 #include <memory>
+#include <string>
 
 namespace Xenorig::Logging::Abstractions
 {

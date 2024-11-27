@@ -225,6 +225,7 @@ elseif(MINGW)
     add_compile_definitions(WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0601)
 elseif(NOT APPLE)
     add_link_options(-static-libgcc -static-libstdc++)
+    add_compile_options(-Wall -Wextra)
 endif()
 
 find_package(httplib CONFIG REQUIRED)

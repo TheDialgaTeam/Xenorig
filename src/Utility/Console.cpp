@@ -1,5 +1,7 @@
 #include "Console.h"
 
+#include <iostream>
+
 #ifdef _WIN32
     #include <Windows.h>
     #pragma push_macro("SetConsoleTitle")

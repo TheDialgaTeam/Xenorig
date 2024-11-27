@@ -1,7 +1,7 @@
 #ifndef XENORIG_UTILITY_CONSOLE_H
 #define XENORIG_UTILITY_CONSOLE_H
 
-#include <iostream>
+#include <string>
 
 namespace Xenorig::Utility::Console
 {
