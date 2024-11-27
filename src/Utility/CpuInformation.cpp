@@ -2,52 +2,31 @@
 
 #include <cpuinfo.h>
 
-namespace Xenorig::Utility
+std::string Xenorig::Utility::CpuInformation::ProcessorName = "";
+uint32_t Xenorig::Utility::CpuInformation::L2CacheSize = 0;
+uint32_t Xenorig::Utility::CpuInformation::L3CacheSize = 0;
+uint32_t Xenorig::Utility::CpuInformation::ProcessorCoreCount = 0;
+
+void Xenorig::Utility::CpuInformation::Initialize()
 {
-    CpuInformation::CpuInformation()
+    if (!cpuinfo_initialize()) return;
+
+    if (const auto package = cpuinfo_get_package(0); package != nullptr)
     {
-        if (!cpuinfo_initialize()) return;
-
-        if (const auto package = cpuinfo_get_package(0); package != nullptr)
-        {
-            processorName = package->name;
-        }
-
-        if (const auto cache = cpuinfo_get_l2_cache(0); cache != nullptr)
-        {
-            l2CacheSize = cache->size * cpuinfo_get_cores_count();
-        }
-
-        if (const auto cache = cpuinfo_get_l3_cache(0); cache != nullptr)
-        {
-            l3CacheSize = cache->size;
-        }
-
-        processorCoreCount = cpuinfo_get_cores_count();
+        Xenorig::Utility::CpuInformation::ProcessorName = package->name;
     }
 
-    CpuInformation::~CpuInformation()
+    if (const auto cache = cpuinfo_get_l2_cache(0); cache != nullptr)
     {
-        cpuinfo_deinitialize();
+        Xenorig::Utility::CpuInformation::L2CacheSize = cache->size * cpuinfo_get_cores_count();
     }
 
-    const std::string &CpuInformation::GetProcessorName() const
+    if (const auto cache = cpuinfo_get_l3_cache(0); cache != nullptr)
     {
-        return processorName;
+        Xenorig::Utility::CpuInformation::L3CacheSize = cache->size;
     }
 
-    uint32_t CpuInformation::GetL2CacheSize() const
-    {
-        return l2CacheSize;
-    }
+    Xenorig::Utility::CpuInformation::ProcessorCoreCount = cpuinfo_get_cores_count();
 
-    uint32_t CpuInformation::GetL3CacheSize() const
-    {
-        return l3CacheSize;
-    }
-
-    uint32_t CpuInformation::GetProcessorCoreCount() const
-    {
-        return processorCoreCount;
-    }
-} // namespace Xenorig::Utility
+    cpuinfo_deinitialize();
+}

@@ -4,12 +4,13 @@
 #include "Utility/CpuInformation.h"
 
 #include <version.h>
+#include <iostream>
 
 int main(int argv, char *argc[])
 {
     const Xenorig::Logger::Logger logger;
-    const Xenorig::Utility::CpuInformation cpuInformation;
-
+    
+    Xenorig::Utility::CpuInformation::Initialize();
     Xenorig::Utility::Console::SetConsoleTitle("Test");
 
     logger.GetConsole(true)->info(" {}* {}{:<12} {}{}/{} {}{}/{}{}",
@@ -29,7 +30,7 @@ int main(int argv, char *argc[])
         Xenorig::Logger::AnsiEscapeCodeConstants::WhiteForegroundColor,
         "CPU",
         Xenorig::Logger::AnsiEscapeCodeConstants::DarkGrayForegroundColor,
-        cpuInformation.GetProcessorName(),
+        Xenorig::Utility::CpuInformation::ProcessorName,
         Xenorig::Logger::AnsiEscapeCodeConstants::Reset);
 
     std::cin.get();

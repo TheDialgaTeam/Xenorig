@@ -4,24 +4,14 @@
 #include <cstdint>
 #include <string>
 
-namespace Xenorig::Utility
+namespace Xenorig::Utility::CpuInformation
 {
-    class CpuInformation
-    {
-        std::string processorName;
-        uint32_t l2CacheSize;
-        uint32_t l3CacheSize;
-        uint32_t processorCoreCount;
+    extern std::string ProcessorName;
+    extern uint32_t L2CacheSize;
+    extern uint32_t L3CacheSize;
+    extern uint32_t ProcessorCoreCount;
 
-    public:
-        CpuInformation();
-        ~CpuInformation();
-
-        const std::string &GetProcessorName() const;
-        uint32_t GetL2CacheSize() const;
-        uint32_t GetL3CacheSize() const;
-        uint32_t GetProcessorCoreCount() const;
-    };
+    void Initialize();
 } // namespace Xenorig::Utility
 
 #endif // XENORIG_UTILITY_CPUINFORMATION_H
