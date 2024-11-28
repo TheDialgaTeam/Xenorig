@@ -6,6 +6,7 @@ target_sources(Utility
         "CpuInformation.h"
         PRIVATE
         "Console.cpp"
-        "CpuInformation.cpp")
+        "CpuInformation.cpp"
+)
 
 target_link_libraries(Utility PRIVATE cpuinfo::cpuinfo)
