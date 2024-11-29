@@ -8,6 +8,6 @@ namespace Xenorig::Logging
     void PrintAbout();
 
     void PrintCpu();
-}
+} // namespace Xenorig::Logging
 
 #endif // XENORIG_LOGGING_LOGGER_H
