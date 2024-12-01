@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace Xenorig::Configuration
+namespace xenorig::Configuration
 {
     struct XenorigOptions
     {

@@ -1,4 +1,4 @@
-#include "Console.h"
+#include "console.h"
 
 #ifdef _WIN32
     #include <Windows.h>
@@ -6,9 +6,9 @@
     #include <iostream>
 #endif
 
-namespace Xenorig::Utility::Console
+namespace xenorig::utility::console
 {
-    void SetTitle(const std::string &title)
+    void set_console_title(const std::string &title)
     {
 #ifdef _WIN32
         SetConsoleTitle(title.c_str());
@@ -16,4 +16,4 @@ namespace Xenorig::Utility::Console
         std::cout << "\033]0;" << title << "\007"; // ANSI escape sequence
 #endif
     }
-} // namespace Xenorig::Utility::Console
+} // namespace xenorig::utility::console

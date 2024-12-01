@@ -1,14 +1,14 @@
-#include "About.h"
-#include "Logging/Logger.h"
-#include "Utility/Console.h"
+#include "about.h"
+#include "logging/logger.h"
+#include "utility/console.h"
 
 int main(int argv, char *argc[])
 {
-    Xenorig::Logging::ConfigureLogging();
-    Xenorig::Utility::Console::SetTitle(PROJECT_NAME);
+    xenorig::logging::configure_logging();
+    xenorig::utility::console::set_console_title(PROJECT_NAME);
 
-    Xenorig::Logging::PrintAbout();
-    Xenorig::Logging::PrintCpu();
+    xenorig::logging::print_about();
+    xenorig::logging::print_cpu();
 
     return 0;
 }

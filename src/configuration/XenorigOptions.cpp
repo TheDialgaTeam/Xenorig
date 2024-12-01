@@ -1,5 +1,5 @@
 #include "XenorigOptions.h"
 
-namespace Xenorig::Configuration {
+namespace xenorig::Configuration {
 
 } // Xenorig
